@@ -35,11 +35,17 @@ client.on('message', async message => {
   if (isGreeting(lowerCaseMessage)) {
     await handleGreeting(message);
   } else {
-    message.reply('Desculpe, não entendi. Por favor, inicie com uma saudação como "Oi" ou "Olá".');
+    if (!userDocument) {
+      await processUserResponse(message, lowerCaseMessage);
+    } else {
+      await handleUserChoice(message, parseInt(lowerCaseMessage, 10));
+    }
   }
 });
 
 async function handleGreeting(message) {
+  console.log("handleGreeting props -", message)
+
   respondedConversations.add(message.from);
   incorrectAttempts = 0;
 
@@ -51,9 +57,12 @@ async function handleGreeting(message) {
 }
 
 async function processUserResponse(message, userResponse) {
+  console.log("processUserResponse props -", message, userResponse)
+
   if (isValidDocument(userResponse)) {
     try {
-      const creditorInfo = await getCreditorInfo(userResponse);
+      userDocument = userResponse; // Armazena o número do documento
+      const creditorInfo = await getCredorInfo(userResponse);
 
       const formattedMessage = createFormattedMessage(creditorInfo);
 
@@ -73,24 +82,47 @@ async function processUserResponse(message, userResponse) {
   }
 }
 
+
+async function handleUserChoice(message, userChoice) {
+  console.log('handleUserChoice props -', message, userChoice);
+
+  switch (userChoice) {
+    case 1:
+      console.log('Opção 1 selecionada. Chamando getCredorInfo.');
+      try {
+        const creditorInfo = await getCredorInfo(userDocument);
+        console.log('Informações do credor:', creditorInfo);
+        const creditorMessage = createFormattedMessage(creditorInfo);
+        await message.reply(creditorMessage);
+      } catch (error) {
+        console.error('Erro ao obter informações do credor:', error.message);
+        handleProcessingError(message, error);
+      }
+      break;
+    case 2:
+      // Adicione lógica para a opção 2, se necessário
+      break;
+    // Adicione outras opções conforme necessário
+    default:
+      console.log('Opção não reconhecida ou não tratada.');
+      // Trate outras opções, se necessário
+  }
+}
+
 function createFormattedMessage(creditorInfo) {
-  return `Olá *${creditorInfo.nome}*, tudo bem? Esperamos que sim!\n\nNosso contato é referente a *${creditorInfo.empresa}*, ao qual encontramos um débito em aberto sobre nossa consultoria. Gostaria de receber mais informações e propostas?`;
+  return `Olá *${creditorInfo.nome}*, tudo bem? Esperamos que sim!\n\nNosso contato é referente a *${creditorInfo.empresa}*, ao qual encontramos um débito em aberto sobre nossa consultoria. Gostaria de receber mais informações e propostas?\n\nPor favor, escolha uma opção:\n1. Credores\n2. Dívidas\n3. Parcelamento\n4. Ver Acordos\n5. Ver Boletos\n6. Linha Digitável\n7. Pix Copia e Cola`;
 }
 
 async function handleUserConfirmation(message, userConfirmation) {
   if (userConfirmation.toLowerCase() === 'sim') {
-    const totalInfo = await getTotalInfo(iddevedor, dataBase);
+    const totalInfo = await getCredorDividasTotais(iddevedor, dataBase);
 
     const totalFormatado = totalInfo && totalInfo.total_geral ? formatValue(totalInfo.total_geral) : 'Erro ao formatar total_geral';
 
     const replyMessage = `Foram encontradas em seu CPF/CNPJ um total de *${totalInfo.numero_dividas}* dívidas, no valor total de *${totalFormatado}*.\n\nA seguir, segue oferta de parcelamento disponível:\n\n`;
-    // console.log("replyMessage -", replyMessage) - OK
-
-    const ofertas = await getOfertas(iddevedor);
+    
+    const ofertas = await getCredorOfertas(iddevedor);
     const cards = await formatOfertasAsCards(ofertas);
-
-    // console.log("ofertas -", ofertas) - OK
-    // console.log("cards -", cards) - OK
 
     const fullMessage = replyMessage + cards.join('\n') + "\n_(Selecione a opção correspondente ao parcelamento escolhido. Ex: 1, 2, 3...)_";
 
@@ -154,26 +186,24 @@ function isGreeting(message) {
   return ['oi', 'ola', 'bom dia', 'boa tarde', 'boa noite'].includes(message);
 }
 
-async function getCreditorInfo(document) {
+async function getCredorInfo(document) {
   const response = await axios.get(`http://localhost:3000/lista-credores?documento=${document}`);
   return response.data[0];
 }
 
-async function getTotalInfo(iddevedor, dataBase) {
+async function getCredorDividas(iddevedor, dataBase) {
+  const response = await axios.get(`http://localhost:3000/credores/dividas?iddevedor=${iddevedor}&database=${dataBase}`);
+  return response.data[0];
+}
+
+async function getCredorDividasTotais(iddevedor, dataBase) {
   const response = await axios.get(`http://localhost:3000/credores/dividas/total?iddevedor=${iddevedor}&database=${dataBase}`);
   return response.data;
 }
 
-async function getOfertas(iddevedor) {
-  const planoMax = 5;
-  const ofertas = [];
-
-  for (let i = 1; i <= planoMax; i += 1) {
-    const response = await axios.get(`http://localhost:3000/credores/oferta?iddevedor=${iddevedor}&plano=${i}`);
-    ofertas.push(response.data);
-  }
-
-  return ofertas;
+async function getCredorOfertas(iddevedor) {
+  const response = await axios.get(`http://localhost:3000/credores/oferta-parcelas?iddevedor=${iddevedor}`);
+  return response.data;
 }
 
 function formatOfertasAsCards(ofertas) {
