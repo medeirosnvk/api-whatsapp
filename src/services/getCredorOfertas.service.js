@@ -1,4 +1,10 @@
-export async function getCredorOfertas(iddevedor) {
+const axios = require('axios');
+
+require('dotenv').config();
+
+async function getCredorOfertas(iddevedor) {
   const response = await axios.get(`http://localhost:3000/credores/oferta-parcelas?iddevedor=${iddevedor}`);
   return response.data;
 };
+
+module.exports = getCredorOfertas;
