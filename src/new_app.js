@@ -21,6 +21,65 @@ const client = new Client({
   authStrategy: new LocalAuth(),
 });
 
+const data = {};
+
+function formatValue(number) {
+  if (number !== undefined && number !== null) {
+    return number.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+  } else {
+    return 'N/A';
+  }
+}
+
+function formatarMoeda(valorString) {
+  let valorNumerico = parseFloat(valorString);
+  if (isNaN(valorNumerico)) {
+      return 'Formato inválido';
+  }
+  return valorNumerico.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+}
+
+function formatCredorOfertas(ofertas) {
+  return ofertas.map((detalhe, index) => (
+    `${index + 1}) ` + `Parcelamento em ${index + 1} x ` + `${formatarMoeda(detalhe.valor_parcela)}`
+  )).join('\n');
+}
+
+function formatCredorInfo(creditorInfo) {
+  return creditorInfo.map((info, index) => (
+    `*--------- ${index + 1} ---------*\n` +
+    `IdDevedor: ${info.iddevedor}\n` +
+    `Empresa: ${info.empresa}\n` +
+    `Saldo: ${formatValue(info.saldo)}`  
+  )).join('\n\n');
+}
+
+function formatCredorDividas(creditorDividas) {
+  return creditorDividas.map((info, index) => (
+    `*--------- ${index + 1} ---------*\n` +
+    `Contrato: ${info.contrato}\n` +
+    `Vencimento: ${formatDateIsoToBr(info.vencimento)}\n` +
+    `Dias Atraso: ${info.diasatraso}\n` +
+    `Valor: ${formatValue(info.valor)}`
+  )).join('\n\n');
+}
+
+function getCurrentDate() {
+  const currentDate = new Date();
+  const year = currentDate.getFullYear();
+  const month = String(currentDate.getMonth() + 1).padStart(2, '0');
+  const day = String(currentDate.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+}
+
+function formatDateIsoToBr(data) {
+  return new Date(data).toLocaleDateString('pt-BR', {
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric'
+  });
+}
+
 class StateMachine {
   constructor() {
     this.client = client;
@@ -54,6 +113,7 @@ class StateMachine {
   }
 
   async _postMessage(origin, message) {
+    console.log(`Horário da mensagem enviada ao cliente: ${new Date}`);
     await this.client.sendMessage(origin, message);
   }
 
@@ -107,7 +167,7 @@ class StateMachine {
       case "1":
         try {
           const { cpfcnpj: document } = this._getCredor(phoneNumber);
-          const credorInfo = await this.getCredorInfo(document);
+          const credorInfo = await getCredorInfo(document);
 
           if (credorInfo && credorInfo.length > 0) {
             const credorMessage = formatCredorInfo(credorInfo);
@@ -123,11 +183,48 @@ class StateMachine {
     }
   }
 
+  async _handleCredorState(origin, phoneNumber = "80307836", response) {
+    if (response && response.body.trim().match(/^\d+$/)) {
+      const selectedOption = parseInt(response.body.trim());
+      const { cpfcnpj: document } = this._getCredor(phoneNumber);
+      const credorInfo = await getCredorInfo(document);
+
+      if (selectedOption >= 1 && selectedOption <= credorInfo.length) {
+        const selectedCreditor = credorInfo[selectedOption - 1];
+
+        console.log(`Conteúdo da opção ${selectedOption} armazenado:`, selectedCreditor);
+
+        data.credorInfo = credorInfo;
+        data.selectedCreditor = selectedCreditor;
+
+        const idDevedor = selectedCreditor.iddevedor;
+        const dataBase = getCurrentDate();
+
+        const credorDividas = await getCredorDividas(idDevedor, dataBase);
+        const credorOfertas = await getCredorOfertas(idDevedor);
+
+        data.credorDividas = credorDividas;
+
+        const formattedResponseDividas = formatCredorDividas(credorDividas);
+        const formattedResponseOfertas = formatCredorOfertas(credorOfertas);
+
+        const terceiraMensagem = `As seguintes dividas foram encontradas para a empresa selecionada:\n\n${formattedResponseDividas}\n\n*Escolha uma das opções abaixo para prosseguirmos no seu acordo:*\n\n${formattedResponseOfertas}`;
+
+        await this._postMessage(origin, terceiraMensagem);
+        Object.assign(userState[phoneNumber], { ofertaEnviado: true })
+      } else {
+        await this._postMessage(origin, 'Opção inválida. Por favor, escolha uma opção válida.');
+      }
+    } else {
+      await this._postMessage(origin, 'Resposta inválida. Por favor, escolha uma opção válida.');
+    }
+  }
+
   async handleMessage(phoneNumber, response) {
-    const { currentState } = this._getState(phoneNumber);
+    const { credor, currentState } = this._getState(phoneNumber);
     const origin = response.from;
 
-    console.log(`Handle Message from ${phoneNumber} - ${currentState}`);
+    console.log(`[${phoneNumber} - ${currentState}]`);
 
     switch (currentState) {
       case "INICIO":
@@ -140,6 +237,24 @@ class StateMachine {
         // Lógica para o estado MENU
         await this._handleMenuState(origin, "80307836", response);
         this._setState(phoneNumber, "CREDOR");
+        break;
+
+      case "CREDOR":
+        // Lógica para o estado MENU
+        await this._handleCredorState(origin, "80307836", response);
+        this._setState(phoneNumber, "OFERTA");
+        break;
+
+      case "OFERTA":
+        // Lógica para o estado MENU
+        await this._handleOfertaState(origin, "80307836", response);
+        this._setState(phoneNumber, "INFINITO");
+        break;
+        
+      case "INFINITO":
+        // Lógica para o estado MENU
+        await this._handleMenuState(origin, "80307836", response);
+        this._setState(phoneNumber, "INICIO");
         break;
     }
   }
@@ -157,7 +272,7 @@ client.on("ready", () => {
 
 client.on("message", async (response) => {
   const phoneNumber = response.from.replace(/[^0-9]/g, "");
-  await stateMachine.handleMessage(phoneNumber, response);
+  await stateMachine.handleMessage("80307836", response);
 });
 
 client.initialize();
