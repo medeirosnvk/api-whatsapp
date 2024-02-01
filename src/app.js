@@ -27,7 +27,13 @@ let horario;
 let interactionState = null;
 
 const data = {};
-const userStates = {};
+const userState = {};
+
+const defaultValuesMenuState = {
+  menuEnviado: false,
+  credorEnviado: false,
+  ofertaEnviado: false,
+}
 
 const agora = new Date();
 const horaAtual = agora.getHours();
@@ -60,7 +66,7 @@ let menuEnviado = false;
 
 client.on('message', async (userMessage) => {
   console.log('MENSAGEM RECEBIDA -', userMessage.body);
-
+  const origin = userMessage.from;
   phoneNumber = userMessage.from.replace(/[^0-9]/g, '');
   console.log('phoneNumber capturado:', phoneNumber);
 
@@ -136,16 +142,100 @@ client.on('message', async (userMessage) => {
     // return;
   }
 
-  if (!userStates[userMessage.from] || !userStates[userMessage.from].menuEnviado) {
-    const menuInicial = `Olá *${userName}*,\n\nPor favor, escolha uma opção:\n\n1 - Credores\n2 - Parcelamento\n3 - Ver Acordos\n4 - Ver Boletos\n5 - Linha Digitável\n6 - Pix Copia e Cola\n7 - Voltar`;
-
-    await client.sendMessage(userMessage.from, menuInicial);
-
-    userStates[userMessage.from] = { menuEnviado: true };
+  if (!userState.hasOwn(phoneNumber)) {
+    const primeiraMensagem = `Olá *${userName}*,\n\nPor favor, escolha uma opção:\n\n1 - Credores\n2 - Parcelamento\n3 - Ver Acordos\n4 - Ver Boletos\n5 - Linha Digitável\n6 - Pix Copia e Cola\n7 - Voltar`;
+    await client.sendMessage(origin, primeiraMensagem);
+    
+    userState[phoneNumber] = defaultValuesMenuState;
+    Object.assing(userState[phoneNumber], { menuEnviado: true });
 
     return;
   }
 
+  if (userState[phoneNumber].menuEnviado && !userState[phoneNumber].credorEnviado && !userState[phoneNumber].ofertaEnviado) {
+    switch (userMessage.body.trim()) {
+      case '1':
+        try {
+          const credorInfo = await getCredorInfo(document);
+
+          if (credorInfo && credorInfo.length > 0) {
+            const credorMessage = formatCredorInfo(credorInfo);
+            const segundaMensagem = credorMessage + '\n\n_Selecione o credor (por exemplo, responda com "1" ou "2")_'
+            await client.sendMessage(origin, segundaMensagem);
+
+            Object.assing(userState[phoneNumber], { credorEnviado: true });
+          }
+        } catch (error) {
+          console.error('Case 1 retornou um erro - ', error.message);
+        }
+
+        break;
+
+      default:
+        await client.sendMessage(userMessage.from, 'Não foi possível obter informações do credor no momento.');
+    }
+  }
+
+  if (userState[phoneNumber].menuEnviado && userState[phoneNumber].credorEnviado && !userState[phoneNumber].ofertaEnviado) {
+    if (userMessage && userMessage.body.trim().match(/^\d+$/)) {
+      const selectedOption = parseInt(userMessage.body.trim());
+
+      if (selectedOption >= 1 && selectedOption <= credorInfo.length) {
+        const selectedCreditor = credorInfo[selectedOption - 1];
+
+        console.log(`Conteúdo da opção ${selectedOption} armazenado:`, selectedCreditor);
+
+        data.credorInfo = credorInfo;
+        data.selectedCreditor = selectedCreditor;
+
+        const idDevedor = selectedCreditor.iddevedor;
+        const dataBase = getCurrentDate();
+        const credorDividas = await getCredorDividas(idDevedor, dataBase);
+        const credorOfertas = await getCredorOfertas(idDevedor);
+
+        data.credorDividas = credorDividas;
+
+        const formattedResponseDividas = formatCredorDividas(credorDividas);
+        const formattedResponseOfertas = formatCredorOfertas(credorOfertas);
+        const terceiraMensagem = `As seguintes dividas foram encontradas para a empresa selecionada:\n\n${formattedResponseDividas}\n\n*Escolha uma das opções abaixo para prosseguirmos no seu acordo:*\n\n${formattedResponseOfertas}`;
+
+        await client.sendMessage(origin, terceiraMensagem);
+
+
+        const userResponseParcelamento = await getUserResponse(client, userMessage.from);
+        console.log('userResponseParcelamento -', userResponseParcelamento.body);
+
+        // if (userResponseParcelamento && userResponseParcelamento.body.trim().match(/^\d+$/)) {
+        //   const selectedOptionParcelamento = parseInt(userResponseParcelamento.body.trim());
+
+        //   if (selectedOptionParcelamento >= 1 && selectedOptionParcelamento <= credorOfertas.length) {
+        //     const selectedParcelamento = credorOfertas[selectedOptionParcelamento - 1];
+
+        //     console.log(`Conteúdo da opção ${selectedOptionParcelamento} armazenado:`, { selectedParcelamento });
+
+        //     data.selectedParcelamento = selectedParcelamento;
+        //     await client.sendMessage(userMessage.from, selectedParcelamento);
+
+        //     // Aplicar o restante da logica
+
+        //     console.log('data -', data);
+        //     userStates[userMessage.from] = { credoresEnviado: true, state: 'selecionarCredor' };
+        //   } else {
+        //     await client.sendMessage(userMessage.from, 'Opção inválida. Por favor, escolha uma opção válida.');
+        //   }
+        // } else {
+        //   await client.sendMessage(userMessage.from, 'Resposta inválida. Por favor, escolha uma opção válida.');
+        // }
+        // userStates[userMessage.from] = { credoresEnviado: true };
+      } else {
+        await client.sendMessage(origin, 'Opção inválida. Por favor, escolha uma opção válida.');
+      }
+    } else {
+      await client.sendMessage(origin, 'Resposta inválida. Por favor, escolha uma opção válida.');
+    }
+  }
+
+  /*
   switch (userMessage.body.trim()) {
     case '1':
       try {
@@ -254,6 +344,7 @@ client.on('message', async (userMessage) => {
     default:
       await client.sendMessage(userMessage.from, 'Não foi possível obter informações do credor no momento.');
   }
+  */
 });
 
 async function handleUserResponse(userMessage) {
