@@ -142,17 +142,21 @@ client.on('message', async (userMessage) => {
     // return;
   }
 
-  if (!userState.hasOwn(phoneNumber)) {
+  if (!Object.hasOwn(userState, phoneNumber)) {
+    console.log('Não tem o telefone.. adicionando..')
     const primeiraMensagem = `Olá *${userName}*,\n\nPor favor, escolha uma opção:\n\n1 - Credores\n2 - Parcelamento\n3 - Ver Acordos\n4 - Ver Boletos\n5 - Linha Digitável\n6 - Pix Copia e Cola\n7 - Voltar`;
     await client.sendMessage(origin, primeiraMensagem);
     
     userState[phoneNumber] = defaultValuesMenuState;
-    Object.assing(userState[phoneNumber], { menuEnviado: true });
+    Object.assign(userState[phoneNumber], { menuEnviado: true });
+    console.log('Aguardando resposta da primeira mensagem');
 
     return;
   }
 
   if (userState[phoneNumber].menuEnviado && !userState[phoneNumber].credorEnviado && !userState[phoneNumber].ofertaEnviado) {
+    console.log('Processando resposta do menu enviado..');
+
     switch (userMessage.body.trim()) {
       case '1':
         try {
@@ -163,7 +167,10 @@ client.on('message', async (userMessage) => {
             const segundaMensagem = credorMessage + '\n\n_Selecione o credor (por exemplo, responda com "1" ou "2")_'
             await client.sendMessage(origin, segundaMensagem);
 
-            Object.assing(userState[phoneNumber], { credorEnviado: true });
+            Object.assign(userState[phoneNumber], { credorEnviado: true });
+            
+            console.log('Aguardando resposta da segunda mensagem');
+            return;
           }
         } catch (error) {
           console.error('Case 1 retornou um erro - ', error.message);
@@ -177,8 +184,11 @@ client.on('message', async (userMessage) => {
   }
 
   if (userState[phoneNumber].menuEnviado && userState[phoneNumber].credorEnviado && !userState[phoneNumber].ofertaEnviado) {
+    console.log('Processando resposta do credor enviado..');
+
     if (userMessage && userMessage.body.trim().match(/^\d+$/)) {
       const selectedOption = parseInt(userMessage.body.trim());
+      const credorInfo = await getCredorInfo(document);
 
       if (selectedOption >= 1 && selectedOption <= credorInfo.length) {
         const selectedCreditor = credorInfo[selectedOption - 1];
@@ -204,6 +214,7 @@ client.on('message', async (userMessage) => {
 
         const userResponseParcelamento = await getUserResponse(client, userMessage.from);
         console.log('userResponseParcelamento -', userResponseParcelamento.body);
+        console.log('Aguardando resposta da terceira mensagem');
 
         // if (userResponseParcelamento && userResponseParcelamento.body.trim().match(/^\d+$/)) {
         //   const selectedOptionParcelamento = parseInt(userResponseParcelamento.body.trim());
