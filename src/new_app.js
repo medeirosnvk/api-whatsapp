@@ -32,9 +32,13 @@ class StateMachine {
   }
 
   _getState(phoneNumber) {
-    return this.userStates[phoneNumber]
-      ? this.userStates[phoneNumber]
-      : { currentState: "INICIO", credor: {} };
+    if (this.userStates[phoneNumber]) {
+      return this.userStates[phoneNumber];
+    }
+
+    this.userStates[phoneNumber] = { currentState: "INICIO", credor: {} };
+
+    return this.userStates[phoneNumber];
   }
 
   _setCredor(phoneNumber, credor) {
