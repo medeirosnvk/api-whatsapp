@@ -33,8 +33,8 @@ class StateMachine {
 
   _getState(phoneNumber) {
     return this.userStates[phoneNumber]
-      ? this.userStates[phoneNumber].currentState
-      : "INICIO";
+      ? this.userStates[phoneNumber]
+      : { currentState: "INICIO", credor: {} };
   }
 
   _setCredor(phoneNumber, credor) {
@@ -120,7 +120,7 @@ class StateMachine {
   }
 
   async handleMessage(phoneNumber, response) {
-    const currentState = this._getState(phoneNumber);
+    const { currentState } = this._getState(phoneNumber);
     const origin = response.from;
 
     console.log(`Handle Message from ${phoneNumber} - ${currentState}`);
