@@ -2,6 +2,7 @@ require("dotenv").config();
 const qrcode = require("qrcode-terminal");
 const { Client, LocalAuth } = require("whatsapp-web.js");
 
+const { executeQuery } = require("./dbconfig");
 const getCredorDividas = require("./services/getCredorDividas.service");
 const getCredorInfo = require("./services/getCredorInfo.service");
 const getCredorOfertas = require("./services/getCredorOfertas.service");
@@ -90,7 +91,7 @@ class StateMachine {
   }
 
   async _handleInitialState(origin, phoneNumber = "80307836") {
-    const { nome: userName } = await _getCredorFromDB(phoneNumber);
+    const { nome: userName } = await this._getCredorFromDB(phoneNumber);
     const message = `Olá *${userName}*,\n\nPor favor, escolha uma opção:\n\n1 - Credores\n2 - Parcelamento\n3 - Ver Acordos\n4 - Ver Boletos\n5 - Linha Digitável\n6 - Pix Copia e Cola\n7 - Voltar`;
 
     await this._postMessage(origin, message);
@@ -102,7 +103,7 @@ class StateMachine {
       case "1":
         try {
           const { cpfcnpj: document } = this._getCredor(phoneNumber);
-          const credorInfo = await getCredorInfo(document);
+          const credorInfo = await this.getCredorInfo(document);
 
           if (credorInfo && credorInfo.length > 0) {
             const credorMessage = formatCredorInfo(credorInfo);
@@ -127,13 +128,13 @@ class StateMachine {
     switch (currentState) {
       case "INICIO":
         // Lógica para o estado INICIO
-        this._handleInitialState(origin, "80307836");
+        await this._handleInitialState(origin, "80307836");
         this._setState(phoneNumber, "MENU");
         break;
 
       case "MENU":
         // Lógica para o estado MENU
-        this._handleMenuState(origin, "80307836", response);
+        await this._handleMenuState(origin, "80307836", response);
         this._setState(phoneNumber, "CREDOR");
         break;
     }
