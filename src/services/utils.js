@@ -82,8 +82,8 @@ function formatDateIsoToBr(data) {
 function formatDateRegistroBr(dateString) {
   const date = new Date(dateString);
   date.setUTCHours(0, 0, 0, 0); // Define a hora para meia-noite (00:00:00) no fuso horário UTC
-  const day = date.getUTCDate().toString().padStart(2, '0');
-  const month = (date.getUTCMonth() + 1).toString().padStart(2, '0');
+  const day = date.getUTCDate().toString().padStart(2, "0");
+  const month = (date.getUTCMonth() + 1).toString().padStart(2, "0");
   const year = date.getUTCFullYear();
 
   return `${day}/${month}/${year}`;
@@ -91,8 +91,8 @@ function formatDateRegistroBr(dateString) {
 
 function formatDateRegistroBrUTC(dateString) {
   const date = new Date(`${dateString}T00:00:00Z`); // Adiciona a hora e o UTC ao criar a data
-  const day = date.getUTCDate().toString().padStart(2, '0');
-  const month = (date.getUTCMonth() + 1).toString().padStart(2, '0');
+  const day = date.getUTCDate().toString().padStart(2, "0");
+  const month = (date.getUTCMonth() + 1).toString().padStart(2, "0");
   const year = date.getUTCFullYear();
 
   return `${day}/${month}/${year}`;
@@ -132,10 +132,10 @@ function parseDadosAcordo(props) {
     honorarios_percentual,
     multa_percentual,
     tarifa_boleto,
-    responseDividasCredores
+    responseDividasCredores,
   } = props;
 
-  console.log('ultimaDataVencimento -', ultimaDataVencimento);
+  console.log("ultimaDataVencimento -", ultimaDataVencimento);
 
   const currentDate = new Date().toISOString().slice(0, 10);
 
@@ -157,24 +157,35 @@ Data Base.: ${currentDataBase}
 --------------- ------- ---------- ---------- ---------- ---------- ---------- ---------- ----------
 `;
 
-    let dynamicMessage = '';
+    let dynamicMessage = "";
 
     responseDividasCredores.forEach((dividas, index, array) => {
-      const contrato = dividas.contrato.padEnd(15, ' ');
-      const parcela = '10'.padStart(7, ' ');
+      const contrato = dividas.contrato.padEnd(15, " ");
+      const parcela = "10".padStart(7, " ");
       const vencimento = formatDateRegistroBr(dividas.vencimento);
 
       const formatNumber = (number) => {
-        const formattedNumber = number.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-        return formattedNumber.replace('R$', '').trim();
+        const formattedNumber = number.toLocaleString("pt-BR", {
+          minimumFractionDigits: 2,
+          maximumFractionDigits: 2,
+        });
+        return formattedNumber.replace("R$", "").trim();
       };
 
-      const valor = formatNumber(Number(dividas.saldo)).padStart(10, ' ');
-      const juros = formatNumber(Number(dividas.juros_calculado)).padStart(10, ' ');
-      const multa = formatNumber(Number(dividas.multa_calculada)).padStart(10, ' ');
-      const desconto = '0,00'.padStart(10, ' ');
-      const honorarios = formatNumber(Number(dividas.honorarios_calculado)).padStart(10, ' ');
-      const total = formatNumber(Number(dividas.total)).padStart(10, ' ');
+      const valor = formatNumber(Number(dividas.saldo)).padStart(10, " ");
+      const juros = formatNumber(Number(dividas.juros_calculado)).padStart(
+        10,
+        " "
+      );
+      const multa = formatNumber(Number(dividas.multa_calculada)).padStart(
+        10,
+        " "
+      );
+      const desconto = "0,00".padStart(10, " ");
+      const honorarios = formatNumber(
+        Number(dividas.honorarios_calculado)
+      ).padStart(10, " ");
+      const total = formatNumber(Number(dividas.total)).padStart(10, " ");
 
       if (index === array.length - 1) {
         dynamicMessage += `${contrato} ${parcela} ${vencimento} ${valor} ${juros} ${multa} ${desconto} ${honorarios} ${total}`;
@@ -198,16 +209,22 @@ Data Base.: ${currentDataBase}
     });
 
     const formatNumber = (number) => {
-      const formattedNumber = number.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-      return formattedNumber.replace('R$', '').trim();
+      const formattedNumber = number.toLocaleString("pt-BR", {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2,
+      });
+      return formattedNumber.replace("R$", "").trim();
     };
 
-    const totalSaldo = formatNumber(somaSaldo).padStart(45, ' ');
-    const totalJuros = formatNumber(somaJurosCalculado).padStart(10, ' ');
-    const totalMulta = formatNumber(somaMultaCalculada).padStart(10, ' ');
-    const desconto = '0,00'.padStart(10, ' ');
-    const totalHonorarios = formatNumber(somaHonorariosCalculado).padStart(10, ' ');
-    const totalGeral = formatNumber(somaTotal).padStart(10, ' ');
+    const totalSaldo = formatNumber(somaSaldo).padStart(45, " ");
+    const totalJuros = formatNumber(somaJurosCalculado).padStart(10, " ");
+    const totalMulta = formatNumber(somaMultaCalculada).padStart(10, " ");
+    const desconto = "0,00".padStart(10, " ");
+    const totalHonorarios = formatNumber(somaHonorariosCalculado).padStart(
+      10,
+      " "
+    );
+    const totalGeral = formatNumber(somaTotal).padStart(10, " ");
 
     const messageTotais = `${totalSaldo} ${totalJuros} ${totalMulta} ${desconto} ${totalHonorarios} ${totalGeral}`;
 
@@ -221,7 +238,12 @@ ${messageTotais}
 \nINCLUÍDO POR: API COBRANCE EM ${currentDateFormat} ${currentTimeFormat}.
 ---------------------------------------------------------------------------`;
 
-    return (message + dynamicMessage + sumMessageTotais + bottomMessage).trimStart();
+    return (
+      message +
+      dynamicMessage +
+      sumMessageTotais +
+      bottomMessage
+    ).trimStart();
   };
 
   const mensagem = insertMessageAcordo();
@@ -270,70 +292,75 @@ ${messageTotais}
     data_cancela: null,
     boletagem: 0,
     taxa_boleto: tarifa_boleto,
-    idtiponegociacao: 15
+    idtiponegociacao: 15,
   };
 }
 
-function parsePromessa(props) {
+function parseDadosPromessa(props) {
   const { idacordo, iddevedor, plano } = props;
 
   return {
-    responsavel: 'API PROMESSA',
-    data: '',
+    responsavel: "API PROMESSA",
+    data: "",
     valor: 0,
     iddevedor,
-    sistema: 'API',
-    tipo: 'BOLETO',
-    mensagem: '',
+    sistema: "API",
+    tipo: "BOLETO",
+    mensagem: "",
     situacao: 1,
     alteracao: null,
-    respalteracao: '',
+    respalteracao: "",
     parcela: 0,
     codigo: 0,
     idacordo,
     plano,
     idresponsavel: 111,
-    email: 'N',
+    email: "N",
     idemail: null,
-    idstatus_cartao: null
+    idstatus_cartao: null,
   };
 }
 
-async function criarPromessas(parsedData2, responseDividasCredores, parcelasArray, plano) {
-  let contratos = '';
-      const contratosIncluidos = new Set();
+async function criarPromessas(
+  parsedData2,
+  responseDividasCredores,
+  parcelasArray,
+  plano
+) {
+  let contratos = "";
+  const contratosIncluidos = new Set();
 
-      responseDividasCredores.forEach((dividas, index) => {
-        const { contrato, indice } = dividas;
+  responseDividasCredores.forEach((dividas, index) => {
+    const { contrato, indice } = dividas;
 
-        // Verifica se o contrato já foi incluído na lista.
-        if (!contratosIncluidos.has(contrato)) {
-          contratos += contrato;
-          contratosIncluidos.add(contrato); // Adiciona o contrato ao Set.
+    // Verifica se o contrato já foi incluído na lista.
+    if (!contratosIncluidos.has(contrato)) {
+      contratos += contrato;
+      contratosIncluidos.add(contrato); // Adiciona o contrato ao Set.
 
-          // Verifica se não é o último contrato antes de adicionar a barra "/".
-          if (index !== responseDividasCredores.length - 1) {
-            contratos += ' / ';
-          }
-        }
-      });
+      // Verifica se não é o último contrato antes de adicionar a barra "/".
+      if (index !== responseDividasCredores.length - 1) {
+        contratos += " / ";
+      }
+    }
+  });
 
-      const contratosDividas = contratos;
+  const contratosDividas = contratos;
 
-      const promises = [];
-      let parcelaNumber = 0;
+  const promises = [];
+  let parcelaNumber = 0;
 
-      for await (const parcela of parcelasArray) {
-        parcelaNumber += 1;
+  for await (const parcela of parcelasArray) {
+    parcelaNumber += 1;
 
-        const dataPromessa = {
-          ...parsedData2,
-          data: parcela.vencimento.toISOString().slice(0, 10),
-          valor: parseFloat(parcela.valorParcelaAtual),
-          parcela: parcelaNumber
-        };
+    const dataPromessa = {
+      ...parsedData2,
+      data: parcela.vencimento.toISOString().slice(0, 10),
+      valor: parseFloat(parcela.valorParcelaAtual),
+      parcela: parcelaNumber,
+    };
 
-        dataPromessa.mensagem = `Parcela(s) ${parcelaNumber}/${plano} de acordo referente ao(s) título(s): ${contratos}
+    dataPromessa.mensagem = `Parcela(s) ${parcelaNumber}/${plano} de acordo referente ao(s) título(s): ${contratos}
   Sr(a). Caixa:
   Não receber após o vencimento.
   Não receber valor inferior ao valor facial deste boleto, sem autorização do cedente.
@@ -342,13 +369,53 @@ async function criarPromessas(parsedData2, responseDividasCredores, parcelasArra
   Depósito na conta corrente, sem a devida autorização do cedente, não garante a quitação do débito.
   `;
 
-        // console.log(dataPromessa.mensagem);
+    // console.log(dataPromessa.mensagem);
 
-        const promise = await requests.postDadosPromessa(dataPromessa);
-        promises.push(promise);
-      }
+    const promise = await requests.postDadosPromessa(dataPromessa);
+    promises.push(promise);
+  }
 
-    return promises;
+  return promises;
+}
+
+function parseDadosRecibo(props) {
+  const {
+    cpfcnpj,
+    idacordo,
+    iddevedor,
+    idcredor,
+    ultimaDataVencimento,
+    plano,
+    honorarios_percentual,
+    juros_percentual,
+    comissao_comercial,
+    idcomercial,
+    idgerente_comercial,
+    chave,
+    empresa,
+    percentual_comissao_cobrador,
+    idoperacao,
+    idempresa,
+  } = props;
+
+  return {
+    cpfcnpj,
+    idacordo,
+    iddevedor,
+    idcredor,
+    database1: ultimaDataVencimento,
+    plano,
+    honorarios_percentual,
+    juros_percentual,
+    comissao: comissao_comercial,
+    idcomercial,
+    idgerentecomercial: idgerente_comercial,
+    chave,
+    empresa,
+    percentual_comissao_cobrador,
+    idoperacao,
+    idempresa,
+  };
 }
 
 module.exports = {
@@ -362,6 +429,7 @@ module.exports = {
   formatDateIsoToBr,
   getUltimaDataParcela,
   parseDadosAcordo,
-  parsePromessa,
-  criarPromessas
+  parseDadosPromessa,
+  criarPromessas,
+  parseDadosRecibo,
 };

@@ -61,10 +61,10 @@ async function getCredorVerBoleto(iddevedor) {
 
 async function postDadosAcordo(props) {
   try {
-    const { data } = await axiosApiInstance.post('/insert-acordo', props);
+    const { data } = await axiosApiInstance.post("/insert-acordo", props);
     return data;
   } catch (error) {
-    const errorMessage = 'Erro ao inserir dados do acordo';
+    const errorMessage = "Erro ao inserir dados do acordo";
     console.error(errorMessage, error);
 
     return { error: errorMessage };
@@ -73,10 +73,25 @@ async function postDadosAcordo(props) {
 
 async function postDadosPromessa(props) {
   try {
-    const { data } = await axiosApiInstance.post('/insert-promessa', props);
+    const { data } = await axiosApiInstance.post("/insert-promessa", props);
     return data;
   } catch (error) {
-    const errorMessage = 'Erro ao inserir promessa';
+    const errorMessage = "Erro ao inserir promessa";
+    console.error(errorMessage, error);
+
+    return { error: errorMessage };
+  }
+}
+
+async function postDadosRecibo(props) {
+  try {
+    const { data } = await axiosApiInstance.post(
+      "/insert-recibo/parcelado",
+      props
+    );
+    return data;
+  } catch (error) {
+    const errorMessage = "Erro ao inserir dados do recibo";
     console.error(errorMessage, error);
 
     return { error: errorMessage };
@@ -93,4 +108,5 @@ module.exports = {
   getCredorVerBoleto,
   postDadosAcordo,
   postDadosPromessa,
+  postDadosRecibo,
 };

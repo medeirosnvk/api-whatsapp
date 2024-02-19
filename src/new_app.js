@@ -25,6 +25,7 @@ class StateMachine {
   constructor() {
     this.userStates = {};
     this.client = client;
+    this.document = null;
     this.idDevedor = null;
     this.globalData = {};
   }
@@ -44,7 +45,7 @@ class StateMachine {
       data: {
         CREDOR: {},
         OFERTA: {},
-      }
+      },
     };
 
     return this.userStates[phoneNumber];
@@ -84,7 +85,7 @@ class StateMachine {
 
   _setDataPromessas(phoneNumber, data) {
     this.userStates[phoneNumber].data.PROMESSAS = data;
-  }  
+  }
 
   async _postMessage(origin, message) {
     console.log(`Horário da mensagem enviada ao cliente: ${new Date()}`);
@@ -162,7 +163,9 @@ class StateMachine {
       const selectedOption = parseInt(response.body.trim());
       const { cpfcnpj: document } = this._getCredor(phoneNumber);
       const credorInfo = await requests.getCredorInfo(document);
-      this._setDataCredores(phoneNumber, credorInfo);
+
+      this.document = document; // salvando documento no construtor
+      this._setDataCredores(phoneNumber, credorInfo); // salvando toda a response de credorInfo
 
       if (selectedOption >= 1 && selectedOption <= credorInfo.length) {
         const selectedCreditor = credorInfo[selectedOption - 1];
@@ -178,13 +181,18 @@ class StateMachine {
         const idDevedor = selectedCreditor.iddevedor;
         const dataBase = utils.getCurrentDate();
 
-        const credorDividas = await requests.getCredorDividas(idDevedor,dataBase);
+        const credorDividas = await requests.getCredorDividas(
+          idDevedor,
+          dataBase
+        );
         const credorOfertas = await requests.getCredorOfertas(idDevedor);
 
         this._setDataCredorDividas(phoneNumber, credorDividas);
 
-        const formattedResponseDividas = utils.formatCredorDividas(credorDividas);
-        const formattedResponseOfertas = utils.formatCredorOfertas(credorOfertas);
+        const formattedResponseDividas =
+          utils.formatCredorDividas(credorDividas);
+        const formattedResponseOfertas =
+          utils.formatCredorOfertas(credorOfertas);
         const terceiraMensagem = `As seguintes dividas foram encontradas para a empresa selecionada:\n\n${formattedResponseDividas}\n\n*Escolha uma das opções abaixo para prosseguirmos no seu acordo:*\n\n${formattedResponseOfertas}`;
 
         await this._postMessage(origin, terceiraMensagem);
@@ -205,42 +213,72 @@ class StateMachine {
   async _handleOfertaState(origin, phoneNumber = "80307836", response) {
     if (response && response.body.trim().match(/^\d+$/)) {
       const selectedOptionParcelamento = parseInt(response.body.trim());
+      const credorInfo = await requests.getCredorInfo(this.document);
+      const { comissao_comercial, iddevedor } = credorInfo[0];
+
       const credorOfertas = await requests.getCredorOfertas(this.idDevedor); // Acesse aqui
-  
-      if (selectedOptionParcelamento >= 1 && selectedOptionParcelamento <= credorOfertas.length) {
+
+      if (
+        selectedOptionParcelamento >= 1 &&
+        selectedOptionParcelamento <= credorOfertas.length
+      ) {
         const ofertaSelecionada = credorOfertas[selectedOptionParcelamento - 1];
         this._setDataOferta(phoneNumber, ofertaSelecionada);
 
-        const { periodicidade, valor_parcela, plano, idcredor, total_geral } = ofertaSelecionada;
+        const { periodicidade, valor_parcela, plano, idcredor, total_geral } =
+          ofertaSelecionada;
 
-        const ultimaDataParcela = utils.getUltimaDataParcela(periodicidade, valor_parcela, plano);
+        const ultimaDataParcela = utils.getUltimaDataParcela(
+          periodicidade,
+          valor_parcela,
+          plano
+        );
         const { parcelasArray, ultimaData } = ultimaDataParcela;
-        const ultimaDataFormat = ultimaData.toISOString().slice(0,10)
+        const ultimaDataFormat = ultimaData.toISOString().slice(0, 10);
 
-        console.log('parcelasArray -', parcelasArray);
-        console.log('ultimaData -', ultimaData);
-    
         const currentDate = new Date();
         const currentTime = utils.getCurrentTime();
-        
-        const newDataBase = (currentDate.getDate() + parseInt(plano) * periodicidade);
+
+        const newDataBase =
+          currentDate.getDate() + parseInt(plano) * periodicidade;
         const formattedDate = newDataBase.toString().substring(0, 10);
 
-        const { data: promessas } = await requests.getCredorDividas(this.idDevedor, formattedDate)
+        const { data: promessas } = await requests.getCredorDividas(
+          this.idDevedor,
+          formattedDate
+        );
 
         const obj = {
           promessas,
           ultimaDataVencimento: ultimaData.toISOString().slice(0, 10),
-          vencimentosParcelas: parcelasArray
+          vencimentosParcelas: parcelasArray,
         };
 
         this._setDataPromessas(phoneNumber, obj);
-        console.log('userStates -', JSON.stringify(this.userStates, undefined, 2));
+        console.log(
+          "userStates -",
+          JSON.stringify(this.userStates, undefined, 2)
+        );
 
-        const responseDividasCredores = await requests.getCredorDividas( this.idDevedor, ultimaDataFormat );
-        const responseDividasCredoresTotais = await requests.getCredorDividasTotais( this.idDevedor, ultimaDataFormat );
+        const responseDividasCredores = await requests.getCredorDividas(
+          this.idDevedor,
+          ultimaDataFormat
+        );
 
-        const { juros_percentual, honorarios_percentual, multa_percentual, tarifa_boleto } = responseDividasCredoresTotais;
+        const { idcomercial, idgerente_comercial } = responseDividasCredores;
+
+        const responseDividasCredoresTotais =
+          await requests.getCredorDividasTotais(
+            this.idDevedor,
+            ultimaDataFormat
+          );
+
+        const {
+          juros_percentual,
+          honorarios_percentual,
+          multa_percentual,
+          tarifa_boleto,
+        } = responseDividasCredoresTotais;
 
         const parsedData = utils.parseDadosAcordo({
           currentTime,
@@ -254,21 +292,24 @@ class StateMachine {
           tarifa_boleto,
           total_geral,
           ultimaDataVencimento: ultimaDataFormat,
-          parcelasArray
+          parcelasArray,
         });
 
         const idacordo = await requests.postDadosAcordo(parsedData);
-        console.log('idacordo -', idacordo);
+        console.log("idacordo -", idacordo);
 
-        await this._postMessage(origin, 'Acordo realizado com sucesso - ' + JSON.stringify(idacordo));
+        await this._postMessage(
+          origin,
+          "Acordo realizado com sucesso - " + JSON.stringify(idacordo)
+        );
 
-        const parsedData2 = utils.parsePromessa({
+        const parsedData2 = utils.parseDadosPromessa({
           idacordo,
           iddevedor: this.idDevedor,
-          plano
+          plano,
         });
 
-        let contratos = '';
+        let contratos = "";
         const contratosIncluidos = new Set();
 
         responseDividasCredores.forEach((dividas, index) => {
@@ -281,7 +322,7 @@ class StateMachine {
 
             // Verifica se não é o último contrato antes de adicionar a barra "/".
             if (index !== responseDividasCredores.length - 1) {
-              contratos += ' / ';
+              contratos += " / ";
             }
           }
         });
@@ -296,7 +337,7 @@ class StateMachine {
             ...parsedData2,
             data: parcela.vencimento.toISOString().slice(0, 10),
             valor: parseFloat(parcela.valorParcelaAtual),
-            parcela: parcelaNumber
+            parcela: parcelaNumber,
           };
 
           dataPromessa.mensagem = `Parcela(s) ${parcelaNumber}/${plano} de acordo referente ao(s) título(s): ${contratos}
@@ -315,15 +356,55 @@ class StateMachine {
         }
 
         const responsePromessas = await Promise.all(promises);
+        await this._postMessage(
+          origin,
+          "Promessas realizadas com sucesso - " +
+            JSON.stringify(responsePromessas)
+        );
 
-        await this._postMessage(origin, 'Promessas realizadas com sucesso - ' + JSON.stringify(responsePromessas));
+        const [ultimoIdPromessa] = responsePromessas.slice(-1);
+
+        const { chave, empresa } = credorInfo[0];
+        const { percentual_comissao_cobrador, idoperacao, idempresa } =
+          responseDividasCredores[0];
+
+        const parsedData3 = utils.parseDadosRecibo({
+          comissao_comercial,
+          cpfcnpj: this.document,
+          honorarios_percentual,
+          idacordo,
+          iddevedor,
+          idcredor,
+          idcomercial,
+          idgerente_comercial,
+          juros_percentual,
+          plano,
+          ultimaDataVencimento: ultimaData,
+          ultimoIdPromessa,
+          chave,
+          empresa,
+          percentual_comissao_cobrador,
+          idoperacao,
+          idempresa,
+        });
+        console.log("parsedData3 -", parsedData3);
+
+        const responseRecibo = await requests.postDadosRecibo(parsedData3);
+
+        await this._postMessage(origin, "Recibo inserido com sucesso!");
       } else {
-        await this._postMessage(origin, 'Opção inválida. Por favor, escolha uma opção válida.');
+        await this._postMessage(
+          origin,
+          "Opção inválida. Por favor, escolha uma opção válida."
+        );
       }
     } else {
-      await this._postMessage(origin, 'Resposta inválida. Por favor, escolha uma opção válida.');
+      await this._postMessage(
+        origin,
+        "Resposta inválida. Por favor, escolha uma opção válida."
+      );
     }
-  }  
+  }
 
   async handleMessage(phoneNumber, response) {
     const { credor, currentState } = this._getState(phoneNumber);
