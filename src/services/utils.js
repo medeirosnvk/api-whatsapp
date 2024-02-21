@@ -98,6 +98,14 @@ function formatDateRegistroBrUTC(dateString) {
   return `${day}/${month}/${year}`;
 }
 
+function formatDateInverse(dataString) {
+  const data = new Date(dataString);
+  const ano = data.getFullYear();
+  const mes = String(data.getMonth() + 1).padStart(2, "0");
+  const dia = String(data.getDate()).padStart(2, "0");
+  return `${ano}-${mes}-${dia}`;
+}
+
 function getUltimaDataParcela(periodicidade, valor_parcela, plano) {
   try {
     const parcelasArray = [];
@@ -300,7 +308,7 @@ function parseDadosPromessa(props) {
   const { idacordo, iddevedor, plano } = props;
 
   return {
-    responsavel: "API PROMESSA",
+    responsavel: "API WHATSAPP",
     data: "",
     valor: 0,
     iddevedor,
@@ -415,6 +423,73 @@ function parseDadosRecibo(props) {
     percentual_comissao_cobrador,
     idoperacao,
     idempresa,
+    responsavel: "API WHATSAPP",
+  };
+}
+
+function parseDadosBoleto(props) {
+  const {
+    iddevedor,
+    datavenc,
+    valdoc,
+    idcredor,
+    cpfcnpj,
+    plano,
+    total_geral,
+    valor_parcela,
+    idcedente,
+    ultimoIdAcordo,
+    endres,
+    baires,
+    cidres,
+    cepres,
+    ufres,
+    chave,
+    contratosDividas,
+  } = props;
+
+  const dataVencFormat = formatDateInverse(datavenc);
+
+  const messagemBoleto = `Parcela(s) 1/${plano} de acordo referente ao(s) título(s): ${contratosDividas}
+  Sr(a). Caixa:
+  Não receber após o vencimento.
+  Não receber valor inferior ao valor facial deste boleto, sem autorização do cedente.
+  Sr (a). Cliente:
+  A utilização deste boleto é obrigatória para adequada confirmação do pagamento.
+  Depósito na conta corrente, sem a devida autorização do cedente, não garante a quitação do débito.
+  `;
+
+  // console.log(messagemBoleto);
+
+  return {
+    iddevedor: `${iddevedor}`,
+    DATAVENC: `'${dataVencFormat}'`,
+    VALDOC: `${valdoc}`,
+    ESPECIE: "'RC'",
+    ACEITE: "'N'",
+    IMP: "'N'",
+    inclusao: `curdate()`,
+    responsavel: "'API WHATSAPP'",
+    destino: "'e-mail'",
+    email: `left(BuscaEmailConcat(${cpfcnpj}),100)`,
+    chave: `${chave}`,
+    sistema: "'COBRANCE'",
+    hora: `curtime()`,
+    enddestino: "''",
+    idescritorio: "'PA'",
+    idcredor: `${idcredor}`,
+    idmodelo: 9,
+    cpfcnpj: `${cpfcnpj}`,
+    mensagem: `'${messagemBoleto}'`,
+    idcedente: `${idcedente}`,
+    boleto_idstatus: 1,
+    idacordo: `${ultimoIdAcordo}`,
+    endereco: `'${endres}'`,
+    bairro: `'${baires}'`,
+    cidade: `'${cidres}'`,
+    cep: `'${cepres}'`,
+    uf: `'${ufres}'`,
+    parcela: 1,
   };
 }
 
@@ -432,4 +507,5 @@ module.exports = {
   parseDadosPromessa,
   criarPromessas,
   parseDadosRecibo,
+  parseDadosBoleto,
 };

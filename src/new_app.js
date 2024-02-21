@@ -214,7 +214,12 @@ class StateMachine {
     if (response && response.body.trim().match(/^\d+$/)) {
       const selectedOptionParcelamento = parseInt(response.body.trim());
       const credorInfo = await requests.getCredorInfo(this.document);
-      const { comissao_comercial, iddevedor } = credorInfo[0];
+      const {
+        comissao_comercial,
+        idcomercial,
+        idgerente_comercial,
+        iddevedor,
+      } = credorInfo[0];
 
       const credorOfertas = await requests.getCredorOfertas(this.idDevedor); // Acesse aqui
 
@@ -233,6 +238,7 @@ class StateMachine {
           valor_parcela,
           plano
         );
+
         const { parcelasArray, ultimaData } = ultimaDataParcela;
         const ultimaDataFormat = ultimaData.toISOString().slice(0, 10);
 
@@ -264,8 +270,6 @@ class StateMachine {
           this.idDevedor,
           ultimaDataFormat
         );
-
-        const { idcomercial, idgerente_comercial } = responseDividasCredores;
 
         const responseDividasCredoresTotais =
           await requests.getCredorDividasTotais(
@@ -327,6 +331,8 @@ class StateMachine {
           }
         });
 
+        const contratosDividas = contratos;
+
         const promises = [];
         let parcelaNumber = 0;
 
@@ -379,7 +385,7 @@ class StateMachine {
           idgerente_comercial,
           juros_percentual,
           plano,
-          ultimaDataVencimento: ultimaData,
+          ultimaDataVencimento: ultimaDataFormat,
           ultimoIdPromessa,
           chave,
           empresa,
@@ -387,11 +393,39 @@ class StateMachine {
           idoperacao,
           idempresa,
         });
-        console.log("parsedData3 -", parsedData3);
 
         const responseRecibo = await requests.postDadosRecibo(parsedData3);
 
+        if (
+          responseRecibo &&
+          Object.prototype.hasOwnProperty.call(responseRecibo, "error")
+        ) {
+          console.error(responseRecibo.error);
+          setErrorMessage("Erro ao receber responseRecibo.");
+          return;
+        }
+
         await this._postMessage(origin, "Recibo inserido com sucesso!");
+
+        await requests.getAtualizarPromessas(idacordo);
+        await requests.getAtualizarValores(idacordo);
+
+        const insertBoleto = await requests.postBoletoFinal(
+          credorInfo,
+          idacordo,
+          contratosDividas,
+          this.idDevedor,
+          idcredor,
+          plano,
+          total_geral,
+          periodicidade,
+          valor_parcela
+        );
+
+        await this._postMessage(
+          origin,
+          "getAtualizarPromessas, getAtualizarValores e postDadosBoleto realizado com sucesso!"
+        );
       } else {
         await this._postMessage(
           origin,
