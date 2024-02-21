@@ -7,7 +7,7 @@
     "whatsapp-web.js": "https://github.com/Julzk/whatsapp-web.js/tarball/jkr_hotfix_7"
   },
   "scripts": {
-    "start": "nodemon src/app.js"
+    "start": "nodemon src/new_app.js"
   },
   "devDependencies": {
     "nodemon": "^3.0.2"
