@@ -45,11 +45,25 @@ function formatCredorInfo(creditorInfo) {
     .join("\n\n");
 }
 
+function formatCredorAcordos(creditorAcordos) {
+  return creditorAcordos
+    .map(
+      (info, index) =>
+        `*--------- ${index + 1} ---------*\n` +
+        `Empresa: ${info.credor}\n` +
+        `IdDevedor: ${info.iddevedor}\n` +
+        `IdAcordo: ${info.idacordo}\n` +
+        `Data Acordo: ${formatDateIsoToBr(info.dataacordo)}\n` +
+        `Parcelamento: ${info.plano}x`
+    )
+    .join("\n\n");
+}
+
 function formatCredorDividas(creditorDividas) {
   return creditorDividas
     .map(
       (info, index) =>
-        `*--------- ${index + 1} ---------*\n` +
+        // `*--------- ${index + 1} ---------*\n` +
         `Contrato: ${info.contrato}\n` +
         `Vencimento: ${formatDateIsoToBr(info.vencimento)}\n` +
         `Dias Atraso: ${info.diasatraso}\n` +
@@ -493,12 +507,82 @@ function parseDadosBoleto(props) {
   };
 }
 
+function parseDadosIMagemBoleto(props) {
+  const { ultimoIdAcordo, idboleto, banco } = props;
+
+  return {
+    idacordo: ultimoIdAcordo,
+    idboleto,
+    banco,
+  };
+}
+
+function parseDadosImagemQrCode(props) {
+  const { idboleto } = props;
+
+  return {
+    idboleto,
+  };
+}
+
+function parseDadosEmv(props) {
+  const { idboleto } = props;
+
+  return {
+    idboleto,
+  };
+}
+
+function handleCopyPix() {
+  if (navigator.clipboard) {
+    if (emvContent) {
+      navigator.clipboard
+        .writeText(emvContent)
+        .then(() => {
+          console.log(
+            "Valor copiado para a área de transferência:",
+            emvContent
+          );
+          alert(`Valor copiado para a área de transferência: ${emvContent}`);
+        })
+        .catch((error) => {
+          console.error("Erro ao copiar o valor:", error);
+        });
+    } else {
+      console.error("O conteúdo a ser copiado (emvContent) não está definido.");
+    }
+  } else {
+    // Fallback para navegadores que não suportam a API Clipboard
+    const tempTextArea = document.createElement("textarea");
+    tempTextArea.value = emvContent;
+
+    // Adiciona o elemento ao DOM
+    document.body.appendChild(tempTextArea);
+
+    // Seleciona o texto
+    tempTextArea.select();
+
+    try {
+      // Copia o texto para a área de transferência
+      document.execCommand("copy");
+      console.log("Valor copiado para a área de transferência:", emvContent);
+      alert(`Valor copiado para a área de transferência: ${emvContent}`);
+    } catch (error) {
+      console.error("Erro ao copiar o valor:", error);
+    } finally {
+      // Remove o elemento temporário do DOM
+      document.body.removeChild(tempTextArea);
+    }
+  }
+}
+
 module.exports = {
   formatValue,
   formatarMoeda,
   formatCredorOfertas,
   formatCredorInfo,
   formatCredorDividas,
+  formatCredorAcordos,
   getCurrentDate,
   getCurrentTime,
   formatDateIsoToBr,
@@ -508,4 +592,8 @@ module.exports = {
   criarPromessas,
   parseDadosRecibo,
   parseDadosBoleto,
+  parseDadosIMagemBoleto,
+  parseDadosImagemQrCode,
+  parseDadosEmv,
+  handleCopyPix,
 };

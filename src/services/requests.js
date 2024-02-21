@@ -127,7 +127,6 @@ async function getAtualizarValores(idacordo) {
 
 async function getDataValdoc(props) {
   const { ultimoIdAcordo } = props;
-  console.log("ultimoIdAcordo DENTRO DE getDataValdoc -", ultimoIdAcordo);
 
   try {
     const { data } = await axiosApiInstance.get(
@@ -143,7 +142,6 @@ async function getDataValdoc(props) {
 async function postDadosBoleto(props) {
   try {
     const { data } = await axiosApiInstance.post("/insert-boleto", props);
-    console.log("postDadosBoleto -", data);
     return data;
   } catch (error) {
     const errorMessage = "Erro ao inserir dados do boleto";
@@ -157,11 +155,15 @@ async function postBoletoFinal(
   credorInfo,
   ultimoIdAcordo,
   contratosDividas,
-  idDevedor,
-  idCredor,
+  iddevedor,
+  idcredor,
   plano,
   total_geral,
-  valor_parcela
+  valor_parcela,
+  comissao_comercial,
+  idcomercial,
+  idgerente_comercial,
+  tarifa_boleto
 ) {
   if (!credorInfo.length && contratosDividas === "" && ultimoIdAcordo === "") {
     console.error(
@@ -170,6 +172,8 @@ async function postBoletoFinal(
     );
     return;
   }
+
+  const currentDate = new Date().toISOString().slice(0, 10);
 
   const filterCredoresIdDevedor = await credorInfo.find(
     (item) => item.iddevedor === idDevedor
@@ -224,22 +228,136 @@ async function postBoletoFinal(
   }
   console.log(`Boleto inserido com sucesso -`, responseBoleto);
 
-  // const data = {
-  //   idcredor,
-  //   cpfcnpj,
-  //   comissao_comercial,
-  //   idcomercial,
-  //   idgerente_comercial,
-  //   iddevedor,
-  //   plano,
-  //   total_geral,
-  //   valor_parcela,
-  //   tarifa_boleto,
-  //   ultimoIdAcordo,
-  //   dataacordo: currentDate,
-  // };
+  const data = {
+    idcredor,
+    cpfcnpj,
+    comissao_comercial,
+    idcomercial,
+    idgerente_comercial,
+    iddevedor,
+    plano,
+    total_geral,
+    valor_parcela,
+    tarifa_boleto,
+    ultimoIdAcordo,
+    dataacordo: currentDate,
+  };
 
-  return responseBoleto;
+  return data;
+}
+
+async function getIdBoleto(props) {
+  const { idacordo, plano } = props;
+
+  try {
+    const { data } = await axiosApiInstance.get(
+      `/busca-idboleto?idacordo=${idacordo}`
+    );
+    return data;
+  } catch (error) {
+    console.error("Erro ao buscar dados no servidor: ", error);
+    return { error: "Erro ao buscar dados no servidor." };
+  }
+}
+
+async function postAtualizarValores(props) {
+  try {
+    const { data } = await axiosApiInstance.post(
+      "/atualizar-valores-boleto",
+      props
+    );
+    return data;
+  } catch (error) {
+    const errorMessage = "Erro ao inserir dados do boleto";
+    console.error(errorMessage, error);
+
+    return { error: errorMessage };
+  }
+}
+
+async function getImagemBoleto(props) {
+  try {
+    const { idacordo, idboleto, banco } = props;
+
+    const response = await axiosApiInstance.get(
+      `/busca-imagem-boleto?idacordo=${idacordo}&idboleto=${idboleto}&banco=${banco}`,
+      {
+        maxRedirects: 0, // Impede o Axios de seguir redirecionamentos
+      }
+    );
+
+    // Verifica se a resposta é um redirecionamento (código de status 302)
+    if (response.status === 302) {
+      // A nova URL estará no cabeçalho "Location" da resposta
+      const newURL = response.headers.location;
+      console.log(`Redirecionado para: ${newURL}`);
+
+      // Trate o redirecionamento manualmente, fazendo outra solicitação para a nova URL, se necessário
+      const responseImagemBoleto = await axios.get(newURL);
+      return responseImagemBoleto.data;
+    }
+    // Se não for um redirecionamento, retorne os dados da resposta normalmente
+    return response.data;
+  } catch (error) {
+    console.error("Erro ao buscar dados no servidor: ", error);
+    return { error: "Erro ao buscar dados no servidor." };
+  }
+}
+
+async function getImagemQrCode(props) {
+  try {
+    const { idboleto } = props;
+    const response = await axiosApiInstance.get(
+      `/busca-qrcode?idboleto=${idboleto}`,
+      {
+        maxRedirects: 0, // Impede o Axios de seguir redirecionamentos
+      }
+    );
+
+    // Verifica se a resposta é um redirecionamento (código de status 302)
+    if (response.status === 302) {
+      // A nova URL estará no cabeçalho "Location" da resposta
+      const newURL = response.headers.location;
+      console.log(`Redirecionado para: ${newURL}`);
+
+      // Trate o redirecionamento manualmente, fazendo outra solicitação para a nova URL, se necessário
+      const responseImageQrCode = await axios.get(newURL);
+      return responseImageQrCode.data;
+    }
+    // Se não for um redirecionamento, retorne os dados da resposta normalmente
+    return response.data;
+  } catch (error) {
+    console.error("Erro ao buscar dados no servidor: ", error);
+    return { error: "Erro ao buscar dados no servidor." };
+  }
+}
+
+async function getDataEmv(props) {
+  try {
+    const { idboleto } = props;
+    const response = await axiosApiInstance.get(
+      `/busca-emv?idboleto=${idboleto}`,
+      {
+        maxRedirects: 0, // Impede o Axios de seguir redirecionamentos
+      }
+    );
+
+    // Verifica se a resposta é um redirecionamento (código de status 302)
+    if (response.status === 302) {
+      // A nova URL estará no cabeçalho "Location" da resposta
+      const newURL = response.headers.location;
+      console.log(`Redirecionado para: ${newURL}`);
+
+      // Trate o redirecionamento manualmente, fazendo outra solicitação para a nova URL, se necessário
+      const responseImageQrCode = await axios.get(newURL);
+      return responseImageQrCode.data;
+    }
+    // Se não for um redirecionamento, retorne os dados da resposta normalmente
+    return response.data;
+  } catch (error) {
+    console.error("Erro ao buscar dados no servidor: ", error);
+    return { error: "Erro ao buscar dados no servidor." };
+  }
 }
 
 module.exports = {
@@ -256,4 +374,9 @@ module.exports = {
   getAtualizarPromessas,
   getAtualizarValores,
   postBoletoFinal,
+  getIdBoleto,
+  postAtualizarValores,
+  getImagemBoleto,
+  getImagemQrCode,
+  getDataEmv,
 };

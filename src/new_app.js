@@ -87,6 +87,10 @@ class StateMachine {
     this.userStates[phoneNumber].data.PROMESSAS = data;
   }
 
+  _setDataBoleto(phoneNumber, data) {
+    this.userStates[phoneNumber].data.BOLETO = data;
+  }
+
   async _postMessage(origin, message) {
     console.log(`Horário da mensagem enviada ao cliente: ${new Date()}`);
     await this.client.sendMessage(origin, message);
@@ -111,13 +115,13 @@ class StateMachine {
 
   async _getSomething(phoneNumber) {
     const dbQuery = `
-      SELECT DISTINCT c.*, t.*,
-        (SELECT m.fromMe FROM Messages m WHERE m.ticketId = t.id ORDER BY m.createdAt DESC LIMIT 1) AS fromMe,
-        (SELECT m.body FROM Messages m WHERE m.ticketId = t.id ORDER BY m.createdAt DESC LIMIT 1) AS body
-      FROM Tickets t
-      LEFT JOIN Contacts c ON c.id = t.contactId
-      WHERE status = 'pending' AND LENGTH(c.number) <= 15 AND c.number = '${phoneNumber}'
-      HAVING fromMe = 0;
+    SELECT DISTINCT c.*, t.*,
+    (SELECT m.fromMe FROM Messages m WHERE m.ticketId = t.id ORDER BY m.createdAt DESC LIMIT 1) AS fromMe,
+    (SELECT m.body FROM Messages m WHERE m.ticketId = t.id ORDER BY m.createdAt DESC LIMIT 1) AS body
+    FROM Tickets t
+    LEFT JOIN Contacts c ON c.id = t.contactId
+    WHERE status = 'pending' AND LENGTH(c.number) <= 15 AND c.number = '${phoneNumber}'
+    HAVING fromMe = 0;
     `;
 
     const dbResponse = await executeQuery(dbQuery);
@@ -127,13 +131,6 @@ class StateMachine {
     }
 
     throw new Error("Something não encontrado");
-  }
-
-  async _handleInitialState(origin, phoneNumber = "80307836") {
-    const { nome: userName } = await this._getCredorFromDB(phoneNumber);
-    const message = `Olá *${userName}*,\n\nPor favor, escolha uma opção:\n\n1 - Credores\n2 - Parcelamento\n3 - Ver Acordos\n4 - Ver Boletos\n5 - Linha Digitável\n6 - Pix Copia e Cola\n7 - Voltar`;
-
-    await this._postMessage(origin, message);
   }
 
   async _handleMenuState(origin, phoneNumber = "80307836", response) {
@@ -153,9 +150,32 @@ class StateMachine {
         } catch (error) {
           console.error("Case 1 retornou um erro - ", error.message);
         }
+        break;
+      case "2":
+        try {
+          const { cpfcnpj: document } = await this._getCredorFromDB(
+            phoneNumber
+          );
 
+          const acordosFirmados = await requests.getAcordosFirmados(document);
+
+          if (acordosFirmados && acordosFirmados.length > 0) {
+            const acordoMessage = utils.formatCredorAcordos(acordosFirmados);
+
+            await this._postMessage(origin, acordoMessage);
+          }
+        } catch (error) {
+          console.error("Case 2 retornou um erro - ", error.message);
+        }
         break;
     }
+  }
+
+  async _handleInitialState(origin, phoneNumber = "80307836") {
+    const { nome: userName } = await this._getCredorFromDB(phoneNumber);
+    const message = `Olá *${userName}*,\n\nPor favor, escolha uma opção:\n\n1 - Credores\n2 - Ver Acordos\n3 - Ver Boletos\n4 - Linha Digitável\n5 - Pix Copia e Cola\n6 - Voltar`;
+
+    await this._postMessage(origin, message);
   }
 
   async _handleCredorState(origin, phoneNumber = "80307836", response) {
@@ -229,6 +249,7 @@ class StateMachine {
       ) {
         const ofertaSelecionada = credorOfertas[selectedOptionParcelamento - 1];
         this._setDataOferta(phoneNumber, ofertaSelecionada);
+        console.log("ofertaSelecionada -", ofertaSelecionada);
 
         const { periodicidade, valor_parcela, plano, idcredor, total_geral } =
           ofertaSelecionada;
@@ -410,7 +431,7 @@ class StateMachine {
         await requests.getAtualizarPromessas(idacordo);
         await requests.getAtualizarValores(idacordo);
 
-        const insertBoleto = await requests.postBoletoFinal(
+        const responseBoleto = await requests.postBoletoFinal(
           credorInfo,
           idacordo,
           contratosDividas,
@@ -418,13 +439,37 @@ class StateMachine {
           idcredor,
           plano,
           total_geral,
-          periodicidade,
-          valor_parcela
+          valor_parcela,
+          comissao_comercial,
+          idcomercial,
+          idgerente_comercial,
+          tarifa_boleto
+        );
+
+        this._setDataBoleto(phoneNumber, responseBoleto);
+
+        const responseIdBoleto = await requests.getIdBoleto(idacordo);
+
+        if (
+          responseIdBoleto &&
+          Object.prototype.hasOwnProperty.call(responseIdBoleto, "error")
+        ) {
+          console.error("Está faltando IdBoleto: ", { responseIdBoleto });
+          setErro("Erro ao buscar ID do boleto.");
+          return;
+        }
+        const { idboleto } = responseIdBoleto[0];
+        const { banco } = responseIdBoleto[0];
+        const { convenio } = responseIdBoleto[0];
+
+        console.log(
+          `IdBoleto de número ${idboleto} no banco ${banco} encontrado!`
         );
 
         await this._postMessage(
           origin,
-          "getAtualizarPromessas, getAtualizarValores e postDadosBoleto realizado com sucesso!"
+          "getAtualizarPromessas, getAtualizarValores e postDadosBoleto realizado com sucesso!" +
+            JSON.stringify(responseBoleto, undefined, 2)
         );
       } else {
         await this._postMessage(
@@ -465,6 +510,11 @@ class StateMachine {
       case "OFERTA":
         await this._handleOfertaState(origin, "80307836", response);
         this._setCurrentState(phoneNumber, "INICIO");
+        break;
+
+      case "VER_ACORDOS":
+        await this._handleAcordoState(origin, "80307836", response);
+        this._setCurrentState(phoneNumber, "ACORDOS");
         break;
 
       // case "INFINITO":
