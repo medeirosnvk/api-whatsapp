@@ -1,8 +1,20 @@
-/* eslint-disable radix */
+const puppeteer = require("puppeteer");
 const mysql = require("mysql2/promise");
-require('dotenv').config();
+require("dotenv").config();
 
-// Função para criar e retornar uma nova conexão
+// Caminho para o executável do Chromium
+const chromiumPath = "/usr/bin/chromium-browser";
+
+// Função para criar e retornar uma nova instância do navegador com o caminho do executável e a flag --no-sandbox
+const createBrowserInstance = async () => {
+  const browser = await puppeteer.launch({
+    executablePath: chromiumPath,
+    args: ["--no-sandbox"],
+  });
+  return browser;
+};
+
+// Função para criar e retornar uma nova conexão com o banco de dados
 const createConnection = async (dbConfig) => {
   const connection = await mysql.createConnection(dbConfig);
   return connection;
@@ -31,5 +43,6 @@ const executeQuery = async (sql, customDbConfig = defaultDbConfig) => {
 };
 
 module.exports = {
+  createBrowserInstance,
   executeQuery,
 };
