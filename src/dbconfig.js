@@ -2,15 +2,9 @@ const puppeteer = require("puppeteer");
 const mysql = require("mysql2/promise");
 require("dotenv").config();
 
-// Caminho para o executável do Chromium
-const chromiumPath = "/usr/bin/chromium-browser";
-
-// Função para criar e retornar uma nova instância do navegador com o caminho do executável e a flag --no-sandbox
+// Função para criar e retornar uma nova instância do navegador com a flag --no-sandbox
 const createBrowserInstance = async () => {
-  const browser = await puppeteer.launch({
-    executablePath: chromiumPath,
-    args: ["--no-sandbox"],
-  });
+  const browser = await puppeteer.launch({ args: ["--no-sandbox"] });
   return browser;
 };
 
