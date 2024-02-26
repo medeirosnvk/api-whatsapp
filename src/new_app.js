@@ -455,7 +455,6 @@ class StateMachine {
           Object.prototype.hasOwnProperty.call(responseIdBoleto, "error")
         ) {
           console.error("Está faltando IdBoleto: ", { responseIdBoleto });
-          setErro("Erro ao buscar ID do boleto.");
           return;
         }
         const { idboleto } = responseIdBoleto[0];

@@ -176,7 +176,7 @@ async function postBoletoFinal(
   const currentDate = new Date().toISOString().slice(0, 10);
 
   const filterCredoresIdDevedor = await credorInfo.find(
-    (item) => item.iddevedor === idDevedor
+    (item) => item.iddevedor === iddevedor
   );
 
   const { endres, baires, cidres, cepres, ufres, chave, idcedente, cpfcnpj } =
@@ -198,10 +198,10 @@ async function postBoletoFinal(
   const { datavenc, valdoc } = responseDataValdoc[0];
 
   const parsedData5 = utils.parseDadosBoleto({
-    iddevedor: idDevedor,
+    iddevedor,
     datavenc,
     valdoc,
-    idcredor: idCredor,
+    idcredor,
     cpfcnpj,
     plano,
     total_geral,
