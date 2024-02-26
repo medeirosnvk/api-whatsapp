@@ -5,11 +5,13 @@ require("dotenv").config();
 // Função para criar e retornar uma nova instância do navegador com a flag --no-sandbox
 const createBrowserInstance = async () => {
   const browser = await puppeteer.launch({
-    headless: true,
-    args:
-      process.env.NODE_ENV === "production"
-        ? ["--no-sandbox", "--disable-setuid-sandbox"]
-        : [],
+    executablePath: "/usr/bin/chromium-browser",
+    args: [
+      "--disable-gpu",
+      "--disable-setuid-sandbox",
+      "--no-sandbox",
+      "--no-zygote",
+    ],
   });
   return browser;
 };
