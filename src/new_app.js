@@ -19,6 +19,9 @@ const customDbConfig = {
 
 const client = new Client({
   authStrategy: new LocalAuth(),
+  puppeteer: {
+    args: ["--no-sandbox"],
+  },
 });
 
 class StateMachine {

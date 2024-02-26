@@ -6,6 +6,7 @@ require("dotenv").config();
 const createBrowserInstance = async () => {
   const browser = await puppeteer.launch({
     headless: false,
+    args: ["--no-sandbox"],
     executablePath: "/usr/bin/chromium-browser",
     ignoreDefaultArgs: ["--disable-extensions"],
   });
