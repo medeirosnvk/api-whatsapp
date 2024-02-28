@@ -1,5 +1,6 @@
 require("dotenv").config();
 const qrcode = require("qrcode-terminal");
+
 const { Client, LocalAuth } = require("whatsapp-web.js");
 
 const { executeQuery } = require("./dbconfig");
@@ -504,10 +505,13 @@ class StateMachine {
 
         const responseEmvContent = await requests.getDataEmv(parsedData6);
 
+        await utils.saveQRCodeImageToLocal(responseQrcodeContent.url);
+
         await this._postMessage(origin, {
           type: "image",
           content: responseQrcodeContent.url,
         });
+
         await this._postMessage(
           origin,
           `http://cobrance.com.br/acordo/boleto.php?idboleto=${responseBoletoContent.idboleto}&email=2`

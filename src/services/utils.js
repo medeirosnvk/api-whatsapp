@@ -1,5 +1,9 @@
 const requests = require("./requests");
 
+const fs = require("fs");
+const fetch = require("node-fetch");
+const { promisify } = require("util");
+
 function formatValue(number) {
   if (number !== undefined && number !== null) {
     return number.toLocaleString("pt-BR", {
@@ -576,6 +580,20 @@ function handleCopyPix() {
   }
 }
 
+async function saveQRCodeImageToLocal(url) {
+  try {
+    const response = await fetch(url);
+    if (!response.ok) {
+      throw new Error("Erro ao baixar a imagem do QR Code");
+    }
+    const buffer = await response.buffer();
+    await promisify(fs.writeFile)("qrcode.png", buffer);
+    console.log("Imagem do QR Code salva localmente com sucesso.");
+  } catch (error) {
+    console.error("Erro ao salvar imagem do QR Code localmente:", error);
+  }
+}
+
 module.exports = {
   formatValue,
   formatarMoeda,
@@ -596,4 +614,5 @@ module.exports = {
   parseDadosImagemQrCode,
   parseDadosEmv,
   handleCopyPix,
+  saveQRCodeImageToLocal,
 };
