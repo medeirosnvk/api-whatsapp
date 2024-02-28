@@ -459,13 +459,14 @@ class StateMachine {
             JSON.stringify(responseBoleto, undefined, 2)
         );
 
-        if (
-          responseIdBoleto &&
-          Object.prototype.hasOwnProperty.call(responseIdBoleto, "error")
-        ) {
-          console.error("Está faltando IdBoleto: ", { responseIdBoleto });
-          return;
-        }
+        // if (
+        //   responseIdBoleto &&
+        //   Object.prototype.hasOwnProperty.call(responseIdBoleto, "error")
+        // ) {
+        //   console.error("Está faltando IdBoleto: ", { responseIdBoleto });
+        //   return;
+        // }
+
         const { idboleto } = responseIdBoleto[0];
         const { banco } = responseIdBoleto[0];
         const { convenio } = responseIdBoleto[0];
