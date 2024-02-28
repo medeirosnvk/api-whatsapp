@@ -500,6 +500,7 @@ class StateMachine {
         const responseQrcodeContent = await requests.getImagemQrCode(
           parsedData5
         );
+        console.log(responseQrcodeContent.url);
 
         const parsedData6 = utils.parseDadosEmv({ idboleto });
 
