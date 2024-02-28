@@ -508,10 +508,10 @@ function parseDadosBoleto(props) {
 }
 
 function parseDadosImagemBoleto(props) {
-  const { ultimoIdAcordo, idboleto, banco } = props;
+  const { idacordo, idboleto, banco } = props;
 
   return {
-    idacordo: ultimoIdAcordo,
+    idacordo,
     idboleto,
     banco,
   };

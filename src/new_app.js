@@ -493,7 +493,7 @@ class StateMachine {
         }
 
         const parsedData4 = utils.parseDadosImagemBoleto({
-          ultimoIdAcordo,
+          idacordo,
           idboleto,
           banco,
         });
