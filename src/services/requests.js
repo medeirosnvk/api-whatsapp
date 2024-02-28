@@ -246,9 +246,7 @@ async function postBoletoFinal(
   return data;
 }
 
-async function getIdBoleto(props) {
-  const { idacordo, plano } = props;
-
+async function getIdBoleto(idacordo) {
   try {
     const { data } = await axiosApiInstance.get(
       `/busca-idboleto?idacordo=${idacordo}`

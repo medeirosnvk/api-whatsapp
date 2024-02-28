@@ -451,7 +451,7 @@ class StateMachine {
 
         this._setDataBoleto(phoneNumber, responseBoleto);
 
-        const responseIdBoleto = await requests.getIdBoleto({ idacordo });
+        const responseIdBoleto = await requests.getIdBoleto(idacordo);
 
         await this._postMessage(
           origin,
