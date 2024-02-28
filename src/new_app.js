@@ -507,11 +507,9 @@ class StateMachine {
         const responseEmvContent = await requests.getDataEmv(parsedData6);
 
         await utils.saveQRCodeImageToLocal(responseQrcodeContent.url);
+        const media = MessageMedia.fromFilePath("qrcode.png");
 
-        await this._postMessage(origin, {
-          type: "image",
-          content: responseQrcodeContent.url,
-        });
+        await this._postMessage(origin, media);
 
         await this._postMessage(
           origin,
