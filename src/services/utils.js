@@ -507,7 +507,7 @@ function parseDadosBoleto(props) {
   };
 }
 
-function parseDadosIMagemBoleto(props) {
+function parseDadosImagemBoleto(props) {
   const { ultimoIdAcordo, idboleto, banco } = props;
 
   return {
@@ -592,7 +592,7 @@ module.exports = {
   criarPromessas,
   parseDadosRecibo,
   parseDadosBoleto,
-  parseDadosIMagemBoleto,
+  parseDadosImagemBoleto,
   parseDadosImagemQrCode,
   parseDadosEmv,
   handleCopyPix,

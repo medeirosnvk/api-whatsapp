@@ -453,6 +453,12 @@ class StateMachine {
 
         const responseIdBoleto = await requests.getIdBoleto({ idacordo });
 
+        await this._postMessage(
+          origin,
+          "getAtualizarPromessas, getAtualizarValores e postDadosBoleto realizado com sucesso!" +
+            JSON.stringify(responseBoleto, undefined, 2)
+        );
+
         if (
           responseIdBoleto &&
           Object.prototype.hasOwnProperty.call(responseIdBoleto, "error")
@@ -468,10 +474,71 @@ class StateMachine {
           `IdBoleto de número ${idboleto} no banco ${banco} encontrado!`
         );
 
+        const updateValoresBoleto = await requests.postAtualizarValores({
+          idboleto,
+          banco,
+          convenio,
+        });
+
+        if (
+          updateValoresBoleto &&
+          Object.prototype.hasOwnProperty.call(updateValoresBoleto, "error")
+        ) {
+          console.error("Erro ao atualizar valores de nossoNum e numDoc: ", {
+            updateValoresBoleto,
+          });
+          setErro("Erro ao atualizar valores de nossoNum e numDoc.");
+          return;
+        }
+
+        const parsedData4 = utils.parseDadosImagemBoleto({
+          ultimoIdAcordo,
+          idboleto,
+          banco,
+        });
+
+        const responseBoletoContent = await requests.getImagemBoleto(
+          parsedData4
+        );
+
+        if (responseBoletoContent) {
+          console.log("responseBoletoContent -", responseBoletoContent);
+          setBoletoContent(responseBoletoContent);
+        } else {
+          handleError(
+            "Erro ao buscar imagem do Boleto no servidor: BOLETO not found."
+          );
+          return;
+        }
+
+        const parsedData5 = utils.parseDadosImagemQrCode({ idboleto });
+
+        const responseQrcodeContent = await requests.getImagemQrCode(
+          parsedData5
+        );
+
+        if (responseQrcodeContent && responseQrcodeContent.url) {
+          setQrcodeContent(responseQrcodeContent.url);
+        } else {
+          handleError("Erro ao buscar imagem do QRcode: URL not found.");
+          return;
+        }
+
+        const parsedData6 = utils.parseDadosEmv({ idboleto });
+
+        const responseEmvContent = await requests.getDataEmv(parsedData6);
+
+        if (responseEmvContent && responseEmvContent.emv) {
+          setEmvContent(responseEmvContent.emv);
+        } else {
+          handleError("Erro ao buscar EMV no servidor: EMV not found.");
+          return;
+        }
+
+        await this._postMessage(origin, responseQrcodeContent.url);
         await this._postMessage(
           origin,
-          "getAtualizarPromessas, getAtualizarValores e postDadosBoleto realizado com sucesso!" +
-            JSON.stringify(responseBoleto, undefined, 2)
+          `http://cobrance.com.br/acordo/boleto.php?idboleto=${boletoContent.idboleto}&email=2`
         );
       } else {
         await this._postMessage(
