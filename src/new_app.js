@@ -459,14 +459,6 @@ class StateMachine {
             JSON.stringify(responseBoleto, undefined, 2)
         );
 
-        // if (
-        //   responseIdBoleto &&
-        //   Object.prototype.hasOwnProperty.call(responseIdBoleto, "error")
-        // ) {
-        //   console.error("Está faltando IdBoleto: ", { responseIdBoleto });
-        //   return;
-        // }
-
         const { idboleto } = responseIdBoleto[0];
         const { banco } = responseIdBoleto[0];
         const { convenio } = responseIdBoleto[0];
@@ -502,44 +494,23 @@ class StateMachine {
           parsedData4
         );
 
-        // if (responseBoletoContent) {
-        //   console.log("responseBoletoContent -", responseBoletoContent);
-        //   setBoletoContent(responseBoletoContent);
-        // } else {
-        //   handleError(
-        //     "Erro ao buscar imagem do Boleto no servidor: BOLETO not found."
-        //   );
-        //   return;
-        // }
-
         const parsedData5 = utils.parseDadosImagemQrCode({ idboleto });
 
         const responseQrcodeContent = await requests.getImagemQrCode(
           parsedData5
         );
 
-        // if (responseQrcodeContent && responseQrcodeContent.url) {
-        //   setQrcodeContent(responseQrcodeContent.url);
-        // } else {
-        //   handleError("Erro ao buscar imagem do QRcode: URL not found.");
-        //   return;
-        // }
-
         const parsedData6 = utils.parseDadosEmv({ idboleto });
 
         const responseEmvContent = await requests.getDataEmv(parsedData6);
 
-        // if (responseEmvContent && responseEmvContent.emv) {
-        //   setEmvContent(responseEmvContent.emv);
-        // } else {
-        //   handleError("Erro ao buscar EMV no servidor: EMV not found.");
-        //   return;
-        // }
-
-        await this._postMessage(origin, responseQrcodeContent.url);
+        await this._postMessage(origin, {
+          type: "image",
+          content: responseQrcodeContent.url,
+        });
         await this._postMessage(
           origin,
-          `http://cobrance.com.br/acordo/boleto.php?idboleto=${boletoContent.idboleto}&email=2`
+          `http://cobrance.com.br/acordo/boleto.php?idboleto=${responseBoletoContent.idboleto}&email=2`
         );
       } else {
         await this._postMessage(
