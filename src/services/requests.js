@@ -357,6 +357,19 @@ async function getDataEmv(props) {
   }
 }
 
+async function getDataBoletoPix(iddevedor) {
+  try {
+    const { data } = await axiosApiInstance.get(
+      `/busca-boleto-pix?iddevedor=${iddevedor}`
+    );
+
+    return data;
+  } catch (error) {
+    console.error("Erro ao buscar getDataBoletoPix no servidor: ", error);
+    return { error: "Erro ao buscar getDataBoletoPix no servidor." };
+  }
+}
+
 module.exports = {
   getAcordosFirmados,
   getAcordosFirmadosDetalhado,
@@ -376,4 +389,5 @@ module.exports = {
   getImagemBoleto,
   getImagemQrCode,
   getDataEmv,
+  getDataBoletoPix,
 };

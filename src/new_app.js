@@ -173,6 +173,23 @@ class StateMachine {
           console.error("Case 2 retornou um erro - ", error.message);
         }
         break;
+      case "3":
+        try {
+          const { cpfcnpj: document } = await this._getCredorFromDB(
+            phoneNumber
+          );
+
+          const acordosFirmados = await requests.getAcordosFirmados(document);
+
+          if (acordosFirmados && acordosFirmados.length > 0) {
+            const acordoMessage = utils.formatCredorAcordos(acordosFirmados);
+
+            await this._postMessage(origin, acordoMessage);
+          }
+        } catch (error) {
+          console.error("Case 2 retornou um erro - ", error.message);
+        }
+        break;
     }
   }
 
@@ -561,10 +578,10 @@ class StateMachine {
         this._setCurrentState(phoneNumber, "ACORDOS");
         break;
 
-      // case "INFINITO":
-      //   await this._handleMenuState(origin, "80307836", response);
-      //   this._setCurrentState(phoneNumber, "INICIO");
-      //   break;
+      case "LINHA_DIGITAVEL":
+        await this._handleAcordoState(origin, "80307836", response);
+        this._setCurrentState(phoneNumber, "LINHA_DIGITAVEL");
+        break;
     }
   }
 }
