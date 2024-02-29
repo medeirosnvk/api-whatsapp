@@ -130,7 +130,6 @@ async function getDataValdoc(idacordo) {
     const { data } = await axiosApiInstance.get(
       `/lista-promessas-datavaldoc?idacordo=${idacordo}`
     );
-    console.log("getDataValdoc -", data);
 
     return data;
   } catch (error) {
@@ -183,7 +182,6 @@ async function postBoletoFinal(
     filterCredoresIdDevedor;
 
   const responseDataValdoc = await getDataValdoc(ultimoIdAcordo);
-  console.log("responseDataValdoc -", responseDataValdoc);
 
   if (
     responseDataValdoc[0].valdoc === null ||
