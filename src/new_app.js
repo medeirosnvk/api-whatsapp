@@ -328,10 +328,10 @@ class StateMachine {
         const idacordo = await requests.postDadosAcordo(parsedData);
         console.log("idacordo -", idacordo);
 
-        // await this._postMessage(
-        //   origin,
-        //   "Acordo realizado com sucesso - " + JSON.stringify(idacordo)
-        // );
+        await this._postMessage(
+          origin,
+          "Acordo realizado com sucesso - " + JSON.stringify(idacordo)
+        );
 
         const parsedData2 = utils.parseDadosPromessa({
           idacordo,
@@ -388,11 +388,11 @@ class StateMachine {
         }
 
         const responsePromessas = await Promise.all(promises);
-        // await this._postMessage(
-        //   origin,
-        //   "Promessas realizadas com sucesso - " +
-        //     JSON.stringify(responsePromessas)
-        // );
+        await this._postMessage(
+          origin,
+          "Promessas realizadas com sucesso - " +
+            JSON.stringify(responsePromessas)
+        );
 
         const [ultimoIdPromessa] = responsePromessas.slice(-1);
 
@@ -431,7 +431,7 @@ class StateMachine {
           return;
         }
 
-        // await this._postMessage(origin, "Recibo inserido com sucesso!");
+        await this._postMessage(origin, "Recibo inserido com sucesso!");
 
         await requests.getAtualizarPromessas(idacordo);
         await requests.getAtualizarValores(idacordo);

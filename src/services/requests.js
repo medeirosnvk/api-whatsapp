@@ -130,6 +130,8 @@ async function getDataValdoc(idacordo) {
     const { data } = await axiosApiInstance.get(
       `/lista-promessas-datavaldoc?idacordo=${idacordo}`
     );
+    console.log("getDataValdoc -", data);
+
     return data;
   } catch (error) {
     console.error("Erro ao buscar getDataValdoc no servidor: ", error);
