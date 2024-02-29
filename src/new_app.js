@@ -454,12 +454,13 @@ class StateMachine {
         this._setDataBoleto(phoneNumber, responseBoleto);
 
         const responseIdBoleto = await requests.getIdBoleto(idacordo);
+        console.log("responseIdBoleto -", responseIdBoleto);
 
-        // await this._postMessage(
-        //   origin,
-        //   "getAtualizarPromessas, getAtualizarValores e postDadosBoleto realizado com sucesso!" +
-        //     JSON.stringify(responseBoleto, undefined, 2)
-        // );
+        await this._postMessage(
+          origin,
+          "getAtualizarPromessas, getAtualizarValores e postDadosBoleto realizado com sucesso!" +
+            JSON.stringify(responseBoleto, undefined, 2)
+        );
 
         const { idboleto } = responseIdBoleto[0];
         const { banco } = responseIdBoleto[0];

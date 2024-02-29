@@ -181,6 +181,7 @@ async function postBoletoFinal(
     filterCredoresIdDevedor;
 
   const responseDataValdoc = await getDataValdoc(ultimoIdAcordo);
+  console.log("responseDataValdoc -", responseDataValdoc);
 
   if (
     responseDataValdoc[0].valdoc === null ||
