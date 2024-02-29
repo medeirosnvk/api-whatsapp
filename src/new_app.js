@@ -510,6 +510,8 @@ class StateMachine {
         await utils.saveQRCodeImageToLocal(responseQrcodeContent.url);
         const media = MessageMedia.fromFilePath("qrcode.png");
 
+        const qrCodeMensagem = `Acordo realizado com sucesso! Pague a primeira parcela através das opções abaixo:\n\n${media}\n\n*Link boleto: http://cobrance.com.br/acordo/boleto.php?idboleto=${responseBoletoContent.idboleto}&email=2`;
+
         await this._postMessage(origin, media);
 
         await this._postMessage(
