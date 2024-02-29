@@ -125,12 +125,10 @@ async function getAtualizarValores(idacordo) {
   }
 }
 
-async function getDataValdoc(props) {
-  const { ultimoIdAcordo } = props;
-
+async function getDataValdoc(idacordo) {
   try {
     const { data } = await axiosApiInstance.get(
-      `/lista-promessas-datavaldoc?idacordo=${ultimoIdAcordo}`
+      `/lista-promessas-datavaldoc?idacordo=${idacordo}`
     );
     return data;
   } catch (error) {
@@ -182,7 +180,7 @@ async function postBoletoFinal(
   const { endres, baires, cidres, cepres, ufres, chave, idcedente, cpfcnpj } =
     filterCredoresIdDevedor;
 
-  const responseDataValdoc = await getDataValdoc({ ultimoIdAcordo });
+  const responseDataValdoc = await getDataValdoc(ultimoIdAcordo);
 
   if (
     responseDataValdoc[0].valdoc === null ||
