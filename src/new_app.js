@@ -511,11 +511,10 @@ class StateMachine {
         await utils.saveQRCodeImageToLocal(responseQrcodeContent.url);
         const media = MessageMedia.fromFilePath("qrcode.png");
 
-        const qrCodeMensagem = `Acordo realizado com sucesso! Pague a primeira parcela através das opções abaixo:\n\nLink boleto: http://cobrance.com.br/acordo/boleto.php?idboleto=${responseBoletoContent.idboleto}&email=2\n\n`;
-        const mensagemComMedia = new MessageMedia(media, qrCodeMensagem);
+        const mensagem = `Acordo realizado com sucesso! Pague a primeira parcela através do QRCODE abaixo ou pelo Link boleto: http://cobrance.com.br/acordo/boleto.php?idboleto=${responseBoletoContent.idboleto}&email=2`;
 
-        // Enviar a mensagem com a mídia e o texto combinados
-        await this._postMessage(origin, mensagemComMedia);
+        await this._postMessage(origin, mensagem);
+        await this._postMessage(origin, media);
       } else {
         await this._postMessage(
           origin,
