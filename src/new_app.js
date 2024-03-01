@@ -178,12 +178,9 @@ class StateMachine {
           const responseBoletoPix = await requests.getDataBoletoPix(
             this.idDevedor
           );
+          console.log("data responseBoletoPix -", responseBoletoPix);
 
-          if (responseBoletoPix && responseBoletoPix.length > 0) {
-            // const acordoMessage = utils.formatCredorAcordos(acordosFirmados);
-
-            await this._postMessage(origin, responseBoletoPix);
-          }
+          await this._postMessage(origin, responseBoletoPix);
         } catch (error) {
           console.error("Case 3 retornou um erro - ", error.message);
         }
