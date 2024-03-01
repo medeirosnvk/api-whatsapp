@@ -178,7 +178,10 @@ class StateMachine {
           const responseBoletoPix = await requests.getDataBoletoPix(6319);
           console.log("data responseBoletoPix -", responseBoletoPix);
 
-          await this._postMessage(origin, responseBoletoPix);
+          await this._postMessage(
+            origin,
+            JSON(responseBoletoPix, undefined, 2)
+          );
         } catch (error) {
           console.error("Case 3 retornou um erro - ", error.message);
         }
