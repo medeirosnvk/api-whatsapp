@@ -175,13 +175,45 @@ class StateMachine {
         break;
       case "3":
         try {
-          const responseBoletoPix = await requests.getDataBoletoPix(6319);
-          console.log("data responseBoletoPix -", responseBoletoPix);
-
-          await this._postMessage(
-            origin,
-            JSON.stringify(responseBoletoPix, undefined, 2)
+          const { cpfcnpj: document } = await this._getCredorFromDB(
+            phoneNumber
           );
+
+          const acordosFirmados = await requests.getAcordosFirmados(document);
+          console.log("acordosFirmados -", acordosFirmados);
+
+          if (acordosFirmados && acordosFirmados.length > 0) {
+            const responseBoletoPixArray = [];
+            const idDevedores = new Set();
+
+            // Extrair iddevedor único de cada objeto e adicionar ao Set
+            acordosFirmados.forEach((acordo) => {
+              idDevedores.add(acordo.iddevedor);
+            });
+
+            // Iterar sobre cada iddevedor diferente e disparar a rota
+            for (const iddevedor of idDevedores) {
+              try {
+                const responseBoletoPix = await requests.getDataBoletoPix(
+                  iddevedor
+                );
+                console.log("data responseBoletoPix -", responseBoletoPix);
+                responseBoletoPixArray.push(responseBoletoPix);
+              } catch (error) {
+                console.error(
+                  "Erro ao obter dados do boleto para iddevedor",
+                  iddevedor,
+                  ":",
+                  error.message
+                );
+              }
+            }
+
+            await this._postMessage(
+              origin,
+              JSON.stringify(responseBoletoPixArray, undefined, 2)
+            );
+          }
         } catch (error) {
           console.error("Case 3 retornou um erro - ", error.message);
         }
