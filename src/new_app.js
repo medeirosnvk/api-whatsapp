@@ -175,7 +175,9 @@ class StateMachine {
         break;
       case "3":
         try {
-          const responseBoletoPix = await requests.getDataBoletoPix(6319);
+          const responseBoletoPix = await requests.getDataBoletoPix(
+            this.idDevedor
+          );
 
           if (responseBoletoPix && responseBoletoPix.length > 0) {
             // const acordoMessage = utils.formatCredorAcordos(acordosFirmados);
