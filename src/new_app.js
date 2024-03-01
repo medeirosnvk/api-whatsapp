@@ -193,7 +193,7 @@ class StateMachine {
 
   async _handleInitialState(origin, phoneNumber = "80307836") {
     const { nome: userName } = await this._getCredorFromDB(phoneNumber);
-    const message = `Olá *${userName}*,\n\nPor favor, escolha uma opção:\n\n1 - Credores\n2 - Ver Acordos\n3 - Ver Boletos\n4 - Linha Digitável\n5 - Pix Copia e Cola\n6 - Voltar`;
+    const message = `Olá *${userName}*,\n\nPor favor, escolha uma opção:\n\n1 - Credores\n2 - Ver Acordos\n3 - Linha Digitável\n4 - Pix Copia e Cola\n5 - Voltar`;
 
     await this._postMessage(origin, message);
   }
