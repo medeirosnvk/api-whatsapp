@@ -180,7 +180,7 @@ class StateMachine {
 
           await this._postMessage(
             origin,
-            JSON(responseBoletoPix, undefined, 2)
+            JSON.stringify(responseBoletoPix, undefined, 2)
           );
         } catch (error) {
           console.error("Case 3 retornou um erro - ", error.message);
