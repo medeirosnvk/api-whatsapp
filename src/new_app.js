@@ -175,19 +175,17 @@ class StateMachine {
         break;
       case "3":
         try {
-          const { cpfcnpj: document } = await this._getCredorFromDB(
-            phoneNumber
+          const responseBoletoPix = await requests.getDataBoletoPix(
+            this.idDevedor
           );
 
-          const acordosFirmados = await requests.getAcordosFirmados(document);
+          if (responseBoletoPix && responseBoletoPix.length > 0) {
+            // const acordoMessage = utils.formatCredorAcordos(acordosFirmados);
 
-          if (acordosFirmados && acordosFirmados.length > 0) {
-            const acordoMessage = utils.formatCredorAcordos(acordosFirmados);
-
-            await this._postMessage(origin, acordoMessage);
+            await this._postMessage(origin, responseBoletoPix);
           }
         } catch (error) {
-          console.error("Case 2 retornou um erro - ", error.message);
+          console.error("Case 3 retornou um erro - ", error.message);
         }
         break;
     }
