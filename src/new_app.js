@@ -175,9 +175,7 @@ class StateMachine {
         break;
       case "3":
         try {
-          const responseBoletoPix = await requests.getDataBoletoPix(
-            this.idDevedor
-          );
+          const responseBoletoPix = await requests.getDataBoletoPix(6319);
           console.log("data responseBoletoPix -", responseBoletoPix);
 
           await this._postMessage(origin, responseBoletoPix);
