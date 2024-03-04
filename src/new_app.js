@@ -255,6 +255,8 @@ class StateMachine {
               }
             }
 
+            console.log("idDevedores -", idDevedores);
+
             const formatBoletoPixArray = utils.formatCodigoPix(
               responseBoletoPixArray
             );

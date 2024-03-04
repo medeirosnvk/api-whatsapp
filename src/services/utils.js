@@ -104,7 +104,7 @@ function formatCodigoPix(creditorBoleto) {
           `ID Acordo: ${info.idacordo}\n` +
           `Valor: ${formatValue(info.VALDOC)}\n` +
           `Parcela: ${info.parcela}\n` +
-          `PIX Copia e Cola: ${info.emv}\n`
+          `PIX Copia e Cola: ${info.emv}`
       )
     )
     .join("\n\n");
