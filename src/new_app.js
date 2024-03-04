@@ -244,6 +244,9 @@ class StateMachine {
                   iddevedor
                 );
                 responseBoletoPixArray.push(responseBoletoPix);
+                console.log(
+                  `for realizado para ${iddevedor} e resposta ${responseBoletoPix}`
+                );
               } catch (error) {
                 console.error(
                   "Erro ao obter dados do boleto para iddevedor",
@@ -253,8 +256,6 @@ class StateMachine {
                 );
               }
             }
-
-            console.log("responseBoletoPixArray -", responseBoletoPixArray);
 
             const formatBoletoPixArray = utils.formatCodigoPix(
               responseBoletoPixArray
