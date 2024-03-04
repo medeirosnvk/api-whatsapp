@@ -31,8 +31,8 @@ function formatCredorOfertas(ofertas) {
     .map(
       (detalhe, index) =>
         `${index + 1}) ` +
-        `Parcelamento em ${index + 1} x ` +
-        `${formatarMoeda(detalhe.valor_parcela)}`
+        `Parcelamento em ${index + 1} x de ` +
+        `${formatarMoeda(detalhe.valor_parcela + detalhe.tarifa_boleto)}`
     )
     .join("\n");
 }
