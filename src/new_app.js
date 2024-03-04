@@ -227,25 +227,25 @@ class StateMachine {
 
           const acordosFirmados = await requests.getAcordosFirmados(document);
 
-          const idDevedores = new Set();
-
-          // Extrair iddevedor único de cada objeto e adicionar ao Set
-          acordosFirmados.forEach((acordo) => {
-            idDevedores.add(acordo.iddevedor);
-          });
-
           if (acordosFirmados && acordosFirmados.length > 0) {
             const responseBoletoPixArray = [];
+            const idDevedores = new Set();
 
-            // Iterar sobre cada iddevedor diferente e disparar a rota
-            for (const iddevedor of idDevedores) {
+            // Extrair iddevedor único de cada objeto e adicionar ao Set
+            acordosFirmados.forEach((acordo) => {
+              idDevedores.add(acordo.iddevedor);
+            });
+
+            if (idDevedores.size === 1) {
+              // Se houver apenas um único iddevedor, execute responseBoletoPix uma vez
+              const iddevedor = idDevedores.values().next().value;
               try {
                 const responseBoletoPix = await requests.getDataBoletoPix(
                   iddevedor
                 );
                 responseBoletoPixArray.push(responseBoletoPix);
                 console.log(
-                  `for realizado para ${iddevedor} e resposta ${responseBoletoPix}`
+                  `responseBoletoPix executado para ${iddevedor} com resposta ${responseBoletoPix}`
                 );
               } catch (error) {
                 console.error(
@@ -254,6 +254,26 @@ class StateMachine {
                   ":",
                   error.message
                 );
+              }
+            } else {
+              // Se houver mais de um iddevedor, iterar sobre cada um e executar responseBoletoPix
+              for (const iddevedor of idDevedores) {
+                try {
+                  const responseBoletoPix = await requests.getDataBoletoPix(
+                    iddevedor
+                  );
+                  responseBoletoPixArray.push(responseBoletoPix);
+                  console.log(
+                    `responseBoletoPix executado para ${iddevedor} com resposta ${responseBoletoPix}`
+                  );
+                } catch (error) {
+                  console.error(
+                    "Erro ao obter dados do boleto para iddevedor",
+                    iddevedor,
+                    ":",
+                    error.message
+                  );
+                }
               }
             }
 
