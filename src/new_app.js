@@ -255,7 +255,7 @@ class StateMachine {
               }
             }
 
-            const formatBoletoPixArray = utils.formatLinhaDigitavel(
+            const formatBoletoPixArray = utils.formatCodigoPix(
               responseBoletoPixArray
             );
 
