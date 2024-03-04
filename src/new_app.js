@@ -227,14 +227,15 @@ class StateMachine {
 
           const acordosFirmados = await requests.getAcordosFirmados(document);
 
+          const idDevedores = new Set();
+
+          // Extrair iddevedor único de cada objeto e adicionar ao Set
+          acordosFirmados.forEach((acordo) => {
+            idDevedores.add(acordo.iddevedor);
+          });
+
           if (acordosFirmados && acordosFirmados.length > 0) {
             const responseBoletoPixArray = [];
-            const idDevedores = new Set();
-
-            // Extrair iddevedor único de cada objeto e adicionar ao Set
-            acordosFirmados.forEach((acordo) => {
-              idDevedores.add(acordo.iddevedor);
-            });
 
             // Iterar sobre cada iddevedor diferente e disparar a rota
             for (const iddevedor of idDevedores) {
