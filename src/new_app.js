@@ -197,7 +197,7 @@ class StateMachine {
                 const responseBoletoPix = await requests.getDataBoletoPix(
                   iddevedor
                 );
-                console.log("data responseBoletoPix -", responseBoletoPix);
+
                 responseBoletoPixArray.push(responseBoletoPix);
               } catch (error) {
                 console.error(
@@ -213,6 +213,52 @@ class StateMachine {
               origin,
               JSON.stringify(responseBoletoPixArray, undefined, 2)
             );
+          }
+        } catch (error) {
+          console.error("Case 3 retornou um erro - ", error.message);
+        }
+        break;
+      case "4":
+        try {
+          const { cpfcnpj: document } = await this._getCredorFromDB(
+            phoneNumber
+          );
+
+          const acordosFirmados = await requests.getAcordosFirmados(document);
+          console.log("acordosFirmados -", acordosFirmados);
+
+          if (acordosFirmados && acordosFirmados.length > 0) {
+            const responseBoletoPixArray = [];
+            const idDevedores = new Set();
+
+            // Extrair iddevedor único de cada objeto e adicionar ao Set
+            acordosFirmados.forEach((acordo) => {
+              idDevedores.add(acordo.iddevedor);
+            });
+
+            // Iterar sobre cada iddevedor diferente e disparar a rota
+            for (const iddevedor of idDevedores) {
+              try {
+                const responseBoletoPix = await requests.getDataBoletoPix(
+                  iddevedor
+                );
+                console.log("data responseBoletoPix -", responseBoletoPix);
+                responseBoletoPixArray.push(responseBoletoPix);
+              } catch (error) {
+                console.error(
+                  "Erro ao obter dados do boleto para iddevedor",
+                  iddevedor,
+                  ":",
+                  error.message
+                );
+              }
+            }
+
+            const formatBoletoPixArray = utils.formatLinhaDigitavel(
+              responseBoletoPixArray
+            );
+
+            await this._postMessage(origin, formatBoletoPixArray);
           }
         } catch (error) {
           console.error("Case 3 retornou um erro - ", error.message);
@@ -556,7 +602,7 @@ class StateMachine {
         await utils.saveQRCodeImageToLocal(responseQrcodeContent.url);
         const media = MessageMedia.fromFilePath("qrcode.png");
 
-        const mensagem = `ACORDO REALIZADO COM SUCESSO!\n\nPague a primeira parcela através do QRCODE ou link do BOLETO abaixo:\n\nhttp://cobrance.com.br/acordo/boleto.php?idboleto=${responseBoletoContent.idboleto}&email=2`;
+        const mensagem = `*ACORDO REALIZADO COM SUCESSO!*\n\nPague a primeira parcela através do QRCODE ou link do BOLETO abaixo:\n\nhttp://cobrance.com.br/acordo/boleto.php?idboleto=${responseBoletoContent.idboleto}&email=2`;
 
         await this._postMessage(origin, mensagem);
         await this._postMessage(origin, media);

@@ -76,6 +76,20 @@ function formatCredorDividas(creditorDividas) {
     .join("\n\n");
 }
 
+function formatLinhaDigitavel(creditorBoleto) {
+  return creditorBoleto
+    .map(
+      (info, index) =>
+        `*--------- ${index + 1} ---------*\n` +
+        `CPF/CNPJ: ${info.cpfcnpj}\n` +
+        `ID Devedor: ${info.iddevedor}\n` +
+        `ID Credor: ${info.idcredor}\n` +
+        `Valor: ${formatValue(info.valdoc)}\n` +
+        `Linha Digitavel: ${info.linha}`
+    )
+    .join("\n\n");
+}
+
 function getCurrentDate() {
   const currentDate = new Date();
   const year = currentDate.getFullYear();
@@ -615,4 +629,5 @@ module.exports = {
   parseDadosEmv,
   handleCopyPix,
   saveQRCodeImageToLocal,
+  formatLinhaDigitavel,
 };
