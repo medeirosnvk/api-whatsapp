@@ -226,7 +226,6 @@ class StateMachine {
           );
 
           const acordosFirmados = await requests.getAcordosFirmados(document);
-          console.log("acordosFirmados -", acordosFirmados);
 
           if (acordosFirmados && acordosFirmados.length > 0) {
             const responseBoletoPixArray = [];
@@ -243,7 +242,6 @@ class StateMachine {
                 const responseBoletoPix = await requests.getDataBoletoPix(
                   iddevedor
                 );
-                console.log("data responseBoletoPix -", responseBoletoPix);
                 responseBoletoPixArray.push(responseBoletoPix);
               } catch (error) {
                 console.error(
@@ -255,7 +253,7 @@ class StateMachine {
               }
             }
 
-            console.log("idDevedores -", idDevedores);
+            console.log("responseBoletoPixArray -", responseBoletoPixArray);
 
             const formatBoletoPixArray = utils.formatCodigoPix(
               responseBoletoPixArray
