@@ -29,7 +29,8 @@ function formatarMoeda(valorString) {
 function formatCredorOfertas(ofertas) {
   return ofertas
     .map((detalhe, index) => {
-      const total = detalhe.valor_parcela + detalhe.tarifa_boleto;
+      const total =
+        parseFloat(detalhe.valor_parcela) + parseFloat(detalhe.tarifa_boleto);
       const totalFormatado = formatarMoeda(total.toFixed(2));
       return `${index + 1}) Parcelamento em ${index + 1} x ${totalFormatado}`;
     })
