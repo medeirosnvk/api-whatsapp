@@ -234,7 +234,10 @@ class StateMachine {
             responseBoletoPix
           );
 
-          await this._postMessage(origin, responseBoletoPix);
+          await this._postMessage(
+            origin,
+            JSON.stringify(responseBoletoPix, undefined, 2)
+          );
         } catch (error) {
           console.error("Case 4 retornou um erro - ", error.message);
         }
