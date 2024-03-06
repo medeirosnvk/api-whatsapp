@@ -239,6 +239,7 @@ class StateMachine {
             if (idDevedores.size === 1) {
               // Se houver apenas um único iddevedor, execute responseBoletoPix uma vez
               const iddevedor = idDevedores.values().next().value;
+              console.log("iddevedor -", iddevedor);
 
               try {
                 const responseBoletoPix = await requests.getDataBoletoPix(
@@ -271,6 +272,8 @@ class StateMachine {
                 }
               }
             }
+
+            console.log("responseBoletoPixArray -", responseBoletoPixArray);
 
             const formatBoletoPixArray = utils.formatCodigoPix(
               responseBoletoPixArray
