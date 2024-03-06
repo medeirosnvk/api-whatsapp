@@ -226,6 +226,7 @@ class StateMachine {
           );
 
           const acordosFirmados = await requests.getAcordosFirmados(document);
+          console.log("acordosFirmados -", acordosFirmados);
 
           if (acordosFirmados && acordosFirmados.length > 0) {
             const responseBoletoPixArray = [];
@@ -235,6 +236,8 @@ class StateMachine {
             acordosFirmados.forEach((acordo) => {
               idDevedores.add(acordo.iddevedor);
             });
+
+            console.log("idDevedores -", idDevedores);
 
             if (idDevedores.size === 1) {
               // Se houver apenas um único iddevedor, execute responseBoletoPix uma vez
