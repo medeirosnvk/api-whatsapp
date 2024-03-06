@@ -78,17 +78,15 @@ function formatCredorDividas(creditorDividas) {
 
 function formatLinhaDigitavel(creditorBoleto) {
   return creditorBoleto
-    .flatMap((arr, index) =>
-      arr.map(
-        (info, subIndex) =>
-          // `*--------- ${index + 1}, ${subIndex + 1} ---------*\n` +
-          `CPF/CNPJ: ${info.cpfcnpj}\n` +
-          `ID Devedor: ${info.iddevedor}\n` +
-          `ID Acordo: ${info.idacordo}\n` +
-          `Valor: ${formatValue(info.VALDOC)}\n` +
-          `Parcela: ${info.parcela}\n` +
-          `Linha Digitavel: ${info.linha}\n`
-      )
+    .map(
+      (info, index) =>
+        // `*--------- ${index + 1}, ${subIndex + 1} ---------*\n` +
+        `CPF/CNPJ: ${info.cpfcnpj}\n` +
+        `ID Devedor: ${info.iddevedor}\n` +
+        `ID Acordo: ${info.idacordo}\n` +
+        `Valor: ${formatValue(info.VALDOC)}\n` +
+        `Parcela: ${info.parcela}\n` +
+        `Linha Digitavel: ${info.linha}\n`
     )
     .join("\n\n");
 }
