@@ -105,7 +105,7 @@ function formatCodigoPix(creditorBoleto) {
     .flat() // Achatamos o array de array de objetos para um array de objetos
     .map(
       (info, index) =>
-        `CPF/CNPJ: ${formatCPFCNPJ(info.cpfcnpj)}\n` +
+        `CPF/CNPJ: ${info.cpfcnpj}\n` +
         `ID Devedor: ${info.iddevedor}\n` +
         `ID Acordo: ${info.idacordo}\n` +
         `Valor: ${formatValue(info.VALDOC)}\n` +
