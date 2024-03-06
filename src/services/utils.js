@@ -86,7 +86,7 @@ function formatLinhaDigitavel(creditorBoleto) {
         `ID Acordo: ${info.idacordo}\n` +
         `Valor: ${formatValue(info.VALDOC)}\n` +
         `Parcela: ${info.parcela}\n` +
-        `Linha Digitavel: ${info.linha}\n`
+        `Linha Digitavel: ${info.linha}`
     )
     .join("\n\n");
 }
