@@ -230,9 +230,7 @@ class StateMachine {
           const responseBoletoPix = await requests.getDataBoletoPix(655355);
           console.log("responseBoletoPix -", responseBoletoPix);
 
-          const formatBoletoPixArray = await utils.formatCodigoPix(
-            responseBoletoPix
-          );
+          const formatBoletoPixArray = utils.formatCodigoPix(responseBoletoPix);
           console.log("formatBoletoPixArray -", formatBoletoPixArray);
 
           await this._postMessage(origin, formatBoletoPixArray);

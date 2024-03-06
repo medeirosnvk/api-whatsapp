@@ -362,7 +362,6 @@ async function getDataBoletoPix(iddevedor) {
     const { data } = await axiosApiInstance.get(
       `/busca-boleto-pix?iddevedor=${iddevedor}`
     );
-    console.log("getDataBoletoPix -", data);
 
     return data;
   } catch (error) {

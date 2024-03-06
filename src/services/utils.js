@@ -93,16 +93,19 @@ function formatLinhaDigitavel(creditorBoleto) {
 
 function formatCodigoPix(creditorBoleto) {
   // Verifica se creditorBoleto é um array e se contém elementos
-  if (
-    !Array.isArray(creditorBoleto) ||
-    creditorBoleto.length === 0 ||
-    !Array.isArray(creditorBoleto[0])
-  ) {
-    return ""; // Retorna uma string vazia se o array estiver vazio, não for um array ou não contiver sub-arrays
+  if (!Array.isArray(creditorBoleto) || creditorBoleto.length === 0) {
+    return "Array vazio ou nao é um array!"; // Retorna uma string vazia se o array estiver vazio ou não for um array
   }
 
-  return creditorBoleto
-    .flat() // Achatamos o array de array de objetos para um array de objetos
+  // Verifica se o primeiro elemento do array é um array
+  const isArrayofArrays = Array.isArray(creditorBoleto[0]);
+
+  // Se for um array de array de objetos, achatamos o array
+  const flattenedArray = isArrayofArrays
+    ? creditorBoleto.flat()
+    : creditorBoleto;
+
+  return flattenedArray
     .map(
       (info, index) =>
         `CPF/CNPJ: ${info.cpfcnpj}\n` +
