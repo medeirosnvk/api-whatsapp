@@ -236,7 +236,7 @@ class StateMachine {
 
           await this._postMessage(origin, formatBoletoPixArray);
         } catch (error) {
-          console.error("Case 3 retornou um erro - ", error.message);
+          console.error("Case 4 retornou um erro - ", error.message);
         }
         break;
     }
