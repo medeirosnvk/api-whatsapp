@@ -226,9 +226,10 @@ class StateMachine {
           );
 
           const acordosFirmados = await requests.getAcordosFirmados(document);
-          console.log("acordosFirmados -", acordosFirmados);
 
           const responseBoletoPix = await requests.getDataBoletoPix(6319);
+          console.log("responseBoletoPix -", responseBoletoPix);
+
           const formatBoletoPixArray = await utils.formatCodigoPix(
             responseBoletoPix
           );
