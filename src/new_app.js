@@ -7,7 +7,6 @@ const { executeQuery } = require("./dbconfig");
 
 const requests = require("./services/requests");
 const utils = require("./services/utils");
-const axiosApiInstance = require("./api");
 
 const customDbConfig = {
   host: process.env.DB2_MY_SQL_HOST,
