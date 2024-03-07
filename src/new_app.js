@@ -250,62 +250,31 @@ class StateMachine {
           const acordosFirmados = await requests.getAcordosFirmados(document);
           console.log("acordosFirmados -", acordosFirmados);
 
-          if (acordosFirmados && acordosFirmados.length > 0) {
-            const responseBoletoPixArray = [];
-            const idDevedores = new Set();
+          const responseBoletoPixArray = [];
 
-            // Extrair iddevedor único de cada objeto e adicionar ao Set
-            acordosFirmados.forEach((acordo) => {
-              idDevedores.add(acordo.iddevedor);
-            });
+          // Iterar sobre cada acordo e obter os dados do boleto Pix para o iddevedor
+          for (const acordo of acordosFirmados) {
+            const iddevedor = acordo.iddevedor;
 
-            if (idDevedores.size === 1) {
-              // Se houver apenas um único iddevedor, execute responseBoletoPix uma vez
-              const iddevedor = idDevedores.values().next().value;
-              try {
-                const responseBoletoPix = await requests.getDataBoletoPix(
-                  iddevedor
-                );
-                responseBoletoPixArray.push(responseBoletoPix);
-                console.log(
-                  `responseBoletoPix executado para ${iddevedor} com resposta ${responseBoletoPix}`
-                );
-              } catch (error) {
-                console.error(
-                  "Erro ao obter dados do boleto para iddevedor",
-                  iddevedor,
-                  ":",
-                  error.message
-                );
-              }
-            } else {
-              // Se houver mais de um iddevedor, iterar sobre cada um e executar responseBoletoPix
-              for (const iddevedor of idDevedores) {
-                try {
-                  const responseBoletoPix = await requests.getDataBoletoPix(
-                    iddevedor
-                  );
-                  responseBoletoPixArray.push(responseBoletoPix);
-                  console.log(
-                    `responseBoletoPix executado para ${iddevedor} com resposta ${responseBoletoPix}`
-                  );
-                } catch (error) {
-                  console.error(
-                    "Erro ao obter dados do boleto para iddevedor",
-                    iddevedor,
-                    ":",
-                    error.message
-                  );
-                }
-              }
+            try {
+              const responseBoletoPix = await getDataBoletoPix(iddevedor);
+              responseBoletoPixArray.push(responseBoletoPix);
+              console.log(
+                `responseBoletoPix executado para ${iddevedor} com resposta ${responseBoletoPix}`
+              );
+            } catch (error) {
+              console.error(
+                "Erro ao obter dados do boleto para iddevedor",
+                iddevedor,
+                ":",
+                error.message
+              );
             }
-
-            const formatBoletoPixArray = utils.formatCodigoPix(
-              responseBoletoPixArray
-            );
-
-            await this._postMessage(origin, formatBoletoPixArray);
           }
+
+          const formatBoletoPixArray = formatCodigoPix(responseBoletoPixArray);
+
+          await this._postMessage(origin, formatBoletoPixArray);
         } catch (error) {
           console.error("Case 4 retornou um erro - ", error.message);
         }
