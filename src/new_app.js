@@ -1,13 +1,13 @@
 require("dotenv").config();
 const qrcode = require("qrcode-terminal");
 const { MessageMedia } = require("whatsapp-web.js");
-
 const { Client, LocalAuth } = require("whatsapp-web.js");
 
 const { executeQuery } = require("./dbconfig");
 
 const requests = require("./services/requests");
 const utils = require("./services/utils");
+const axiosApiInstance = require("./api");
 
 const customDbConfig = {
   host: process.env.DB2_MY_SQL_HOST,

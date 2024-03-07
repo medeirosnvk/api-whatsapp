@@ -1,5 +1,5 @@
 const utils = require("./utils");
-const axiosApiInstance = require("./api");
+const axiosApiInstance = require("./api").axiosApiInstance;
 
 async function getAcordosFirmados(document) {
   const response = await axiosApiInstance.get(
