@@ -227,16 +227,12 @@ class StateMachine {
           const acordosFirmados = await requests.getAcordosFirmados(document);
           console.log("acordosFirmados -", acordosFirmados);
 
-          // const responseBoletoPix = await requests.getDataBoletoPix(655355);
-          // console.log("responseBoletoPix -", responseBoletoPix);
+          const responseBoletoPix = await requests.getDataBoletoPix(655355);
+          console.log("responseBoletoPix -", responseBoletoPix);
 
-          const formatBoletoPixArray = utils.formatCodigoPix(acordosFirmados);
+          const formatBoletoPixArray = utils.formatCodigoPix(responseBoletoPix);
           console.log("formatBoletoPixArray -", formatBoletoPixArray);
 
-          await this._postMessage(
-            origin,
-            JSON.stringify(acordosFirmados, undefined, 2)
-          );
           await this._postMessage(origin, formatBoletoPixArray);
         } catch (error) {
           console.error("Case 3 retornou um erro - ", error.message);

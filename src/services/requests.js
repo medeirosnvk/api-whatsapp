@@ -1,8 +1,5 @@
-const axios = require("axios");
-
-const baseURL = "http://localhost:3000";
-const axiosApiInstance = axios.create({ baseURL });
 const utils = require("./utils");
+const axiosApiInstance = require("./api");
 
 async function getAcordosFirmados(document) {
   const response = await axiosApiInstance.get(
