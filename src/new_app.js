@@ -257,7 +257,9 @@ class StateMachine {
             const iddevedor = acordo.iddevedor;
 
             try {
-              const responseBoletoPix = await getDataBoletoPix(iddevedor);
+              const responseBoletoPix = await requests.getDataBoletoPix(
+                iddevedor
+              );
               responseBoletoPixArray.push(responseBoletoPix);
               console.log(
                 `responseBoletoPix executado para ${iddevedor} com resposta ${responseBoletoPix}`
@@ -272,7 +274,9 @@ class StateMachine {
             }
           }
 
-          const formatBoletoPixArray = formatCodigoPix(responseBoletoPixArray);
+          const formatBoletoPixArray = utils.formatCodigoPix(
+            responseBoletoPixArray
+          );
 
           await this._postMessage(origin, formatBoletoPixArray);
         } catch (error) {
