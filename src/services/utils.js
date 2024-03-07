@@ -76,11 +76,23 @@ function formatCredorDividas(creditorDividas) {
     .join("\n\n");
 }
 
-function formatLinhaDigitavel(creditorBoleto) {
-  return creditorBoleto
+function formatCodigoBoleto(creditorBoleto) {
+  // Verifica se creditorBoleto é um array e se contém elementos
+  if (!Array.isArray(creditorBoleto) || creditorBoleto.length === 0) {
+    return "Array vazio ou nao é um array!"; // Retorna uma string vazia se o array estiver vazio ou não for um array
+  }
+
+  // Verifica se o primeiro elemento do array é um array
+  const isArrayofArrays = Array.isArray(creditorBoleto[0]);
+
+  // Se for um array de array de objetos, achatamos o array
+  const flattenedArray = isArrayofArrays
+    ? creditorBoleto.flat()
+    : creditorBoleto;
+
+  return flattenedArray
     .map(
       (info, index) =>
-        // `*--------- ${index + 1}, ${subIndex + 1} ---------*\n` +
         `CPF/CNPJ: ${info.cpfcnpj}\n` +
         `ID Devedor: ${info.iddevedor}\n` +
         `ID Acordo: ${info.idacordo}\n` +
@@ -657,6 +669,6 @@ module.exports = {
   parseDadosEmv,
   handleCopyPix,
   saveQRCodeImageToLocal,
-  formatLinhaDigitavel,
+  formatCodigoBoleto,
   formatCodigoPix,
 };

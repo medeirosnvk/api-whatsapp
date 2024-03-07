@@ -244,10 +244,10 @@ async function postBoletoFinal(
 
 async function getIdBoleto(idacordo) {
   try {
-    const { data } = await axiosApiInstance.get(
+    const response = await axiosApiInstance.get(
       `/busca-idboleto?idacordo=${idacordo}`
     );
-    return data;
+    return response.data;
   } catch (error) {
     console.error("Erro ao buscar dados no servidor: ", error);
     return { error: "Erro ao buscar dados no servidor." };
@@ -356,11 +356,11 @@ async function getDataEmv(props) {
 
 async function getDataBoletoPix(iddevedor) {
   try {
-    const { data } = await axiosApiInstance.get(
+    const response = await axiosApiInstance.get(
       `/busca-boleto-pix?iddevedor=${iddevedor}`
     );
 
-    return data;
+    return response.data;
   } catch (error) {
     console.error("Erro ao buscar getDataBoletoPix no servidor: ", error);
     return { error: "Erro ao buscar getDataBoletoPix no servidor." };
