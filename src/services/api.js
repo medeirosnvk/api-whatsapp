@@ -5,4 +5,6 @@ const baseURL = "http://191.252.214.9:3000";
 
 const axiosApiInstance = axios.create({ baseURL });
 
-export default axiosApiInstance;
+module.exports = {
+  axiosApiInstance,
+};
