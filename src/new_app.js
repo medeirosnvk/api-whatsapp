@@ -150,21 +150,6 @@ class StateMachine {
     const state = this._getState(phoneNumber);
 
     switch (initialStateResponse) {
-      case "MENU": // Adicione este case para verificar se o usuário está no estado MENU
-        if (response && response.body.trim().match(/^\d+$/)) {
-          const selectedOption = parseInt(response.body.trim());
-          if (selectedOption === 1) {
-            // Se a opção selecionada for 1, execute _handleCredorState
-            await this._handleCredorState(origin, phoneNumber, response);
-            this._setCurrentState(phoneNumber, "CREDOR"); // Defina o próximo estado como CREDOR
-          } else {
-            // Restante do código...
-          }
-        } else {
-          // Restante do código...
-        }
-        break;
-
       case "1":
         try {
           const { cpfcnpj: document } = this._getCredor(phoneNumber);
@@ -251,7 +236,7 @@ class StateMachine {
               "Você não possui acordos nem Códigos PIX a listar."
             );
             await this._handleInitialState(origin, phoneNumber);
-            this._setCurrentState(phoneNumber, "MENU"); // Define o estado como MENU
+            this._setCurrentState(phoneNumber, "INICIO"); // Define o estado como MENU
           } else {
             const responseBoletoPixArray = [];
 
@@ -292,6 +277,7 @@ class StateMachine {
                 "Código PIX vencido ou não disponível"
               );
               await this._handleInitialState(origin, phoneNumber);
+              this._setCurrentState(phoneNumber, "INICIO"); // Define o estado como MENU
             } else {
               const formatBoletoPixArray = utils.formatCodigoPix(
                 responseBoletoPixArray
