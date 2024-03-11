@@ -204,6 +204,8 @@ class StateMachine {
 
           if (!acordosFirmados || acordosFirmados.length === 0) {
             await this._postMessage(origin, "Você não tem acordos realizados.");
+
+            await this._handleInitialState(origin, phoneNumber);
           } else {
             const responseBoletoPixArray = [];
 
@@ -237,11 +239,13 @@ class StateMachine {
                 origin,
                 "Boleto vencido ou não disponível"
               );
+              await this._handleInitialState(origin, phoneNumber);
             } else {
               const formatBoletoPixArray = utils.formatCodigoPix(
                 responseBoletoPixArray
               );
               await this._postMessage(origin, formatBoletoPixArray);
+              await this._handleInitialState(origin, phoneNumber);
             }
           }
         } catch (error) {
