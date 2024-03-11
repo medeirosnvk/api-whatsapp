@@ -149,6 +149,11 @@ class StateMachine {
     const initialStateResponse = response.body.trim();
     const state = this._getState(phoneNumber);
 
+    const { nome: userName } = await this._getCredorFromDB(phoneNumber);
+    const message = `Olá *${userName}*,\n\nPor favor, escolha uma opção:\n\n1 - Credores\n2 - Ver Acordos\n3 - Linha Digitável\n4 - Pix Copia e Cola\n5 - Voltar`;
+
+    await this._postMessage(origin, message);
+
     switch (initialStateResponse) {
       case "1":
         try {
