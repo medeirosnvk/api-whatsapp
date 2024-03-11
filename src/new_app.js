@@ -233,10 +233,11 @@ class StateMachine {
           if (!acordosFirmados || acordosFirmados.length === 0) {
             await this._postMessage(
               origin,
-              "Você não possui acordos nem Códigos PIX a listar."
+              "Você não possui Acordos nem códigos PIX a listar."
             );
-            this._resetUserState(phoneNumber); // Define o estado como MENU
-            await this._handleInitialState(origin, phoneNumber);
+            this._resetUserState(phoneNumber); // Limpar estado do usuário
+            await this._handleInitialState(origin, phoneNumber); // Iniciar a conversa novamente
+            return;
           } else {
             const responseBoletoPixArray = [];
 
