@@ -150,6 +150,21 @@ class StateMachine {
   async _handleMenuState(origin, phoneNumber = "80307836", response) {
     const initialStateResponse = response.body.trim();
     switch (initialStateResponse) {
+      case "MENU": // Adicione este case para verificar se o usuário está no estado MENU
+        if (response && response.body.trim().match(/^\d+$/)) {
+          const selectedOption = parseInt(response.body.trim());
+          if (selectedOption === 1) {
+            // Se a opção selecionada for 1, execute _handleCredorState
+            await this._handleCredorState(origin, phoneNumber, response);
+            this._setCurrentState(phoneNumber, "CREDOR"); // Defina o próximo estado como CREDOR
+          } else {
+            // Restante do código...
+          }
+        } else {
+          // Restante do código...
+        }
+        break;
+
       case "1":
         try {
           const { cpfcnpj: document } = this._getCredor(phoneNumber);
@@ -231,8 +246,12 @@ class StateMachine {
           console.log("acordosFirmados -", acordosFirmados);
 
           if (!acordosFirmados || acordosFirmados.length === 0) {
-            await this._postMessage(origin, "Você não tem acordos realizados.");
+            await this._postMessage(
+              origin,
+              "Você não possui acordos nem Códigos PIX a listar."
+            );
             await this._handleInitialState(origin, phoneNumber);
+            this._setCurrentState(phoneNumber, "MENU"); // Define o estado como MENU
           } else {
             const responseBoletoPixArray = [];
 
@@ -270,7 +289,7 @@ class StateMachine {
             ) {
               await this._postMessage(
                 origin,
-                "Boleto vencido ou não disponível"
+                "Código PIX vencido ou não disponível"
               );
               await this._handleInitialState(origin, phoneNumber);
             } else {
