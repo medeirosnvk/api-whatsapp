@@ -67,6 +67,10 @@ class StateMachine {
     this.userStates[phoneNumber].currentState = newState;
   }
 
+  _resetUserState(phoneNumber) {
+    delete this.userStates[phoneNumber];
+  }
+
   _setDataMenu(phoneNumber, data) {
     this.userStates[phoneNumber].data.MENU = data;
   }
@@ -204,8 +208,8 @@ class StateMachine {
 
           if (!acordosFirmados || acordosFirmados.length === 0) {
             await this._postMessage(origin, "Você não tem acordos realizados.");
-
-            this._setCurrentState(phoneNumber, "MENU");
+            await this._resetUserState(phoneNumber); // Resetar o estado do usuário
+            await this._handleInitialState(origin, phoneNumber); // Redirecionar o usuário de volta ao menu inicial
           } else {
             const responseBoletoPixArray = [];
 
@@ -230,7 +234,6 @@ class StateMachine {
               }
             }
 
-            // Verificar se acordosFirmados tem dados e responseBoletoPixArray está vazio ou indefinido
             if (
               acordosFirmados.length > 0 &&
               (!responseBoletoPixArray || responseBoletoPixArray.length === 0)
@@ -239,13 +242,13 @@ class StateMachine {
                 origin,
                 "Boleto vencido ou não disponível"
               );
-              this._setCurrentState(phoneNumber, "MENU");
+              await this._resetUserState(phoneNumber); // Resetar o estado do usuário
+              await this._handleInitialState(origin, phoneNumber); // Redirecionar o usuário de volta ao menu inicial
             } else {
               const formatBoletoPixArray = utils.formatCodigoPix(
                 responseBoletoPixArray
               );
               await this._postMessage(origin, formatBoletoPixArray);
-              this._setCurrentState(phoneNumber, "MENU");
             }
           }
         } catch (error) {
