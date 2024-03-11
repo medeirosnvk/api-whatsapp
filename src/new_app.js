@@ -235,8 +235,8 @@ class StateMachine {
               origin,
               "Você não possui acordos nem Códigos PIX a listar."
             );
+            this._resetUserState(phoneNumber); // Define o estado como MENU
             await this._handleInitialState(origin, phoneNumber);
-            this._setCurrentState(phoneNumber, "INICIO"); // Define o estado como MENU
           } else {
             const responseBoletoPixArray = [];
 
