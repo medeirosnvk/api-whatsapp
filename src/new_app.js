@@ -34,8 +34,15 @@ class StateMachine {
     this.globalData = {};
   }
 
-  _getCredor(phoneNumber) {
-    return this.userStates[phoneNumber].credor;
+  _resetUserState(phoneNumber) {
+    this.userStates[phoneNumber] = {
+      currentState: "INICIO",
+      credor: {},
+      data: {
+        CREDOR: {},
+        OFERTA: {},
+      },
+    };
   }
 
   _getState(phoneNumber) {
@@ -53,6 +60,10 @@ class StateMachine {
     };
 
     return this.userStates[phoneNumber];
+  }
+
+  _getCredor(phoneNumber) {
+    return this.userStates[phoneNumber].credor;
   }
 
   _setCredor(phoneNumber, credor) {
@@ -149,6 +160,12 @@ class StateMachine {
 
   async _handleMenuState(origin, phoneNumber = "80307836", response) {
     const initialStateResponse = response.body.trim();
+
+    if (selectedOption === 1) {
+      await this._handleInitialState(origin, phoneNumber); // Reinicia o estado antes de enviar para o caso 1
+      this._setCurrentState(phoneNumber, "MENU"); // Define o estado como MENU
+    }
+
     switch (initialStateResponse) {
       case "MENU": // Adicione este case para verificar se o usuário está no estado MENU
         if (response && response.body.trim().match(/^\d+$/)) {
@@ -312,6 +329,8 @@ class StateMachine {
   }
 
   async _handleInitialState(origin, phoneNumber = "80307836") {
+    this._resetUserState(phoneNumber); // Reinicia todos os estados do usuário
+
     const { nome: userName } = await this._getCredorFromDB(phoneNumber);
     const message = `Olá *${userName}*,\n\nPor favor, escolha uma opção:\n\n1 - Credores\n2 - Ver Acordos\n3 - Linha Digitável\n4 - Pix Copia e Cola\n5 - Voltar`;
 
