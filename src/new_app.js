@@ -231,12 +231,13 @@ class StateMachine {
           console.log("acordosFirmados -", acordosFirmados);
 
           if (!acordosFirmados || acordosFirmados.length === 0) {
-            await this._postMessage(
+            await this._handleErrorState(
               origin,
+              phoneNumber,
               "Você não possui Acordos nem códigos PIX a listar."
             );
-            this._setCurrentState(phoneNumber, "INICIO"); // Limpar estado do usuário
-            await this._handleInitialState(origin, phoneNumber); // Iniciar a conversa novamente
+            this._setCurrentState(phoneNumber, "INICIO");
+            await this._handleInitialState(origin, phoneNumber);
             return;
           } else {
             const responseBoletoPixArray = [];
@@ -273,12 +274,13 @@ class StateMachine {
               acordosFirmados.length > 0 &&
               (!responseBoletoPixArray || responseBoletoPixArray.length === 0)
             ) {
-              await this._postMessage(
+              await this._handleErrorState(
                 origin,
-                "Código PIX vencido ou não disponível"
+                phoneNumber,
+                "Código PIX vencido ou não disponível."
               );
+              this._setCurrentState(phoneNumber, "INICIO");
               await this._handleInitialState(origin, phoneNumber);
-              this._setCurrentState(phoneNumber, "INICIO"); // Define o estado como MENU
             } else {
               const formatBoletoPixArray = utils.formatCodigoPix(
                 responseBoletoPixArray
