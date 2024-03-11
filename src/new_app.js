@@ -202,35 +202,48 @@ class StateMachine {
           const acordosFirmados = await requests.getAcordosFirmados(document);
           console.log("acordosFirmados -", acordosFirmados);
 
-          const responseBoletoPixArray = [];
+          if (!acordosFirmados || acordosFirmados.length === 0) {
+            await this._postMessage(origin, "Você não tem acordos realizados.");
+          } else {
+            const responseBoletoPixArray = [];
 
-          // Iterar sobre cada acordo e obter os dados do boleto Pix para o iddevedor
-          for (const acordo of acordosFirmados) {
-            const iddevedor = acordo.iddevedor;
+            for (const acordo of acordosFirmados) {
+              const iddevedor = acordo.iddevedor;
 
-            try {
-              const responseBoletoPix = await requests.getDataBoletoPix(
-                iddevedor
+              try {
+                const responseBoletoPix = await requests.getDataBoletoPix(
+                  iddevedor
+                );
+                responseBoletoPixArray.push(responseBoletoPix);
+                console.log(
+                  `responseBoletoPix executado para ${iddevedor} com resposta ${responseBoletoPix}`
+                );
+              } catch (error) {
+                console.error(
+                  "Erro ao obter dados do boleto para iddevedor",
+                  iddevedor,
+                  ":",
+                  error.message
+                );
+              }
+            }
+
+            // Verificar se acordosFirmados tem dados e responseBoletoPixArray está vazio ou indefinido
+            if (
+              acordosFirmados.length > 0 &&
+              (!responseBoletoPixArray || responseBoletoPixArray.length === 0)
+            ) {
+              await this._postMessage(
+                origin,
+                "Boleto vencido ou não disponível"
               );
-              responseBoletoPixArray.push(responseBoletoPix);
-              console.log(
-                `responseBoletoPix executado para ${iddevedor} com resposta ${responseBoletoPix}`
+            } else {
+              const formatBoletoPixArray = utils.formatCodigoPix(
+                responseBoletoPixArray
               );
-            } catch (error) {
-              console.error(
-                "Erro ao obter dados do boleto para iddevedor",
-                iddevedor,
-                ":",
-                error.message
-              );
+              await this._postMessage(origin, formatBoletoPixArray);
             }
           }
-
-          const formatBoletoPixArray = utils.formatCodigoPix(
-            responseBoletoPixArray
-          );
-
-          await this._postMessage(origin, formatBoletoPixArray);
         } catch (error) {
           console.error("Case 4 retornou um erro - ", error.message);
         }
