@@ -38,17 +38,19 @@ class StateMachine {
     return this.userStates[phoneNumber].credor;
   }
 
-  _resetUserState(phoneNumber) {
-    const initialState = {
-      currentState: "INICIO",
-      credor: {},
-      data: {
-        CREDOR: {},
-        OFERTA: {},
-      },
-    };
+  _getState(phoneNumber) {
+    if (!this.userStates[phoneNumber]) {
+      this.userStates[phoneNumber] = {
+        currentState: "INICIO",
+        credor: {},
+        data: {
+          CREDOR: {},
+          OFERTA: {},
+        },
+      };
+    }
 
-    this.userStates[phoneNumber] = initialState;
+    return this.userStates[phoneNumber];
   }
 
   _setCredor(phoneNumber, credor) {
@@ -145,6 +147,7 @@ class StateMachine {
 
   async _handleMenuState(origin, phoneNumber = "80307836", response) {
     const initialStateResponse = response.body.trim();
+    const state = this._getState(phoneNumber);
 
     switch (initialStateResponse) {
       case "MENU": // Adicione este case para verificar se o usuário está no estado MENU
@@ -306,16 +309,10 @@ class StateMachine {
         }
         break;
     }
-
-    if (selectedOption === 1) {
-      await this._handleInitialState(origin, phoneNumber); // Reinicia o estado antes de enviar para o caso 1
-      this._setCurrentState(phoneNumber, "MENU"); // Define o estado como MENU
-    }
   }
 
   async _handleInitialState(origin, phoneNumber = "80307836") {
     const state = this._getState(phoneNumber);
-    this._resetUserState(phoneNumber); // Reinicia todos os estados do usuário
 
     const { nome: userName } = await this._getCredorFromDB(phoneNumber);
     const message = `Olá *${userName}*,\n\nPor favor, escolha uma opção:\n\n1 - Credores\n2 - Ver Acordos\n3 - Linha Digitável\n4 - Pix Copia e Cola\n5 - Voltar`;
@@ -324,6 +321,8 @@ class StateMachine {
   }
 
   async _handleCredorState(origin, phoneNumber = "80307836", response) {
+    const state = this._getState(phoneNumber);
+
     if (response && response.body.trim().match(/^\d+$/)) {
       const selectedOption = parseInt(response.body.trim());
       const { cpfcnpj: document } = this._getCredor(phoneNumber);
