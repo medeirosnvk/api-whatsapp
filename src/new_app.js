@@ -237,7 +237,6 @@ class StateMachine {
               "Você não possui Acordos nem códigos PIX a listar."
             );
             this._setCurrentState(phoneNumber, "INICIO");
-            await this._handleInitialState(origin, phoneNumber);
             return;
           } else {
             const responseBoletoPixArray = [];
@@ -280,7 +279,6 @@ class StateMachine {
                 "Código PIX vencido ou não disponível."
               );
               this._setCurrentState(phoneNumber, "INICIO");
-              await this._handleInitialState(origin, phoneNumber);
             } else {
               const formatBoletoPixArray = utils.formatCodigoPix(
                 responseBoletoPixArray
