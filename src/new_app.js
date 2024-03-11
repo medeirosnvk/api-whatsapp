@@ -235,7 +235,7 @@ class StateMachine {
               origin,
               "Você não possui Acordos nem códigos PIX a listar."
             );
-            this._resetUserState(phoneNumber); // Limpar estado do usuário
+            this._setCurrentState(phoneNumber, "INICIO"); // Limpar estado do usuário
             await this._handleInitialState(origin, phoneNumber); // Iniciar a conversa novamente
             return;
           } else {
