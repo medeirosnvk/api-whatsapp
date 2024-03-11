@@ -71,6 +71,12 @@ class StateMachine {
     delete this.userStates[phoneNumber];
   }
 
+  async _handleErrorState(origin, phoneNumber, errorMessage) {
+    await this._postMessage(origin, errorMessage);
+    await this._resetUserState(phoneNumber);
+    await this._handleInitialState(origin, phoneNumber);
+  }
+
   _setDataMenu(phoneNumber, data) {
     this.userStates[phoneNumber].data.MENU = data;
   }
@@ -157,8 +163,14 @@ class StateMachine {
           }
         } catch (error) {
           console.error("Case 1 retornou um erro - ", error.message);
+          await this._handleErrorState(
+            origin,
+            phoneNumber,
+            "Ocorreu um erro ao processar sua solicitação. Por favor, tente novamente."
+          );
         }
         break;
+
       case "2":
         try {
           const { cpfcnpj: document } = await this._getCredorFromDB(
@@ -174,8 +186,14 @@ class StateMachine {
           }
         } catch (error) {
           console.error("Case 2 retornou um erro - ", error.message);
+          await this._handleErrorState(
+            origin,
+            phoneNumber,
+            "Ocorreu um erro ao processar sua solicitação. Por favor, tente novamente."
+          );
         }
         break;
+
       case "3":
         try {
           const { cpfcnpj: document } = await this._getCredorFromDB(
@@ -195,8 +213,14 @@ class StateMachine {
           );
         } catch (error) {
           console.error("Case 3 retornou um erro - ", error.message);
+          await this._handleErrorState(
+            origin,
+            phoneNumber,
+            "Ocorreu um erro ao processar sua solicitação. Por favor, tente novamente."
+          );
         }
         break;
+
       case "4":
         try {
           const { cpfcnpj: document } = await this._getCredorFromDB(
@@ -208,8 +232,7 @@ class StateMachine {
 
           if (!acordosFirmados || acordosFirmados.length === 0) {
             await this._postMessage(origin, "Você não tem acordos realizados.");
-            await this._resetUserState(phoneNumber); // Resetar o estado do usuário
-            await this._handleInitialState(origin, phoneNumber); // Redirecionar o usuário de volta ao menu inicial
+            await this._handleInitialState(origin, phoneNumber);
           } else {
             const responseBoletoPixArray = [];
 
@@ -231,9 +254,16 @@ class StateMachine {
                   ":",
                   error.message
                 );
+                await this._handleErrorState(
+                  origin,
+                  phoneNumber,
+                  "Ocorreu um erro ao processar sua solicitação. Por favor, tente novamente."
+                );
+                return;
               }
             }
 
+            // Verificar se acordosFirmados tem dados e responseBoletoPixArray está vazio ou indefinido
             if (
               acordosFirmados.length > 0 &&
               (!responseBoletoPixArray || responseBoletoPixArray.length === 0)
@@ -242,8 +272,7 @@ class StateMachine {
                 origin,
                 "Boleto vencido ou não disponível"
               );
-              await this._resetUserState(phoneNumber); // Resetar o estado do usuário
-              await this._handleInitialState(origin, phoneNumber); // Redirecionar o usuário de volta ao menu inicial
+              await this._handleInitialState(origin, phoneNumber);
             } else {
               const formatBoletoPixArray = utils.formatCodigoPix(
                 responseBoletoPixArray
@@ -253,6 +282,11 @@ class StateMachine {
           }
         } catch (error) {
           console.error("Case 4 retornou um erro - ", error.message);
+          await this._handleErrorState(
+            origin,
+            phoneNumber,
+            "Ocorreu um erro ao processar sua solicitação. Por favor, tente novamente."
+          );
         }
         break;
     }
