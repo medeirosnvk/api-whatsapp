@@ -622,8 +622,6 @@ class StateMachine {
             console.log(
               `responseBoletoPix executado para ${iddevedor} com resposta ${responseBoletoPix}`
             );
-
-            this._setCurrentState(phoneNumber, "INICIO");
           } catch (error) {
             console.error(
               "Erro ao obter dados do boleto para iddevedor",
