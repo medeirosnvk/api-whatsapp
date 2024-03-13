@@ -689,37 +689,36 @@ class StateMachine {
 
     switch (currentState) {
       case "INICIO":
-        await this._handleInitialState(origin, "80307836", response);
+        await this._handleInitialState(origin, phoneNumber, response); // Alterado para passar phoneNumber
         this._setCurrentState(phoneNumber, "MENU");
         break;
 
       case "MENU":
-        await this._handleMenuState(origin, "80307836", response);
-        this._setCurrentState(phoneNumber, "CREDOR");
+        await this._handleMenuState(origin, phoneNumber, response); // Alterado para passar phoneNumber
         break;
 
       case "CREDOR":
-        await this._handleCredorState(origin, "80307836", response);
+        await this._handleCredorState(origin, phoneNumber, response); // Alterado para passar phoneNumber
         this._setCurrentState(phoneNumber, "OFERTA");
         break;
 
       case "OFERTA":
-        await this._handleOfertaState(origin, "80307836", response);
+        await this._handleOfertaState(origin, phoneNumber, response); // Alterado para passar phoneNumber
         this._setCurrentState(phoneNumber, "INICIO");
         break;
 
       case "VER_ACORDOS":
-        await this._handleAcordoState(origin, "80307836", response);
+        await this._handleAcordoState(origin, phoneNumber, response); // Alterado para passar phoneNumber
         this._setCurrentState(phoneNumber, "INICIO");
         break;
 
       case "VER_LINHA_DIGITAVEL":
-        await this._handleBoletoState(origin, "80307836", response);
+        await this._handleBoletoState(origin, phoneNumber, response); // Alterado para passar phoneNumber
         this._setCurrentState(phoneNumber, "INICIO");
         break;
 
       case "VER_CODIGO_PIX":
-        await this._handlePixState(origin, "80307836", response);
+        await this._handlePixState(origin, phoneNumber, response); // Alterado para passar phoneNumber
         this._setCurrentState(phoneNumber, "INICIO");
         break;
     }
