@@ -160,6 +160,8 @@ class StateMachine {
             const message = `${credorMessage}\n\n_Selecione o credor (por exemplo, responda com "1" ou "2")_`;
 
             await this._postMessage(origin, message);
+
+            this._setCurrentState(phoneNumber, "CREDOR");
           }
         } catch (error) {
           console.error("Case 1 retornou um erro - ", error.message);
