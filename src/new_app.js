@@ -576,6 +576,7 @@ class StateMachine {
           origin,
           "Você não possui acordos efetuados a listar."
         );
+        this._setCurrentState(phoneNumber, "INICIO");
       } else {
         const acordoMessage = utils.formatCredorAcordos(acordosFirmados);
         await this._postMessage(origin, acordoMessage);
