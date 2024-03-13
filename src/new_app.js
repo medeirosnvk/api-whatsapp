@@ -574,10 +574,8 @@ class StateMachine {
       const acordosFirmados = await requests.getAcordosFirmados(document);
 
       if (!acordosFirmados || acordosFirmados.length === 0) {
-        await this._postMessage(
-          origin,
-          "Você não possui acordos efetuados a listar."
-        );
+        const message = `Você não possui acordos efetuados a listar.\n\n_Digite a tecla 5 para voltar._`;
+        await this._postMessage(origin, message);
         this._setCurrentState(phoneNumber, "INICIO");
       } else {
         const formatAcordos = utils.formatCredorAcordos(acordosFirmados);
@@ -604,11 +602,9 @@ class StateMachine {
       console.log("acordosFirmados -", acordosFirmados);
 
       if (!acordosFirmados || acordosFirmados.length === 0) {
-        await this._postMessage(
-          origin,
-          "Você não possui acordos nem Linhas Digitáveis a listar."
-        );
-        this._setCurrentState(phoneNumber, "INICIO"); // Define o estado como MENU
+        const message = `Você não possui acordos nem Linhas Digitáveis a listar.\n\n_Digite a tecla 5 para voltar._`;
+        await this._postMessage(origin, message);
+        this._setCurrentState(phoneNumber, "INICIO");
       } else {
         const responseBoletoPixArray = [];
 
@@ -677,11 +673,9 @@ class StateMachine {
       console.log("acordosFirmados -", acordosFirmados);
 
       if (!acordosFirmados || acordosFirmados.length === 0) {
-        await this._postMessage(
-          origin,
-          "Você não possui acordos nem Códigos PIX a listar."
-        );
-        this._setCurrentState(phoneNumber, "INICIO"); // Define o estado como MENU
+        const message = `Você não possui acordos nem Códigos PIX a listar.\n\n_Digite a tecla 5 para voltar._`;
+        await this._postMessage(origin, message);
+        this._setCurrentState(phoneNumber, "INICIO");
       } else {
         const responseBoletoPixArray = [];
 
