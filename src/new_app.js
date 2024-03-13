@@ -604,7 +604,6 @@ class StateMachine {
           origin,
           "Você não possui acordos nem Linhas Digitáveis a listar."
         );
-        await this._handleInitialState(origin, phoneNumber);
         this._setCurrentState(phoneNumber, "INICIO"); // Define o estado como MENU
       } else {
         const responseBoletoPixArray = [];
@@ -675,7 +674,6 @@ class StateMachine {
           origin,
           "Você não possui acordos nem Códigos PIX a listar."
         );
-        await this._handleInitialState(origin, phoneNumber);
         this._setCurrentState(phoneNumber, "INICIO"); // Define o estado como MENU
       } else {
         const responseBoletoPixArray = [];
