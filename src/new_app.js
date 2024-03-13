@@ -580,9 +580,10 @@ class StateMachine {
         );
         this._setCurrentState(phoneNumber, "INICIO");
       } else {
-        const acordoMessage = utils.formatCredorAcordos(acordosFirmados);
-        await this._postMessage(origin, acordoMessage);
+        const formatAcordos = utils.formatCredorAcordos(acordosFirmados);
 
+        const message = `${formatAcordos}\n\n_Digite a tecla 5 para voltar._`;
+        await this._postMessage(origin, message);
         this._setCurrentState(phoneNumber, "INICIO");
       }
     } catch (error) {
