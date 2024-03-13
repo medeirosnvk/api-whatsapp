@@ -71,12 +71,6 @@ class StateMachine {
     delete this.userStates[phoneNumber];
   }
 
-  async _handleErrorState(origin, phoneNumber, errorMessage) {
-    await this._postMessage(origin, errorMessage);
-    await this._resetUserState(phoneNumber);
-    await this._handleInitialState(origin, phoneNumber);
-  }
-
   _setDataMenu(phoneNumber, data) {
     this.userStates[phoneNumber].data.MENU = data;
   }
@@ -147,6 +141,12 @@ class StateMachine {
     throw new Error("Something não encontrado");
   }
 
+  async _handleErrorState(origin, phoneNumber, errorMessage) {
+    await this._postMessage(origin, errorMessage);
+    await this._resetUserState(phoneNumber);
+    await this._handleInitialState(origin, phoneNumber);
+  }
+
   async _handleMenuState(origin, phoneNumber = "80307836", response) {
     const initialStateResponse = response.body.trim();
     switch (initialStateResponse) {
@@ -173,22 +173,7 @@ class StateMachine {
 
       case "2":
         try {
-          const { cpfcnpj: document } = await this._getCredorFromDB(
-            phoneNumber
-          );
-
-          const acordosFirmados = await requests.getAcordosFirmados(document);
-
-          if (!acordosFirmados || acordosFirmados.length === 0) {
-            await this._postMessage(
-              origin,
-              "Você não possui acordos efetuados a listar."
-            );
-            await this._handleInitialState(origin, phoneNumber);
-          } else {
-            const acordoMessage = utils.formatCredorAcordos(acordosFirmados);
-            await this._postMessage(origin, acordoMessage);
-          }
+          await this._handleAcordoState(origin, phoneNumber); // Passando o phoneNumber como argumento
         } catch (error) {
           console.error("Case 2 retornou um erro - ", error.message);
           await this._handleErrorState(
@@ -201,21 +186,7 @@ class StateMachine {
 
       case "3":
         try {
-          const { cpfcnpj: document } = await this._getCredorFromDB(
-            phoneNumber
-          );
-
-          const acordosFirmados = await requests.getAcordosFirmados(document);
-          console.log("acordosFirmados -", acordosFirmados);
-
-          // const formatBoletoPixArray = utils.formatCodigoBoleto(
-          //   responseBoletoPixArray
-          // );
-
-          await this._postMessage(
-            origin,
-            JSON.stringify(acordosFirmados, undefined, 2)
-          );
+          await this._handleBoletoState(origin, phoneNumber, response); // Passando o phoneNumber e response como argumentos
         } catch (error) {
           console.error("Case 3 retornou um erro - ", error.message);
           await this._handleErrorState(
@@ -228,67 +199,7 @@ class StateMachine {
 
       case "4":
         try {
-          const { cpfcnpj: document } = await this._getCredorFromDB(
-            phoneNumber
-          );
-
-          const acordosFirmados = await requests.getAcordosFirmados(document);
-          console.log("acordosFirmados -", acordosFirmados);
-
-          if (!acordosFirmados || acordosFirmados.length === 0) {
-            await this._postMessage(
-              origin,
-              "Você não possui acordos nem Códigos PIX a listar."
-            );
-            await this._handleInitialState(origin, phoneNumber);
-            this._setCurrentState(phoneNumber, "MENU"); // Define o estado como MENU
-          } else {
-            const responseBoletoPixArray = [];
-
-            for (const acordo of acordosFirmados) {
-              const iddevedor = acordo.iddevedor;
-
-              try {
-                const responseBoletoPix = await requests.getDataBoletoPix(
-                  iddevedor
-                );
-                responseBoletoPixArray.push(responseBoletoPix);
-                console.log(
-                  `responseBoletoPix executado para ${iddevedor} com resposta ${responseBoletoPix}`
-                );
-              } catch (error) {
-                console.error(
-                  "Erro ao obter dados do boleto para iddevedor",
-                  iddevedor,
-                  ":",
-                  error.message
-                );
-                await this._handleErrorState(
-                  origin,
-                  phoneNumber,
-                  "Ocorreu um erro ao processar sua solicitação. Por favor, tente novamente."
-                );
-                return;
-              }
-            }
-
-            // Verificar se acordosFirmados tem dados e responseBoletoPixArray está vazio ou indefinido
-            if (
-              acordosFirmados.length > 0 &&
-              (!responseBoletoPixArray || responseBoletoPixArray.length === 0)
-            ) {
-              await this._postMessage(
-                origin,
-                "Código PIX vencido ou não disponível"
-              );
-              await this._handleInitialState(origin, phoneNumber);
-            } else {
-              const formatBoletoPixArray = utils.formatCodigoPix(
-                responseBoletoPixArray
-              );
-              await this._postMessage(origin, formatBoletoPixArray);
-            }
-          }
+          await this._handlePixState(origin, phoneNumber, response); // Passando o phoneNumber e response como argumentos
         } catch (error) {
           console.error("Case 4 retornou um erro - ", error.message);
           await this._handleErrorState(
@@ -301,7 +212,7 @@ class StateMachine {
     }
   }
 
-  async _handleInitialState(origin, phoneNumber = "80307836") {
+  async _handleInitialState(origin, phoneNumber = "80307836", response) {
     const { nome: userName } = await this._getCredorFromDB(phoneNumber);
     const message = `Olá *${userName}*,\n\nPor favor, escolha uma opção:\n\n1 - Credores\n2 - Ver Acordos\n3 - Linha Digitável\n4 - Pix Copia e Cola\n5 - Voltar`;
 
@@ -654,6 +565,122 @@ class StateMachine {
     }
   }
 
+  async _handleAcordoState(origin, phoneNumber = "80307836", response) {
+    try {
+      const { cpfcnpj: document } = await this._getCredorFromDB(phoneNumber);
+
+      const acordosFirmados = await requests.getAcordosFirmados(document);
+
+      if (!acordosFirmados || acordosFirmados.length === 0) {
+        await this._postMessage(
+          origin,
+          "Você não possui acordos efetuados a listar."
+        );
+      } else {
+        const acordoMessage = utils.formatCredorAcordos(acordosFirmados);
+        await this._postMessage(origin, acordoMessage);
+      }
+    } catch (error) {
+      console.error("Case 2 retornou um erro - ", error.message);
+      await this._handleErrorState(
+        origin,
+        phoneNumber,
+        "Ocorreu um erro ao processar sua solicitação. Por favor, tente novamente."
+      );
+    }
+  }
+
+  async _handleBoletoState(origin, phoneNumber = "80307836", response) {
+    try {
+      const { cpfcnpj: document } = await this._getCredorFromDB(phoneNumber);
+
+      const acordosFirmados = await requests.getAcordosFirmados(document);
+      console.log("acordosFirmados -", acordosFirmados);
+
+      const formatBoletoPixArray = utils.formatCodigoBoleto(acordosFirmados);
+
+      await this._postMessage(origin, formatBoletoPixArray);
+    } catch (error) {
+      console.error("Case 3 retornou um erro - ", error.message);
+      await this._handleErrorState(
+        origin,
+        phoneNumber,
+        "Ocorreu um erro ao processar sua solicitação. Por favor, tente novamente."
+      );
+    }
+  }
+
+  async _handlePixState(origin, phoneNumber = "80307836", response) {
+    try {
+      const { cpfcnpj: document } = await this._getCredorFromDB(phoneNumber);
+
+      const acordosFirmados = await requests.getAcordosFirmados(document);
+      console.log("acordosFirmados -", acordosFirmados);
+
+      if (!acordosFirmados || acordosFirmados.length === 0) {
+        await this._postMessage(
+          origin,
+          "Você não possui acordos nem Códigos PIX a listar."
+        );
+        await this._handleInitialState(origin, phoneNumber);
+        this._setCurrentState(phoneNumber, "MENU"); // Define o estado como MENU
+      } else {
+        const responseBoletoPixArray = [];
+
+        for (const acordo of acordosFirmados) {
+          const iddevedor = acordo.iddevedor;
+
+          try {
+            const responseBoletoPix = await requests.getDataBoletoPix(
+              iddevedor
+            );
+            responseBoletoPixArray.push(responseBoletoPix);
+            console.log(
+              `responseBoletoPix executado para ${iddevedor} com resposta ${responseBoletoPix}`
+            );
+          } catch (error) {
+            console.error(
+              "Erro ao obter dados do boleto para iddevedor",
+              iddevedor,
+              ":",
+              error.message
+            );
+            await this._handleErrorState(
+              origin,
+              phoneNumber,
+              "Ocorreu um erro ao processar sua solicitação. Por favor, tente novamente."
+            );
+            return;
+          }
+        }
+
+        // Verificar se acordosFirmados tem dados e responseBoletoPixArray está vazio ou indefinido
+        if (
+          acordosFirmados.length > 0 &&
+          (!responseBoletoPixArray || responseBoletoPixArray.length === 0)
+        ) {
+          await this._postMessage(
+            origin,
+            "Código PIX vencido ou não disponível"
+          );
+          await this._handleInitialState(origin, phoneNumber);
+        } else {
+          const formatBoletoPixArray = utils.formatCodigoPix(
+            responseBoletoPixArray
+          );
+          await this._postMessage(origin, formatBoletoPixArray);
+        }
+      }
+    } catch (error) {
+      console.error("Case 4 retornou um erro - ", error.message);
+      await this._handleErrorState(
+        origin,
+        phoneNumber,
+        "Ocorreu um erro ao processar sua solicitação. Por favor, tente novamente."
+      );
+    }
+  }
+
   async handleMessage(phoneNumber, response) {
     const { credor, currentState } = this._getState(phoneNumber);
     const origin = response.from;
@@ -662,7 +689,7 @@ class StateMachine {
 
     switch (currentState) {
       case "INICIO":
-        await this._handleInitialState(origin, "80307836");
+        await this._handleInitialState(origin, "80307836", response);
         this._setCurrentState(phoneNumber, "MENU");
         break;
 
@@ -683,12 +710,17 @@ class StateMachine {
 
       case "VER_ACORDOS":
         await this._handleAcordoState(origin, "80307836", response);
-        this._setCurrentState(phoneNumber, "ACORDOS");
+        this._setCurrentState(phoneNumber, "INICIO");
         break;
 
-      case "LINHA_DIGITAVEL":
-        await this._handleAcordoState(origin, "80307836", response);
-        this._setCurrentState(phoneNumber, "LINHA_DIGITAVEL");
+      case "VER_LINHA_DIGITAVEL":
+        await this._handleBoletoState(origin, "80307836", response);
+        this._setCurrentState(phoneNumber, "INICIO");
+        break;
+
+      case "VER_CODIGO_PIX":
+        await this._handlePixState(origin, "80307836", response);
+        this._setCurrentState(phoneNumber, "INICIO");
         break;
     }
   }
