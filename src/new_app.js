@@ -179,7 +179,14 @@ class StateMachine {
 
           const acordosFirmados = await requests.getAcordosFirmados(document);
 
-          if (acordosFirmados && acordosFirmados.length > 0) {
+          if (!acordosFirmados || acordosFirmados.length === 0) {
+            await this._postMessage(
+              origin,
+              "Você não possui acordos efetuados a listar."
+            );
+            await this._handleInitialState(origin, phoneNumber);
+            this._setCurrentState(phoneNumber, "MENU"); // Define o estado como MENU
+          } else {
             const acordoMessage = utils.formatCredorAcordos(acordosFirmados);
 
             await this._postMessage(origin, acordoMessage);
