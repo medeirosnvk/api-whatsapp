@@ -39,16 +39,18 @@ class StateMachine {
   }
 
   _getState(phoneNumber) {
-    if (!this.userStates[phoneNumber]) {
-      this.userStates[phoneNumber] = {
-        currentState: "INICIO",
-        credor: {},
-        data: {
-          CREDOR: {},
-          OFERTA: {},
-        },
-      };
+    if (this.userStates[phoneNumber]) {
+      return this.userStates[phoneNumber];
     }
+
+    this.userStates[phoneNumber] = {
+      currentState: "INICIO",
+      credor: {},
+      data: {
+        CREDOR: {},
+        OFERTA: {},
+      },
+    };
 
     return this.userStates[phoneNumber];
   }
@@ -147,8 +149,6 @@ class StateMachine {
 
   async _handleMenuState(origin, phoneNumber = "80307836", response) {
     const initialStateResponse = response.body.trim();
-    const state = this._getState(phoneNumber);
-
     switch (initialStateResponse) {
       case "1":
         try {
@@ -231,13 +231,12 @@ class StateMachine {
           console.log("acordosFirmados -", acordosFirmados);
 
           if (!acordosFirmados || acordosFirmados.length === 0) {
-            await this._handleErrorState(
+            await this._postMessage(
               origin,
-              phoneNumber,
-              "Você não possui Acordos nem códigos PIX a listar."
+              "Você não possui acordos nem Códigos PIX a listar."
             );
-            this._setCurrentState(phoneNumber, "MENU");
-            return;
+            await this._handleInitialState(origin, phoneNumber);
+            this._setCurrentState(phoneNumber, "MENU"); // Define o estado como MENU
           } else {
             const responseBoletoPixArray = [];
 
@@ -273,12 +272,11 @@ class StateMachine {
               acordosFirmados.length > 0 &&
               (!responseBoletoPixArray || responseBoletoPixArray.length === 0)
             ) {
-              await this._handleErrorState(
+              await this._postMessage(
                 origin,
-                phoneNumber,
-                "Código PIX vencido ou não disponível."
+                "Código PIX vencido ou não disponível"
               );
-              this._setCurrentState(phoneNumber, "MENU");
+              await this._handleInitialState(origin, phoneNumber);
             } else {
               const formatBoletoPixArray = utils.formatCodigoPix(
                 responseBoletoPixArray
@@ -299,8 +297,6 @@ class StateMachine {
   }
 
   async _handleInitialState(origin, phoneNumber = "80307836") {
-    const state = this._getState(phoneNumber);
-
     const { nome: userName } = await this._getCredorFromDB(phoneNumber);
     const message = `Olá *${userName}*,\n\nPor favor, escolha uma opção:\n\n1 - Credores\n2 - Ver Acordos\n3 - Linha Digitável\n4 - Pix Copia e Cola\n5 - Voltar`;
 
@@ -308,8 +304,6 @@ class StateMachine {
   }
 
   async _handleCredorState(origin, phoneNumber = "80307836", response) {
-    const state = this._getState(phoneNumber);
-
     if (response && response.body.trim().match(/^\d+$/)) {
       const selectedOption = parseInt(response.body.trim());
       const { cpfcnpj: document } = this._getCredor(phoneNumber);
