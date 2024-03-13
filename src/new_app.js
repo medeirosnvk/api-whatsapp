@@ -185,10 +185,8 @@ class StateMachine {
               "Você não possui acordos efetuados a listar."
             );
             await this._handleInitialState(origin, phoneNumber);
-            this._setCurrentState(phoneNumber, "MENU"); // Define o estado como MENU
           } else {
             const acordoMessage = utils.formatCredorAcordos(acordosFirmados);
-
             await this._postMessage(origin, acordoMessage);
           }
         } catch (error) {
