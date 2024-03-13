@@ -622,6 +622,8 @@ class StateMachine {
             console.log(
               `responseBoletoPix executado para ${iddevedor} com resposta ${responseBoletoPix}`
             );
+
+            this._setCurrentState(phoneNumber, "INICIO");
           } catch (error) {
             console.error(
               "Erro ao obter dados do boleto para iddevedor",
@@ -647,12 +649,13 @@ class StateMachine {
             origin,
             "Código PIX vencido ou não disponível"
           );
-          await this._handleInitialState(origin, phoneNumber);
+          this._setCurrentState(phoneNumber, "INICIO");
         } else {
           const formatBoletoPixArray = utils.formatCodigoBoleto(
             responseBoletoPixArray
           );
           await this._postMessage(origin, formatBoletoPixArray);
+          this._setCurrentState(phoneNumber, "INICIO");
         }
       }
     } catch (error) {
@@ -717,12 +720,13 @@ class StateMachine {
             origin,
             "Código PIX vencido ou não disponível"
           );
-          await this._handleInitialState(origin, phoneNumber);
+          this._setCurrentState(phoneNumber, "INICIO");
         } else {
           const formatBoletoPixArray = utils.formatCodigoPix(
             responseBoletoPixArray
           );
           await this._postMessage(origin, formatBoletoPixArray);
+          this._setCurrentState(phoneNumber, "INICIO");
         }
       }
     } catch (error) {
