@@ -599,11 +599,62 @@ class StateMachine {
       const acordosFirmados = await requests.getAcordosFirmados(document);
       console.log("acordosFirmados -", acordosFirmados);
 
-      const formatBoletoPixArray = utils.formatCodigoBoleto(acordosFirmados);
+      if (!acordosFirmados || acordosFirmados.length === 0) {
+        await this._postMessage(
+          origin,
+          "Você não possui acordos nem Linhas Digitáveis a listar."
+        );
+        await this._handleInitialState(origin, phoneNumber);
+        this._setCurrentState(phoneNumber, "INICIO"); // Define o estado como MENU
+      } else {
+        const responseBoletoPixArray = [];
 
-      await this._postMessage(origin, formatBoletoPixArray);
+        for (const acordo of acordosFirmados) {
+          const iddevedor = acordo.iddevedor;
+
+          try {
+            const responseBoletoPix = await requests.getDataBoletoPix(
+              iddevedor
+            );
+            responseBoletoPixArray.push(responseBoletoPix);
+            console.log(
+              `responseBoletoPix executado para ${iddevedor} com resposta ${responseBoletoPix}`
+            );
+          } catch (error) {
+            console.error(
+              "Erro ao obter dados do boleto para iddevedor",
+              iddevedor,
+              ":",
+              error.message
+            );
+            await this._handleErrorState(
+              origin,
+              phoneNumber,
+              "Ocorreu um erro ao processar sua solicitação. Por favor, tente novamente."
+            );
+            return;
+          }
+        }
+
+        // Verificar se acordosFirmados tem dados e responseBoletoPixArray está vazio ou indefinido
+        if (
+          acordosFirmados.length > 0 &&
+          (!responseBoletoPixArray || responseBoletoPixArray.length === 0)
+        ) {
+          await this._postMessage(
+            origin,
+            "Código PIX vencido ou não disponível"
+          );
+          await this._handleInitialState(origin, phoneNumber);
+        } else {
+          const formatBoletoPixArray = utils.formatCodigoBoleto(
+            responseBoletoPixArray
+          );
+          await this._postMessage(origin, formatBoletoPixArray);
+        }
+      }
     } catch (error) {
-      console.error("Case 3 retornou um erro - ", error.message);
+      console.error("Case 4 retornou um erro - ", error.message);
       await this._handleErrorState(
         origin,
         phoneNumber,
@@ -625,7 +676,7 @@ class StateMachine {
           "Você não possui acordos nem Códigos PIX a listar."
         );
         await this._handleInitialState(origin, phoneNumber);
-        this._setCurrentState(phoneNumber, "MENU"); // Define o estado como MENU
+        this._setCurrentState(phoneNumber, "INICIO"); // Define o estado como MENU
       } else {
         const responseBoletoPixArray = [];
 
