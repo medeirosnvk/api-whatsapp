@@ -653,7 +653,7 @@ class StateMachine {
             responseBoletoPixArray
           );
 
-          const message = `${formatBoletoPixArray}\n\n_Digite a tecla 5 para voltar.`;
+          const message = `${formatBoletoPixArray}\n\n_Digite a tecla 5 para voltar._`;
           await this._postMessage(origin, message);
           this._setCurrentState(phoneNumber, "INICIO");
         }
@@ -726,7 +726,7 @@ class StateMachine {
             responseBoletoPixArray
           );
 
-          const message = `${formatBoletoPixArray}\n\n_Digite a tecla 5 para voltar.`;
+          const message = `${formatBoletoPixArray}\n\n_Digite a tecla 5 para voltar._`;
           await this._postMessage(origin, message);
           this._setCurrentState(phoneNumber, "INICIO");
         }
