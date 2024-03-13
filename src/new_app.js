@@ -579,10 +579,11 @@ class StateMachine {
           "Você não possui acordos efetuados a listar."
         );
         this._setCurrentState(phoneNumber, "INICIO");
-        return;
       } else {
         const acordoMessage = utils.formatCredorAcordos(acordosFirmados);
         await this._postMessage(origin, acordoMessage);
+
+        this._setCurrentState(phoneNumber, "INICIO");
       }
     } catch (error) {
       console.error("Case 2 retornou um erro - ", error.message);
