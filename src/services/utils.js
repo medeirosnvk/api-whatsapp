@@ -41,7 +41,7 @@ function formatCredorInfo(creditorInfo) {
   return creditorInfo
     .map(
       (info, index) =>
-        `*${index + 1})*\n` +
+        `${index + 1})\n` +
         `IdDevedor: ${info.iddevedor}\n` +
         `Empresa: ${info.empresa}\n` +
         `Saldo: ${formatValue(info.saldo)}`
@@ -53,7 +53,7 @@ function formatCredorAcordos(creditorAcordos) {
   return creditorAcordos
     .map(
       (info, index) =>
-        `*${index + 1})*\n` +
+        `${index + 1})\n` +
         `Empresa: ${info.credor}\n` +
         `IdDevedor: ${info.iddevedor}\n` +
         `IdAcordo: ${info.idacordo}\n` +
@@ -67,7 +67,7 @@ function formatCredorDividas(creditorDividas) {
   return creditorDividas
     .map(
       (info, index) =>
-        // `*--------- ${index + 1} ---------*\n` +
+        // `${index + 1})\n` +
         `Contrato: ${info.contrato}\n` +
         `Vencimento: ${formatDateIsoToBr(info.vencimento)}\n` +
         `Dias Atraso: ${info.diasatraso}\n` +
