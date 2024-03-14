@@ -112,6 +112,7 @@ class StateMachine {
     `;
 
     const dbResponse = await executeQuery(dbQuery, customDbConfig);
+    console.log("dbResponse -", dbResponse);
 
     if (dbResponse && dbResponse.length) {
       this._setCredor(phoneNumber, dbResponse[0]);
