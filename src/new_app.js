@@ -635,6 +635,9 @@ class StateMachine {
           }
         }
 
+        console.log("acordosFirmados -", acordosFirmados);
+        console.log("responseBoletoPixArray -", responseBoletoPixArray);
+
         // Verificar se acordosFirmados tem dados e responseBoletoPixArray está vazio ou indefinido
         if (
           acordosFirmados.length > 0 &&
