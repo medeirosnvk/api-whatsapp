@@ -106,9 +106,22 @@ class StateMachine {
 
   async _getCredorFromDB(phoneNumber) {
     const dbQuery = `
-      SELECT d.iddevedor,d.cpfcnpj,d.nome,t.telefone,t.idtelefones
-      FROM telefones2 t JOIN devedor d ON d.cpfcnpj = t.cpfcnpj
-      WHERE RIGHT(t.telefone, 8) = '${phoneNumber}' AND d.idusuario NOT IN (11, 14);
+      select
+      d.iddevedor,
+      d.cpfcnpj,
+      d.nome,
+      t.telefone,
+      t.idtelefones
+    from
+      statustelefone s,
+      telefones2 t
+    left join devedor d on
+      d.cpfcnpj = t.cpfcnpj
+    where
+      right(t.telefone,8) = '${phoneNumber}'
+      and d.idusuario not in (11, 14)
+      and s.idstatustelefone = t.idstatustelefone
+      and s.fila = 's' ;
     `;
 
     const dbResponse = await executeQuery(dbQuery, customDbConfig);
@@ -121,7 +134,7 @@ class StateMachine {
     throw new Error(`Nao existe credor vinculado ao numero ${phoneNumber}.`);
   }
 
-  async _getSomething(phoneNumber) {
+  async _getWhaticketStatus(phoneNumber) {
     const dbQuery = `
     SELECT DISTINCT c.*, t.*,
     (SELECT m.fromMe FROM Messages m WHERE m.ticketId = t.id ORDER BY m.createdAt DESC LIMIT 1) AS fromMe,
