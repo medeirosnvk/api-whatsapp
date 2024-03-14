@@ -112,14 +112,13 @@ class StateMachine {
     `;
 
     const dbResponse = await executeQuery(dbQuery, customDbConfig);
-    console.log("dbResponse -", dbResponse);
 
     if (dbResponse && dbResponse.length) {
       this._setCredor(phoneNumber, dbResponse[0]);
       return dbResponse[0];
     }
 
-    throw new Error("Credor não encontrado");
+    throw new Error(`Nao existe credor vinculado ao numero ${phoneNumber}.`);
   }
 
   async _getSomething(phoneNumber) {
