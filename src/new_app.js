@@ -168,12 +168,15 @@ class StateMachine {
           const { cpfcnpj: document } = this._getCredor(phoneNumber);
           const credorInfo = await requests.getCredorInfo(document);
 
-          if (credorInfo && credorInfo.length > 0) {
+          if (!credorInfo || credorInfo.length === 0) {
+            const messageErro = `Você não possui dívidas ou ofertas disponíveis.\n\n_Digite a tecla 5 para voltar._`;
+            await this._postMessage(origin, messageErro);
+            this._setCurrentState(phoneNumber, "INICIO");
+          } else {
             const credorMessage = utils.formatCredorInfo(credorInfo);
-            const message = `${credorMessage}\n\n_Selecione o credor (por exemplo, responda com "1" ou "2")_`;
+            const messageSucess = `${credorMessage}\n\n_Selecione o credor (por exemplo, responda com "1" ou "2")_`;
 
-            await this._postMessage(origin, message);
-
+            await this._postMessage(origin, messageSucess);
             this._setCurrentState(phoneNumber, "CREDOR");
           }
         } catch (error) {
