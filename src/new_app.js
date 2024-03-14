@@ -640,10 +640,7 @@ class StateMachine {
           acordosFirmados.length > 0 &&
           (!responseBoletoPixArray || responseBoletoPixArray.length === 0)
         ) {
-          await this._postMessage(
-            origin,
-            "Código PIX vencido ou não disponível"
-          );
+          await this._postMessage(origin, "Boleto vencido ou não disponível");
           this._setCurrentState(phoneNumber, "INICIO");
         } else {
           const formatBoletoPixArray = utils.formatCodigoBoleto(
@@ -656,7 +653,7 @@ class StateMachine {
         }
       }
     } catch (error) {
-      console.error("Case 4 retornou um erro - ", error.message);
+      console.error("Case 3 retornou um erro - ", error.message);
       await this._handleErrorState(
         origin,
         phoneNumber,
