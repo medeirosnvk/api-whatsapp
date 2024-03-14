@@ -641,11 +641,14 @@ class StateMachine {
         // Verificar se acordosFirmados tem dados e responseBoletoPixArray está vazio ou indefinido
         if (
           acordosFirmados.length > 0 &&
-          (!responseBoletoPixArray || responseBoletoPixArray.length === 0)
+          responseBoletoPixArray &&
+          responseBoletoPixArray.length === 0
         ) {
+          console.log("Condição do if alcançada.");
           await this._postMessage(origin, "Boleto vencido ou não disponível");
           this._setCurrentState(phoneNumber, "INICIO");
         } else {
+          console.log("Condição do if não alcançada.");
           const formatBoletoPixArray = utils.formatCodigoBoleto(
             responseBoletoPixArray
           );
@@ -709,7 +712,8 @@ class StateMachine {
         // Verificar se acordosFirmados tem dados e responseBoletoPixArray está vazio ou indefinido
         if (
           acordosFirmados.length > 0 &&
-          (!responseBoletoPixArray || responseBoletoPixArray.length === 0)
+          responseBoletoPixArray &&
+          responseBoletoPixArray.length === 0
         ) {
           await this._postMessage(
             origin,
