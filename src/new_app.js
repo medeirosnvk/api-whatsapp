@@ -147,7 +147,7 @@ class StateMachine {
     await this._handleInitialState(origin, phoneNumber);
   }
 
-  async _handleMenuState(origin, phoneNumber = "80307836", response) {
+  async _handleMenuState(origin, phoneNumber, response) {
     const initialStateResponse = response.body.trim();
     switch (initialStateResponse) {
       case "1":
@@ -214,14 +214,14 @@ class StateMachine {
     }
   }
 
-  async _handleInitialState(origin, phoneNumber = "80307836", response) {
+  async _handleInitialState(origin, phoneNumber, response) {
     const { nome: userName } = await this._getCredorFromDB(phoneNumber);
-    const message = `Olá *${userName}*,\n\nPor favor, escolha uma opção:\n\n1 - Credores\n2 - Ver Acordos\n3 - Linha Digitável\n4 - Pix Copia e Cola\n5 - Voltar`;
+    const message = `Olá *${userName}*,\n\nPor favor, escolha uma opção:\n\n1) Credores\n2) Ver Acordos\n3) Linha Digitável\n4) Pix Copia e Cola\n5) Voltar`;
 
     await this._postMessage(origin, message);
   }
 
-  async _handleCredorState(origin, phoneNumber = "80307836", response) {
+  async _handleCredorState(origin, phoneNumber, response) {
     if (response && response.body.trim().match(/^\d+$/)) {
       const selectedOption = parseInt(response.body.trim());
       const { cpfcnpj: document } = this._getCredor(phoneNumber);
@@ -273,7 +273,7 @@ class StateMachine {
     }
   }
 
-  async _handleOfertaState(origin, phoneNumber = "80307836", response) {
+  async _handleOfertaState(origin, phoneNumber, response) {
     if (response && response.body.trim().match(/^\d+$/)) {
       const selectedOptionParcelamento = parseInt(response.body.trim());
       const credorInfo = await requests.getCredorInfo(this.document);
@@ -567,7 +567,7 @@ class StateMachine {
     }
   }
 
-  async _handleAcordoState(origin, phoneNumber = "80307836", response) {
+  async _handleAcordoState(origin, phoneNumber, response) {
     try {
       const { cpfcnpj: document } = await this._getCredorFromDB(phoneNumber);
 
@@ -594,7 +594,7 @@ class StateMachine {
     }
   }
 
-  async _handleBoletoState(origin, phoneNumber = "80307836", response) {
+  async _handleBoletoState(origin, phoneNumber, response) {
     try {
       const { cpfcnpj: document } = await this._getCredorFromDB(phoneNumber);
 
@@ -665,7 +665,7 @@ class StateMachine {
     }
   }
 
-  async _handlePixState(origin, phoneNumber = "80307836", response) {
+  async _handlePixState(origin, phoneNumber, response) {
     try {
       const { cpfcnpj: document } = await this._getCredorFromDB(phoneNumber);
 
@@ -792,7 +792,7 @@ client.on("ready", () => {
 
 client.on("message", async (response) => {
   const phoneNumber = response.from.replace(/[^0-9]/g, "");
-  await stateMachine.handleMessage("80307836", response);
+  await stateMachine.handleMessage(phoneNumber, response);
 });
 
 client.initialize();
