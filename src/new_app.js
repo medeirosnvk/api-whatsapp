@@ -791,7 +791,9 @@ client.on("ready", () => {
 });
 
 client.on("message", async (response) => {
-  const phoneNumber = response.from.replace(/[^0-9]/g, "");
+  const phoneNumber = response.from
+    .replace(/[^\d]/g, "")
+    .replace(/^.*?(\d{8})$/, "$1");
   await stateMachine.handleMessage(phoneNumber, response);
 });
 
