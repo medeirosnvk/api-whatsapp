@@ -169,7 +169,7 @@ class StateMachine {
           const credorInfo = await requests.getCredorInfo(document);
 
           if (!credorInfo || credorInfo.length === 0) {
-            const messageErro = `Você não possui dívidas ou ofertas disponíveis.\n\n_Digite a tecla 5 para voltar._`;
+            const messageErro = `Você não possui dívidas ou ofertas disponíveis.`;
             await this._postMessage(origin, messageErro);
             await this._handleInitialState(origin, phoneNumber, response);
           } else {
@@ -592,13 +592,13 @@ class StateMachine {
       if (!acordosFirmados || acordosFirmados.length === 0) {
         const message = `Você não possui acordos efetuados a listar.\n\n_Digite a tecla 5 para voltar._`;
         await this._postMessage(origin, message);
-        this._setCurrentState(phoneNumber, "INICIO");
+        await this._handleInitialState(origin, phoneNumber, response);
       } else {
         const formatAcordos = utils.formatCredorAcordos(acordosFirmados);
 
         const message = `${formatAcordos}\n\n_Digite a tecla 5 para voltar._`;
         await this._postMessage(origin, message);
-        this._setCurrentState(phoneNumber, "INICIO");
+        await this._handleInitialState(origin, phoneNumber, response);
       }
     } catch (error) {
       console.error("Case 2 retornou um erro - ", error.message);
@@ -620,7 +620,7 @@ class StateMachine {
       if (!acordosFirmados || acordosFirmados.length === 0) {
         const message = `Você não possui acordos nem Linhas Digitáveis a listar.\n\n_Digite a tecla 5 para voltar._`;
         await this._postMessage(origin, message);
-        this._setCurrentState(phoneNumber, "INICIO");
+        await this._handleInitialState(origin, phoneNumber, response);
       } else {
         const responseBoletoPixArray = [];
 
@@ -658,7 +658,7 @@ class StateMachine {
           responseBoletoPixArray.length === 0
         ) {
           await this._postMessage(origin, "Boleto vencido ou não disponível");
-          this._setCurrentState(phoneNumber, "INICIO");
+          await this._handleInitialState(origin, phoneNumber, response);
         } else {
           const formatBoletoPixArray = utils.formatCodigoBoleto(
             responseBoletoPixArray
@@ -666,7 +666,7 @@ class StateMachine {
 
           const message = `${formatBoletoPixArray}\n\n_Digite a tecla 5 para voltar._`;
           await this._postMessage(origin, message);
-          this._setCurrentState(phoneNumber, "INICIO");
+          await this._handleInitialState(origin, phoneNumber, response);
         }
       }
     } catch (error) {
@@ -689,7 +689,7 @@ class StateMachine {
       if (!acordosFirmados || acordosFirmados.length === 0) {
         const message = `Você não possui acordos nem Códigos PIX a listar.\n\n_Digite a tecla 5 para voltar._`;
         await this._postMessage(origin, message);
-        this._setCurrentState(phoneNumber, "INICIO");
+        await this._handleInitialState(origin, phoneNumber, response);
       } else {
         const responseBoletoPixArray = [];
 
@@ -730,7 +730,7 @@ class StateMachine {
             origin,
             "Código PIX vencido ou não disponível"
           );
-          this._setCurrentState(phoneNumber, "INICIO");
+          await this._handleInitialState(origin, phoneNumber, response);
         } else {
           const formatBoletoPixArray = utils.formatCodigoPix(
             responseBoletoPixArray
@@ -738,7 +738,7 @@ class StateMachine {
 
           const message = `${formatBoletoPixArray}\n\n_Digite a tecla 5 para voltar._`;
           await this._postMessage(origin, message);
-          this._setCurrentState(phoneNumber, "INICIO");
+          await this._handleInitialState(origin, phoneNumber, response);
         }
       }
     } catch (error) {
