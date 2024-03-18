@@ -1,8 +1,5 @@
-const axios = require("axios");
-
-const baseURL = "http://localhost:3000";
-const axiosApiInstance = axios.create({ baseURL });
 const utils = require("./utils");
+const axiosApiInstance = require("./api").axiosApiInstance;
 
 async function getAcordosFirmados(document) {
   const response = await axiosApiInstance.get(
@@ -125,13 +122,12 @@ async function getAtualizarValores(idacordo) {
   }
 }
 
-async function getDataValdoc(props) {
-  const { ultimoIdAcordo } = props;
-
+async function getDataValdoc(idacordo) {
   try {
     const { data } = await axiosApiInstance.get(
-      `/lista-promessas-datavaldoc?idacordo=${ultimoIdAcordo}`
+      `/lista-promessas-datavaldoc?idacordo=${idacordo}`
     );
+
     return data;
   } catch (error) {
     console.error("Erro ao buscar getDataValdoc no servidor: ", error);
@@ -176,13 +172,13 @@ async function postBoletoFinal(
   const currentDate = new Date().toISOString().slice(0, 10);
 
   const filterCredoresIdDevedor = await credorInfo.find(
-    (item) => item.iddevedor === idDevedor
+    (item) => item.iddevedor === iddevedor
   );
 
   const { endres, baires, cidres, cepres, ufres, chave, idcedente, cpfcnpj } =
     filterCredoresIdDevedor;
 
-  const responseDataValdoc = await getDataValdoc({ ultimoIdAcordo });
+  const responseDataValdoc = await getDataValdoc(ultimoIdAcordo);
 
   if (
     responseDataValdoc[0].valdoc === null ||
@@ -198,10 +194,10 @@ async function postBoletoFinal(
   const { datavenc, valdoc } = responseDataValdoc[0];
 
   const parsedData5 = utils.parseDadosBoleto({
-    iddevedor: idDevedor,
+    iddevedor,
     datavenc,
     valdoc,
-    idcredor: idCredor,
+    idcredor,
     cpfcnpj,
     plano,
     total_geral,
@@ -246,14 +242,12 @@ async function postBoletoFinal(
   return data;
 }
 
-async function getIdBoleto(props) {
-  const { idacordo, plano } = props;
-
+async function getIdBoleto(idacordo) {
   try {
-    const { data } = await axiosApiInstance.get(
+    const response = await axiosApiInstance.get(
       `/busca-idboleto?idacordo=${idacordo}`
     );
-    return data;
+    return response.data;
   } catch (error) {
     console.error("Erro ao buscar dados no servidor: ", error);
     return { error: "Erro ao buscar dados no servidor." };
@@ -360,6 +354,21 @@ async function getDataEmv(props) {
   }
 }
 
+async function getDataBoletoPix(iddevedor) {
+  try {
+    const response = await axiosApiInstance.get(
+      `/busca-boleto-pix?iddevedor=${iddevedor}`
+    );
+    console.log("getDataBoletoPix iddevedor -", iddevedor);
+    console.log("getDataBoletoPix response -", getDataBoletoPix);
+
+    return response.data;
+  } catch (error) {
+    console.error("Erro ao buscar getDataBoletoPix no servidor: ", error);
+    return { error: "Erro ao buscar getDataBoletoPix no servidor." };
+  }
+}
+
 module.exports = {
   getAcordosFirmados,
   getAcordosFirmadosDetalhado,
@@ -379,4 +388,5 @@ module.exports = {
   getImagemBoleto,
   getImagemQrCode,
   getDataEmv,
+  getDataBoletoPix,
 };

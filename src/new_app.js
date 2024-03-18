@@ -1,5 +1,6 @@
 require("dotenv").config();
 const qrcode = require("qrcode-terminal");
+const { MessageMedia } = require("whatsapp-web.js");
 const { Client, LocalAuth } = require("whatsapp-web.js");
 
 const { executeQuery } = require("./dbconfig");
@@ -19,6 +20,9 @@ const customDbConfig = {
 
 const client = new Client({
   authStrategy: new LocalAuth(),
+  puppeteer: {
+    args: ["--no-sandbox"],
+  },
 });
 
 class StateMachine {
@@ -63,6 +67,10 @@ class StateMachine {
     this.userStates[phoneNumber].currentState = newState;
   }
 
+  _resetUserState(phoneNumber) {
+    delete this.userStates[phoneNumber];
+  }
+
   _setDataMenu(phoneNumber, data) {
     this.userStates[phoneNumber].data.MENU = data;
   }
@@ -98,9 +106,22 @@ class StateMachine {
 
   async _getCredorFromDB(phoneNumber) {
     const dbQuery = `
-      SELECT d.iddevedor,d.cpfcnpj,d.nome,t.telefone,t.idtelefones
-      FROM telefones2 t JOIN devedor d ON d.cpfcnpj = t.cpfcnpj
-      WHERE RIGHT(t.telefone, 8) = '${phoneNumber}' AND d.idusuario NOT IN (11, 14);
+      select
+      d.iddevedor,
+      d.cpfcnpj,
+      d.nome,
+      t.telefone,
+      t.idtelefones
+    from
+      statustelefone s,
+      telefones2 t
+    left join devedor d on
+      d.cpfcnpj = t.cpfcnpj
+    where
+      right(t.telefone,8) = '${phoneNumber}'
+      and d.idusuario not in (11, 14)
+      and s.idstatustelefone = t.idstatustelefone
+      and s.fila = 's' ;
     `;
 
     const dbResponse = await executeQuery(dbQuery, customDbConfig);
@@ -110,10 +131,10 @@ class StateMachine {
       return dbResponse[0];
     }
 
-    throw new Error("Credor não encontrado");
+    throw new Error(`Nao existe credor vinculado ao numero ${phoneNumber}.`);
   }
 
-  async _getSomething(phoneNumber) {
+  async _getWhaticketStatus(phoneNumber) {
     const dbQuery = `
     SELECT DISTINCT c.*, t.*,
     (SELECT m.fromMe FROM Messages m WHERE m.ticketId = t.id ORDER BY m.createdAt DESC LIMIT 1) AS fromMe,
@@ -133,7 +154,13 @@ class StateMachine {
     throw new Error("Something não encontrado");
   }
 
-  async _handleMenuState(origin, phoneNumber = "80307836", response) {
+  async _handleErrorState(origin, phoneNumber, errorMessage) {
+    await this._postMessage(origin, errorMessage);
+    await this._resetUserState(phoneNumber);
+    await this._handleInitialState(origin, phoneNumber);
+  }
+
+  async _handleMenuState(origin, phoneNumber, response) {
     const initialStateResponse = response.body.trim();
     switch (initialStateResponse) {
       case "1":
@@ -141,44 +168,77 @@ class StateMachine {
           const { cpfcnpj: document } = this._getCredor(phoneNumber);
           const credorInfo = await requests.getCredorInfo(document);
 
-          if (credorInfo && credorInfo.length > 0) {
+          if (!credorInfo || credorInfo.length === 0) {
+            const messageErro = `Você não possui dívidas ou ofertas disponíveis.\n\n_Digite a tecla 5 para voltar._`;
+            await this._postMessage(origin, messageErro);
+            this._setCurrentState(phoneNumber, "INICIO");
+          } else {
             const credorMessage = utils.formatCredorInfo(credorInfo);
-            const message = `${credorMessage}\n\n_Selecione o credor (por exemplo, responda com "1" ou "2")_`;
+            const messageSucess = `${credorMessage}\n\n_Selecione o credor (por exemplo, responda com "1" ou "2")_`;
 
-            await this._postMessage(origin, message);
+            await this._postMessage(origin, messageSucess);
+            this._setCurrentState(phoneNumber, "CREDOR");
+            await this._handleInitialState(origin, phoneNumber, response); // Alterado para passar phoneNumber
           }
         } catch (error) {
           console.error("Case 1 retornou um erro - ", error.message);
+          await this._handleErrorState(
+            origin,
+            phoneNumber,
+            "Ocorreu um erro ao processar sua solicitação. Por favor, tente novamente."
+          );
         }
         break;
+
       case "2":
         try {
-          const { cpfcnpj: document } = await this._getCredorFromDB(
-            phoneNumber
-          );
-
-          const acordosFirmados = await requests.getAcordosFirmados(document);
-
-          if (acordosFirmados && acordosFirmados.length > 0) {
-            const acordoMessage = utils.formatCredorAcordos(acordosFirmados);
-
-            await this._postMessage(origin, acordoMessage);
-          }
+          await this._handleAcordoState(origin, phoneNumber); // Passando o phoneNumber como argumento
         } catch (error) {
           console.error("Case 2 retornou um erro - ", error.message);
+          await this._handleErrorState(
+            origin,
+            phoneNumber,
+            "Ocorreu um erro ao processar sua solicitação. Por favor, tente novamente."
+          );
+        }
+        break;
+
+      case "3":
+        try {
+          await this._handleBoletoState(origin, phoneNumber, response); // Passando o phoneNumber e response como argumentos
+        } catch (error) {
+          console.error("Case 3 retornou um erro - ", error.message);
+          await this._handleErrorState(
+            origin,
+            phoneNumber,
+            "Ocorreu um erro ao processar sua solicitação. Por favor, tente novamente."
+          );
+        }
+        break;
+
+      case "4":
+        try {
+          await this._handlePixState(origin, phoneNumber, response); // Passando o phoneNumber e response como argumentos
+        } catch (error) {
+          console.error("Case 4 retornou um erro - ", error.message);
+          await this._handleErrorState(
+            origin,
+            phoneNumber,
+            "Ocorreu um erro ao processar sua solicitação. Por favor, tente novamente."
+          );
         }
         break;
     }
   }
 
-  async _handleInitialState(origin, phoneNumber = "80307836") {
+  async _handleInitialState(origin, phoneNumber, response) {
     const { nome: userName } = await this._getCredorFromDB(phoneNumber);
-    const message = `Olá *${userName}*,\n\nPor favor, escolha uma opção:\n\n1 - Credores\n2 - Ver Acordos\n3 - Ver Boletos\n4 - Linha Digitável\n5 - Pix Copia e Cola\n6 - Voltar`;
+    const message = `Olá *${userName}*,\n\nPor favor, escolha uma opção:\n\n1) Credores\n2) Ver Acordos\n3) Linha Digitável\n4) Pix Copia e Cola\n5) Voltar`;
 
     await this._postMessage(origin, message);
   }
 
-  async _handleCredorState(origin, phoneNumber = "80307836", response) {
+  async _handleCredorState(origin, phoneNumber, response) {
     if (response && response.body.trim().match(/^\d+$/)) {
       const selectedOption = parseInt(response.body.trim());
       const { cpfcnpj: document } = this._getCredor(phoneNumber);
@@ -230,7 +290,7 @@ class StateMachine {
     }
   }
 
-  async _handleOfertaState(origin, phoneNumber = "80307836", response) {
+  async _handleOfertaState(origin, phoneNumber, response) {
     if (response && response.body.trim().match(/^\d+$/)) {
       const selectedOptionParcelamento = parseInt(response.body.trim());
       const credorInfo = await requests.getCredorInfo(this.document);
@@ -323,10 +383,10 @@ class StateMachine {
         const idacordo = await requests.postDadosAcordo(parsedData);
         console.log("idacordo -", idacordo);
 
-        await this._postMessage(
-          origin,
-          "Acordo realizado com sucesso - " + JSON.stringify(idacordo)
-        );
+        // await this._postMessage(
+        //   origin,
+        //   "Acordo realizado com sucesso - " + JSON.stringify(idacordo)
+        // );
 
         const parsedData2 = utils.parseDadosPromessa({
           idacordo,
@@ -383,11 +443,11 @@ class StateMachine {
         }
 
         const responsePromessas = await Promise.all(promises);
-        await this._postMessage(
-          origin,
-          "Promessas realizadas com sucesso - " +
-            JSON.stringify(responsePromessas)
-        );
+        // await this._postMessage(
+        //   origin,
+        //   "Promessas realizadas com sucesso - " +
+        //     JSON.stringify(responsePromessas)
+        // );
 
         const [ultimoIdPromessa] = responsePromessas.slice(-1);
 
@@ -426,7 +486,7 @@ class StateMachine {
           return;
         }
 
-        await this._postMessage(origin, "Recibo inserido com sucesso!");
+        // await this._postMessage(origin, "Recibo inserido com sucesso!");
 
         await requests.getAtualizarPromessas(idacordo);
         await requests.getAtualizarValores(idacordo);
@@ -449,15 +509,14 @@ class StateMachine {
         this._setDataBoleto(phoneNumber, responseBoleto);
 
         const responseIdBoleto = await requests.getIdBoleto(idacordo);
+        console.log("responseIdBoleto -", responseIdBoleto);
 
-        if (
-          responseIdBoleto &&
-          Object.prototype.hasOwnProperty.call(responseIdBoleto, "error")
-        ) {
-          console.error("Está faltando IdBoleto: ", { responseIdBoleto });
-          setErro("Erro ao buscar ID do boleto.");
-          return;
-        }
+        // await this._postMessage(
+        //   origin,
+        //   "getAtualizarPromessas, getAtualizarValores e postDadosBoleto realizado com sucesso!" +
+        //     JSON.stringify(responseBoleto, undefined, 2)
+        // );
+
         const { idboleto } = responseIdBoleto[0];
         const { banco } = responseIdBoleto[0];
         const { convenio } = responseIdBoleto[0];
@@ -466,11 +525,51 @@ class StateMachine {
           `IdBoleto de número ${idboleto} no banco ${banco} encontrado!`
         );
 
-        await this._postMessage(
-          origin,
-          "getAtualizarPromessas, getAtualizarValores e postDadosBoleto realizado com sucesso!" +
-            JSON.stringify(responseBoleto, undefined, 2)
+        const updateValoresBoleto = await requests.postAtualizarValores({
+          idboleto,
+          banco,
+          convenio,
+        });
+
+        if (
+          updateValoresBoleto &&
+          Object.prototype.hasOwnProperty.call(updateValoresBoleto, "error")
+        ) {
+          console.error("Erro ao atualizar valores de nossoNum e numDoc: ", {
+            updateValoresBoleto,
+          });
+          setErro("Erro ao atualizar valores de nossoNum e numDoc.");
+          return;
+        }
+
+        const parsedData4 = utils.parseDadosImagemBoleto({
+          idacordo,
+          idboleto,
+          banco,
+        });
+
+        const responseBoletoContent = await requests.getImagemBoleto(
+          parsedData4
         );
+
+        const parsedData5 = utils.parseDadosImagemQrCode({ idboleto });
+
+        const responseQrcodeContent = await requests.getImagemQrCode(
+          parsedData5
+        );
+        console.log(responseQrcodeContent.url);
+
+        const parsedData6 = utils.parseDadosEmv({ idboleto });
+
+        const responseEmvContent = await requests.getDataEmv(parsedData6);
+
+        await utils.saveQRCodeImageToLocal(responseQrcodeContent.url);
+        const media = MessageMedia.fromFilePath("qrcode.png");
+
+        const mensagem = `*ACORDO REALIZADO COM SUCESSO!*\n\nPague a primeira parcela através do QRCODE ou link do BOLETO abaixo:\n\nhttp://cobrance.com.br/acordo/boleto.php?idboleto=${responseBoletoContent.idboleto}&email=2`;
+
+        await this._postMessage(origin, mensagem);
+        await this._postMessage(origin, media);
       } else {
         await this._postMessage(
           origin,
@@ -485,6 +584,174 @@ class StateMachine {
     }
   }
 
+  async _handleAcordoState(origin, phoneNumber, response) {
+    try {
+      const { cpfcnpj: document } = await this._getCredorFromDB(phoneNumber);
+
+      const acordosFirmados = await requests.getAcordosFirmados(document);
+
+      if (!acordosFirmados || acordosFirmados.length === 0) {
+        const message = `Você não possui acordos efetuados a listar.\n\n_Digite a tecla 5 para voltar._`;
+        await this._postMessage(origin, message);
+        this._setCurrentState(phoneNumber, "INICIO");
+      } else {
+        const formatAcordos = utils.formatCredorAcordos(acordosFirmados);
+
+        const message = `${formatAcordos}\n\n_Digite a tecla 5 para voltar._`;
+        await this._postMessage(origin, message);
+        this._setCurrentState(phoneNumber, "INICIO");
+      }
+    } catch (error) {
+      console.error("Case 2 retornou um erro - ", error.message);
+      await this._handleErrorState(
+        origin,
+        phoneNumber,
+        "Ocorreu um erro ao processar sua solicitação. Por favor, tente novamente."
+      );
+    }
+  }
+
+  async _handleBoletoState(origin, phoneNumber, response) {
+    try {
+      const { cpfcnpj: document } = await this._getCredorFromDB(phoneNumber);
+
+      const acordosFirmados = await requests.getAcordosFirmados(document);
+      console.log("acordosFirmados -", acordosFirmados);
+
+      if (!acordosFirmados || acordosFirmados.length === 0) {
+        const message = `Você não possui acordos nem Linhas Digitáveis a listar.\n\n_Digite a tecla 5 para voltar._`;
+        await this._postMessage(origin, message);
+        this._setCurrentState(phoneNumber, "INICIO");
+      } else {
+        const responseBoletoPixArray = [];
+
+        for (const acordo of acordosFirmados) {
+          const iddevedor = acordo.iddevedor;
+
+          try {
+            const responseBoletoPix = await requests.getDataBoletoPix(
+              iddevedor
+            );
+            responseBoletoPixArray.push(responseBoletoPix);
+            console.log(
+              `responseBoletoPix executado para ${iddevedor} com resposta ${responseBoletoPix}`
+            );
+          } catch (error) {
+            console.error(
+              "Erro ao obter dados do boleto para iddevedor",
+              iddevedor,
+              ":",
+              error.message
+            );
+            await this._handleErrorState(
+              origin,
+              phoneNumber,
+              "Ocorreu um erro ao processar sua solicitação. Por favor, tente novamente."
+            );
+            return;
+          }
+        }
+
+        // Verificar se acordosFirmados tem dados e responseBoletoPixArray está vazio ou indefinido
+        if (
+          acordosFirmados.length > 0 &&
+          responseBoletoPixArray &&
+          responseBoletoPixArray.length === 0
+        ) {
+          await this._postMessage(origin, "Boleto vencido ou não disponível");
+          this._setCurrentState(phoneNumber, "INICIO");
+        } else {
+          const formatBoletoPixArray = utils.formatCodigoBoleto(
+            responseBoletoPixArray
+          );
+
+          const message = `${formatBoletoPixArray}\n\n_Digite a tecla 5 para voltar._`;
+          await this._postMessage(origin, message);
+          this._setCurrentState(phoneNumber, "INICIO");
+        }
+      }
+    } catch (error) {
+      console.error("Case 3 retornou um erro - ", error.message);
+      await this._handleErrorState(
+        origin,
+        phoneNumber,
+        "Ocorreu um erro ao processar sua solicitação. Por favor, tente novamente."
+      );
+    }
+  }
+
+  async _handlePixState(origin, phoneNumber, response) {
+    try {
+      const { cpfcnpj: document } = await this._getCredorFromDB(phoneNumber);
+
+      const acordosFirmados = await requests.getAcordosFirmados(document);
+      console.log("acordosFirmados -", acordosFirmados);
+
+      if (!acordosFirmados || acordosFirmados.length === 0) {
+        const message = `Você não possui acordos nem Códigos PIX a listar.\n\n_Digite a tecla 5 para voltar._`;
+        await this._postMessage(origin, message);
+        this._setCurrentState(phoneNumber, "INICIO");
+      } else {
+        const responseBoletoPixArray = [];
+
+        for (const acordo of acordosFirmados) {
+          const iddevedor = acordo.iddevedor;
+
+          try {
+            const responseBoletoPix = await requests.getDataBoletoPix(
+              iddevedor
+            );
+            responseBoletoPixArray.push(responseBoletoPix);
+            console.log(
+              `responseBoletoPix executado para ${iddevedor} com resposta ${responseBoletoPix}`
+            );
+          } catch (error) {
+            console.error(
+              "Erro ao obter dados do boleto para iddevedor",
+              iddevedor,
+              ":",
+              error.message
+            );
+            await this._handleErrorState(
+              origin,
+              phoneNumber,
+              "Ocorreu um erro ao processar sua solicitação. Por favor, tente novamente."
+            );
+            return;
+          }
+        }
+
+        // Verificar se acordosFirmados tem dados e responseBoletoPixArray está vazio ou indefinido
+        if (
+          acordosFirmados.length > 0 &&
+          responseBoletoPixArray &&
+          responseBoletoPixArray.length === 0
+        ) {
+          await this._postMessage(
+            origin,
+            "Código PIX vencido ou não disponível"
+          );
+          this._setCurrentState(phoneNumber, "INICIO");
+        } else {
+          const formatBoletoPixArray = utils.formatCodigoPix(
+            responseBoletoPixArray
+          );
+
+          const message = `${formatBoletoPixArray}\n\n_Digite a tecla 5 para voltar._`;
+          await this._postMessage(origin, message);
+          this._setCurrentState(phoneNumber, "INICIO");
+        }
+      }
+    } catch (error) {
+      console.error("Case 4 retornou um erro - ", error.message);
+      await this._handleErrorState(
+        origin,
+        phoneNumber,
+        "Ocorreu um erro ao processar sua solicitação. Por favor, tente novamente."
+      );
+    }
+  }
+
   async handleMessage(phoneNumber, response) {
     const { credor, currentState } = this._getState(phoneNumber);
     const origin = response.from;
@@ -493,34 +760,38 @@ class StateMachine {
 
     switch (currentState) {
       case "INICIO":
-        await this._handleInitialState(origin, "80307836");
+        await this._handleInitialState(origin, phoneNumber, response); // Alterado para passar phoneNumber
         this._setCurrentState(phoneNumber, "MENU");
         break;
 
       case "MENU":
-        await this._handleMenuState(origin, "80307836", response);
-        this._setCurrentState(phoneNumber, "CREDOR");
+        await this._handleMenuState(origin, phoneNumber, response); // Alterado para passar phoneNumber
         break;
 
       case "CREDOR":
-        await this._handleCredorState(origin, "80307836", response);
+        await this._handleCredorState(origin, phoneNumber, response); // Alterado para passar phoneNumber
         this._setCurrentState(phoneNumber, "OFERTA");
         break;
 
       case "OFERTA":
-        await this._handleOfertaState(origin, "80307836", response);
+        await this._handleOfertaState(origin, phoneNumber, response); // Alterado para passar phoneNumber
         this._setCurrentState(phoneNumber, "INICIO");
         break;
 
       case "VER_ACORDOS":
-        await this._handleAcordoState(origin, "80307836", response);
-        this._setCurrentState(phoneNumber, "ACORDOS");
+        await this._handleAcordoState(origin, phoneNumber, response); // Alterado para passar phoneNumber
+        this._setCurrentState(phoneNumber, "INICIO");
         break;
 
-      // case "INFINITO":
-      //   await this._handleMenuState(origin, "80307836", response);
-      //   this._setCurrentState(phoneNumber, "INICIO");
-      //   break;
+      case "VER_LINHA_DIGITAVEL":
+        await this._handleBoletoState(origin, phoneNumber, response); // Alterado para passar phoneNumber
+        this._setCurrentState(phoneNumber, "INICIO");
+        break;
+
+      case "VER_CODIGO_PIX":
+        await this._handlePixState(origin, phoneNumber, response); // Alterado para passar phoneNumber
+        this._setCurrentState(phoneNumber, "INICIO");
+        break;
     }
   }
 }
@@ -536,8 +807,10 @@ client.on("ready", () => {
 });
 
 client.on("message", async (response) => {
-  const phoneNumber = response.from.replace(/[^0-9]/g, "");
-  await stateMachine.handleMessage("80307836", response);
+  const phoneNumber = response.from
+    .replace(/[^\d]/g, "")
+    .replace(/^.*?(\d{8})$/, "$1");
+  await stateMachine.handleMessage(phoneNumber, response);
 });
 
 client.initialize();

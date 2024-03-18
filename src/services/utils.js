@@ -1,5 +1,9 @@
 const requests = require("./requests");
 
+const fs = require("fs");
+const fetch = require("node-fetch");
+const { promisify } = require("util");
+
 function formatValue(number) {
   if (number !== undefined && number !== null) {
     return number.toLocaleString("pt-BR", {
@@ -24,12 +28,12 @@ function formatarMoeda(valorString) {
 
 function formatCredorOfertas(ofertas) {
   return ofertas
-    .map(
-      (detalhe, index) =>
-        `${index + 1}) ` +
-        `Parcelamento em ${index + 1} x ` +
-        `${formatarMoeda(detalhe.valor_parcela)}`
-    )
+    .map((detalhe, index) => {
+      const total =
+        parseFloat(detalhe.valor_parcela) + parseFloat(detalhe.tarifa_boleto);
+      const totalFormatado = formatarMoeda(total.toFixed(2));
+      return `${index + 1}) Parcelamento em ${index + 1} x ${totalFormatado}`;
+    })
     .join("\n");
 }
 
@@ -37,7 +41,7 @@ function formatCredorInfo(creditorInfo) {
   return creditorInfo
     .map(
       (info, index) =>
-        `*--------- ${index + 1} ---------*\n` +
+        `${index + 1})\n` +
         `IdDevedor: ${info.iddevedor}\n` +
         `Empresa: ${info.empresa}\n` +
         `Saldo: ${formatValue(info.saldo)}`
@@ -49,7 +53,7 @@ function formatCredorAcordos(creditorAcordos) {
   return creditorAcordos
     .map(
       (info, index) =>
-        `*--------- ${index + 1} ---------*\n` +
+        `${index + 1})\n` +
         `Empresa: ${info.credor}\n` +
         `IdDevedor: ${info.iddevedor}\n` +
         `IdAcordo: ${info.idacordo}\n` +
@@ -63,11 +67,65 @@ function formatCredorDividas(creditorDividas) {
   return creditorDividas
     .map(
       (info, index) =>
-        // `*--------- ${index + 1} ---------*\n` +
+        // `${index + 1})\n` +
         `Contrato: ${info.contrato}\n` +
         `Vencimento: ${formatDateIsoToBr(info.vencimento)}\n` +
         `Dias Atraso: ${info.diasatraso}\n` +
         `Valor: ${formatValue(info.valor)}`
+    )
+    .join("\n\n");
+}
+
+function formatCodigoBoleto(creditorBoleto) {
+  // Verifica se creditorBoleto é um array e se contém elementos
+  if (!Array.isArray(creditorBoleto) || creditorBoleto.length === 0) {
+    return "Array vazio ou nao é um array!"; // Retorna uma string vazia se o array estiver vazio ou não for um array
+  }
+
+  // Verifica se o primeiro elemento do array é um array
+  const isArrayofArrays = Array.isArray(creditorBoleto[0]);
+
+  // Se for um array de array de objetos, achatamos o array
+  const flattenedArray = isArrayofArrays
+    ? creditorBoleto.flat()
+    : creditorBoleto;
+
+  return flattenedArray
+    .map(
+      (info, index) =>
+        `CPF/CNPJ: ${info.cpfcnpj}\n` +
+        `ID Devedor: ${info.iddevedor}\n` +
+        `ID Acordo: ${info.idacordo}\n` +
+        `Valor: ${formatValue(info.VALDOC)}\n` +
+        `Parcela: ${info.parcela}\n` +
+        `Linha Digitavel: ${info.linha}`
+    )
+    .join("\n\n");
+}
+
+function formatCodigoPix(creditorBoleto) {
+  // Verifica se creditorBoleto é um array e se contém elementos
+  if (!Array.isArray(creditorBoleto) || creditorBoleto.length === 0) {
+    return "Array vazio ou nao é um array!"; // Retorna uma string vazia se o array estiver vazio ou não for um array
+  }
+
+  // Verifica se o primeiro elemento do array é um array
+  const isArrayofArrays = Array.isArray(creditorBoleto[0]);
+
+  // Se for um array de array de objetos, achatamos o array
+  const flattenedArray = isArrayofArrays
+    ? creditorBoleto.flat()
+    : creditorBoleto;
+
+  return flattenedArray
+    .map(
+      (info, index) =>
+        `CPF/CNPJ: ${info.cpfcnpj}\n` +
+        `ID Devedor: ${info.iddevedor}\n` +
+        `ID Acordo: ${info.idacordo}\n` +
+        `Valor: ${formatValue(info.VALDOC)}\n` +
+        `Parcela: ${info.parcela}\n` +
+        `PIX Copia e Cola: ${info.emv}`
     )
     .join("\n\n");
 }
@@ -507,11 +565,11 @@ function parseDadosBoleto(props) {
   };
 }
 
-function parseDadosIMagemBoleto(props) {
-  const { ultimoIdAcordo, idboleto, banco } = props;
+function parseDadosImagemBoleto(props) {
+  const { idacordo, idboleto, banco } = props;
 
   return {
-    idacordo: ultimoIdAcordo,
+    idacordo,
     idboleto,
     banco,
   };
@@ -576,6 +634,20 @@ function handleCopyPix() {
   }
 }
 
+async function saveQRCodeImageToLocal(url) {
+  try {
+    const response = await fetch(url);
+    if (!response.ok) {
+      throw new Error("Erro ao baixar a imagem do QR Code");
+    }
+    const buffer = await response.buffer();
+    await promisify(fs.writeFile)("qrcode.png", buffer);
+    console.log("Imagem do QR Code salva localmente com sucesso.");
+  } catch (error) {
+    console.error("Erro ao salvar imagem do QR Code localmente:", error);
+  }
+}
+
 module.exports = {
   formatValue,
   formatarMoeda,
@@ -592,8 +664,11 @@ module.exports = {
   criarPromessas,
   parseDadosRecibo,
   parseDadosBoleto,
-  parseDadosIMagemBoleto,
+  parseDadosImagemBoleto,
   parseDadosImagemQrCode,
   parseDadosEmv,
   handleCopyPix,
+  saveQRCodeImageToLocal,
+  formatCodigoBoleto,
+  formatCodigoPix,
 };
