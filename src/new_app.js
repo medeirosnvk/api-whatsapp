@@ -172,13 +172,13 @@ class StateMachine {
             const messageErro = `Você não possui dívidas ou ofertas disponíveis.\n\n_Digite a tecla 5 para voltar._`;
             await this._postMessage(origin, messageErro);
             this._setCurrentState(phoneNumber, "INICIO");
+            await this._handleInitialState(origin, phoneNumber, response); // Alterado para passar phoneNumber
           } else {
             const credorMessage = utils.formatCredorInfo(credorInfo);
             const messageSucess = `${credorMessage}\n\n_Selecione o credor (por exemplo, responda com "1" ou "2")_`;
 
             await this._postMessage(origin, messageSucess);
             this._setCurrentState(phoneNumber, "CREDOR");
-            await this._handleInitialState(origin, phoneNumber, response); // Alterado para passar phoneNumber
           }
         } catch (error) {
           console.error("Case 1 retornou um erro - ", error.message);
