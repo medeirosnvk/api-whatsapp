@@ -171,8 +171,7 @@ class StateMachine {
           if (!credorInfo || credorInfo.length === 0) {
             const messageErro = `Você não possui dívidas ou ofertas disponíveis.\n\n_Digite a tecla 5 para voltar._`;
             await this._postMessage(origin, messageErro);
-            this._setCurrentState(phoneNumber, "INICIO");
-            await this._handleInitialState(origin, phoneNumber, response); // Alterado para passar phoneNumber
+            await this._handleInitialState(origin, phoneNumber, response);
           } else {
             const credorMessage = utils.formatCredorInfo(credorInfo);
             const messageSucess = `${credorMessage}\n\n_Selecione o credor (por exemplo, responda com "1" ou "2")_`;
