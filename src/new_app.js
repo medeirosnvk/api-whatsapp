@@ -178,6 +178,7 @@ class StateMachine {
 
             await this._postMessage(origin, messageSucess);
             this._setCurrentState(phoneNumber, "CREDOR");
+            await this._handleInitialState(origin, phoneNumber, response); // Alterado para passar phoneNumber
           }
         } catch (error) {
           console.error("Case 1 retornou um erro - ", error.message);
