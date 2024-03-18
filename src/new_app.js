@@ -615,7 +615,6 @@ class StateMachine {
       const { cpfcnpj: document } = await this._getCredorFromDB(phoneNumber);
 
       const acordosFirmados = await requests.getAcordosFirmados(document);
-      console.log("acordosFirmados -", acordosFirmados);
 
       if (!acordosFirmados || acordosFirmados.length === 0) {
         const message = `Você não possui acordos nem Linhas Digitáveis a listar.`;
@@ -651,10 +650,11 @@ class StateMachine {
           }
         }
 
-        // Verificar se acordosFirmados tem dados e responseBoletoPixArray está vazio ou indefinido
+        console.log("acordosFirmados -", acordosFirmados);
+        console.log("responseBoletoPixArray -", responseBoletoPixArray);
+
         if (
-          acordosFirmados.length > 0 &&
-          responseBoletoPixArray &&
+          (acordosFirmados.length > 0 && responseBoletoPixArray) ||
           responseBoletoPixArray.length === 0
         ) {
           await this._postMessage(origin, "Boleto vencido ou não disponível");
