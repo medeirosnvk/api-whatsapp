@@ -32,6 +32,7 @@ class StateMachine {
     this.document = null;
     this.idDevedor = null;
     this.globalData = {};
+    this.timer = {};
   }
 
   _getCredor(phoneNumber) {
@@ -597,7 +598,7 @@ class StateMachine {
       } else {
         const formatAcordos = utils.formatCredorAcordos(acordosFirmados);
 
-        const message = `Os seguintes acordos firmados foram encontrados:\n\n${formatAcordos}`;
+        const message = `*Os seguintes acordos firmados foram encontrados:*\n\n${formatAcordos}`;
         await this._postMessage(origin, message);
         await this._handleInitialState(origin, phoneNumber, response);
       }
@@ -754,6 +755,17 @@ class StateMachine {
     const origin = response.from;
 
     console.log(`[${phoneNumber} - ${currentState}]`);
+
+    if (this.timer[phoneNumber]) {
+      clearTimeout(this.timer[phoneNumber]);
+    }
+
+    // Configurar um novo temporizador para reiniciar o atendimento após 60 segundos
+    this.timer[phoneNumber] = setTimeout(async () => {
+      console.log(`Timeout para ${phoneNumber}. Reiniciando atendimento.`);
+      await this._resetUserState(phoneNumber);
+      await this._handleInitialState(response.from, phoneNumber);
+    }, 10000); // 10 segundos
 
     switch (currentState) {
       case "INICIO":
