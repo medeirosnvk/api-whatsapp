@@ -597,7 +597,7 @@ class StateMachine {
       } else {
         const formatAcordos = utils.formatCredorAcordos(acordosFirmados);
 
-        const message = `${formatAcordos}`;
+        const message = `Os seguintes acordos firmados foram encontrados:\n\n${formatAcordos}`;
         await this._postMessage(origin, message);
         await this._handleInitialState(origin, phoneNumber, response);
       }
