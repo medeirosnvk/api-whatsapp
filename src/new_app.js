@@ -106,6 +106,10 @@ class StateMachine {
   }
 
   async _getCredorFromDB(phoneNumber) {
+    if (!this.userStates[phoneNumber]) {
+      this.userStates[phoneNumber] = {}; // inicialize o objeto se não existir
+    }
+
     const dbQuery = `
       select
       d.iddevedor,
