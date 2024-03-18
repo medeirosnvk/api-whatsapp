@@ -569,6 +569,7 @@ class StateMachine {
 
         await this._postMessage(origin, mensagem);
         await this._postMessage(origin, media);
+        await this._handleInitialState(origin, phoneNumber, response);
       } else {
         await this._postMessage(
           origin,
