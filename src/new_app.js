@@ -590,13 +590,13 @@ class StateMachine {
       const acordosFirmados = await requests.getAcordosFirmados(document);
 
       if (!acordosFirmados || acordosFirmados.length === 0) {
-        const message = `Você não possui acordos efetuados a listar.\n\n_Digite a tecla 5 para voltar._`;
+        const message = `Você não possui acordos efetuados a listar.`;
         await this._postMessage(origin, message);
         await this._handleInitialState(origin, phoneNumber, response);
       } else {
         const formatAcordos = utils.formatCredorAcordos(acordosFirmados);
 
-        const message = `${formatAcordos}\n\n_Digite a tecla 5 para voltar._`;
+        const message = `${formatAcordos}`;
         await this._postMessage(origin, message);
         await this._handleInitialState(origin, phoneNumber, response);
       }
@@ -618,7 +618,7 @@ class StateMachine {
       console.log("acordosFirmados -", acordosFirmados);
 
       if (!acordosFirmados || acordosFirmados.length === 0) {
-        const message = `Você não possui acordos nem Linhas Digitáveis a listar.\n\n_Digite a tecla 5 para voltar._`;
+        const message = `Você não possui acordos nem Linhas Digitáveis a listar.`;
         await this._postMessage(origin, message);
         await this._handleInitialState(origin, phoneNumber, response);
       } else {
@@ -664,7 +664,7 @@ class StateMachine {
             responseBoletoPixArray
           );
 
-          const message = `${formatBoletoPixArray}\n\n_Digite a tecla 5 para voltar._`;
+          const message = `${formatBoletoPixArray}`;
           await this._postMessage(origin, message);
           await this._handleInitialState(origin, phoneNumber, response);
         }
@@ -687,7 +687,7 @@ class StateMachine {
       console.log("acordosFirmados -", acordosFirmados);
 
       if (!acordosFirmados || acordosFirmados.length === 0) {
-        const message = `Você não possui acordos nem Códigos PIX a listar.\n\n_Digite a tecla 5 para voltar._`;
+        const message = `Você não possui acordos nem Códigos PIX a listar.`;
         await this._postMessage(origin, message);
         await this._handleInitialState(origin, phoneNumber, response);
       } else {
@@ -736,7 +736,7 @@ class StateMachine {
             responseBoletoPixArray
           );
 
-          const message = `${formatBoletoPixArray}\n\n_Digite a tecla 5 para voltar._`;
+          const message = `${formatBoletoPixArray}`;
           await this._postMessage(origin, message);
           await this._handleInitialState(origin, phoneNumber, response);
         }
