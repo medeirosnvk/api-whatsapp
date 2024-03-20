@@ -202,7 +202,7 @@ class StateMachine {
     values(
       1,
       (select id from bot_contato bc where telefone =${phoneNumber}),
-      1);
+      1)
     )`;
 
     const dbResponse = await executeQuery(dbQuery, customDbConfig);
