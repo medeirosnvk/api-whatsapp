@@ -880,6 +880,22 @@ class StateMachine {
   }
 
   async handleNewContact(phoneNumber, response) {
+    const { credor, currentState } = this._getState(phoneNumber);
+    const origin = response.from;
+
+    console.log(`[${phoneNumber} - ${currentState}]`);
+
+    if (this.timer[phoneNumber]) {
+      clearTimeout(this.timer[phoneNumber]);
+    }
+
+    // Configurar um novo temporizador para reiniciar o atendimento após 60 segundos
+    this.timer[phoneNumber] = setTimeout(async () => {
+      console.log(`Timeout para ${phoneNumber}. Reiniciando atendimento.`);
+      await this._resetUserState(phoneNumber);
+      await this._handleInitialState(response.from, phoneNumber);
+    }, 300000); // 300 segundos
+
     try {
       let ticketNumber = 0;
 
@@ -926,28 +942,34 @@ client.on("ready", () => {
   console.log("Client is ready!");
 });
 
-client.on("message", async (message) => {
-  const { from: phoneNumber, body: messageBody } = message;
-
-  if (!phoneNumber || !messageBody) {
-    console.log("Invalid message received:", message);
-    return;
-  }
-
-  try {
-    await stateMachine.handleMessage(phoneNumber, message);
-  } catch (error) {
-    console.error("Error while handling message:", error);
-    // Handle the error appropriately
-  }
-});
-
 client.on("auth_failure", () => {
   console.error("Authentication failed. Please check your credentials.");
 });
 
 client.on("disconnected", () => {
   console.log("Client was disconnected.");
+});
+
+client.on("message", async (message) => {
+  const phoneNumber = message.from
+    .replace(/[^\d]/g, "")
+    .replace(/^.*?(\d{8})$/, "$1");
+
+  const response = {
+    from: message.from,
+    body: message.body,
+  };
+
+  if (!phoneNumber || !response) {
+    console.log("Invalid message received:", message);
+    return;
+  }
+
+  try {
+    await stateMachine.handleMessage(phoneNumber, response);
+  } catch (error) {
+    console.error("Error while handling message:", error);
+  }
 });
 
 client.initialize();
