@@ -174,7 +174,7 @@ class StateMachine {
     }
 
     const dbQuery = `
-    INSERT INTO
+    INSERT ignore INTO
       cobrance.bot_contato (
         telefone
       ) 
@@ -884,7 +884,6 @@ class StateMachine {
       let ticketNumber = 0;
 
       const ticketStatus = await this._getTicketStatusDB(phoneNumber);
-      console.log("ticketStatus -", ticketStatus);
 
       if (ticketStatus && ticketStatus.length > 0) {
         ticketNumber = ticketStatus[0].id;
