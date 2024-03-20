@@ -165,13 +165,7 @@ class StateMachine {
 
     const dbResponse = await executeQuery(dbQuery, customDbConfig);
 
-    if (dbResponse && dbResponse.length) {
-      return dbResponse;
-    }
-
-    throw new Error(
-      `O numero ${phoneNumber} nao possui Ticket registrado no banco.`
-    );
+    return dbResponse;
   }
 
   async _getInsertClientNumberDB(phoneNumber) {
