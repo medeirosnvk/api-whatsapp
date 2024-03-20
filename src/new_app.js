@@ -231,32 +231,6 @@ class StateMachine {
     );
   }
 
-  async handleNewContact(phoneNumber) {
-    try {
-      // Verifica se o número já possui um ticket registrado
-      await this._getServiceStatusDB(phoneNumber);
-      console.log(
-        `Já existe um ticket para o número ${phoneNumber}. Não é necessário responder.`
-      );
-      return;
-    } catch (error) {
-      if (error.message.includes("Nao existe atendimento registrado")) {
-        console.log(
-          `Não existe um ticket para o número ${phoneNumber}. Criando um novo ticket...`
-        );
-        // Se não houver um ticket registrado, insere o número do cliente e cria um novo ticket
-        await this._getInsertClientNumberDB(phoneNumber);
-        await this._getInsertTicketDB(phoneNumber);
-        console.log(`Novo ticket criado para o número ${phoneNumber}.`);
-        // Continua o fluxo de atendimento normal
-        // Insira aqui o código para responder ao usuário ou seguir o fluxo de atendimento normal já definido
-      } else {
-        console.error("Erro ao verificar o status do serviço:", error);
-        // Insira aqui o tratamento de erro adequado, se necessário
-      }
-    }
-  }
-
   async _getWhaticketStatus(phoneNumber) {
     const dbQuery = `
     SELECT DISTINCT c.*, t.*,
@@ -925,6 +899,32 @@ class StateMachine {
         break;
     }
   }
+
+  async handleNewContact(phoneNumber, response) {
+    try {
+      // Verifica se o número já possui um ticket registrado
+      await this._getServiceStatusDB(phoneNumber);
+      console.log(
+        `Já existe um ticket para o número ${phoneNumber}. Não é necessário responder.`
+      );
+      return;
+    } catch (error) {
+      if (error.message.includes("Nao existe atendimento registrado")) {
+        console.log(
+          `Não existe um ticket para o número ${phoneNumber}. Criando um novo ticket...`
+        );
+        // Se não houver um ticket registrado, insere o número do cliente e cria um novo ticket
+        await this._getInsertClientNumberDB(phoneNumber);
+        await this._getInsertTicketDB(phoneNumber);
+        console.log(`Novo ticket criado para o número ${phoneNumber}.`);
+        // Continua o fluxo de atendimento normal
+        await handleMessage(phoneNumber, response);
+      } else {
+        console.error("Erro ao verificar o status do serviço:", error);
+        // Insira aqui o tratamento de erro adequado, se necessário
+      }
+    }
+  }
 }
 
 const stateMachine = new StateMachine();
@@ -947,12 +947,7 @@ client.on("message", async (message) => {
     body: message.body,
   };
 
-  await stateMachine.handleMessage(phoneNumber, response);
-});
-
-client.on("contactAdded", async (contact) => {
-  const phoneNumber = contact.split("@")[0];
-  await stateMachine.handleNewContact(phoneNumber);
+  await stateMachine.handleNewContact(phoneNumber, response);
 });
 
 client.initialize();
