@@ -193,16 +193,16 @@ class StateMachine {
     }
 
     const dbQuery = `
-    INSERT INTO
+    insert into
       bot_ticket (
         bot_idstatus,
         bot_contato_id,
         idresponsavel
-      )
-    VALUES(
+    )
+    values(
       1,
-      (select	last_insert_id()),
-      1
+      (select id from bot_contato bc where telefone =${phoneNumber}),
+      1);
     )`;
 
     const dbResponse = await executeQuery(dbQuery, customDbConfig);
