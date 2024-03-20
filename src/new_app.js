@@ -164,7 +164,6 @@ class StateMachine {
     `;
 
     const dbResponse = await executeQuery(dbQuery, customDbConfig);
-    console.log("_getTicketStatusDB -", dbResponse);
 
     return dbResponse;
   }
@@ -899,20 +898,25 @@ class StateMachine {
       const ticketStatus = await this._getTicketStatusDB(phoneNumber);
       console.log("serviceStatus -", ticketStatus);
 
-      if (ticketStatus) {
+      if (ticketStatus && ticketStatus.length > 0) {
         ticketNumber = ticketStatus[0].id;
         console.log(
           `Já existe um ticket para o número ${phoneNumber} - ${ticketNumber}`
         );
+      } else {
+        const insertTicketResponse = await this._getInsertTicketDB(phoneNumber);
+        if (insertTicketResponse && insertTicketResponse.insertId) {
+          ticketNumber = insertTicketResponse.insertId;
+          console.log(
+            `Novo ticket criado para o número ${phoneNumber} - ${ticketNumber}.`
+          );
+        }
       }
 
       await this._getInsertClientNumberDB(phoneNumber);
       console.log("_getInsertClientNumberDB -", this._getInsertClientNumberDB);
 
-      await this._getInsertTicketDB(phoneNumber);
-      console.log("_getInsertTicketDB -", this._getInsertTicketDB);
-
-      console.log(`Novo ticket criado para o número ${phoneNumber}.`);
+      console.log(`Ticket Number: ${ticketNumber}`);
 
       await handleMessage(phoneNumber, response);
     } catch (error) {
