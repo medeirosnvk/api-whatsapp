@@ -905,7 +905,7 @@ class StateMachine {
 
       console.log(`Ticket Number: ${ticketNumber}`);
 
-      await handleMessage(phoneNumber, response);
+      await this.handleMessage(phoneNumber, response);
     } catch (error) {
       if (error.message.includes("Nao existe atendimento registrado")) {
         console.error("Erro ao criar um novo ticket:", error);
