@@ -769,7 +769,7 @@ class StateMachine {
       console.log(`Timeout para ${phoneNumber}. Reiniciando atendimento.`);
       await this._resetUserState(phoneNumber);
       await this._handleInitialState(response.from, phoneNumber);
-    }, 60000); // 60 segundos
+    }, 300000); // 300 segundos
 
     switch (currentState) {
       case "INICIO":
