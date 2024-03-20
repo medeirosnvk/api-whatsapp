@@ -213,13 +213,7 @@ class StateMachine {
 
     const dbResponse = await executeQuery(dbQuery, customDbConfig);
 
-    if (dbResponse && dbResponse.length) {
-      return dbResponse;
-    }
-
-    throw new Error(
-      `Erro ao inserir ticket ao numero ${phoneNumber} no banco.`
-    );
+    return dbResponse;
   }
 
   async _getWhaticketStatus(phoneNumber) {
@@ -896,7 +890,7 @@ class StateMachine {
       let ticketNumber = 0;
 
       const ticketStatus = await this._getTicketStatusDB(phoneNumber);
-      console.log("serviceStatus -", ticketStatus);
+      console.log("ticketStatus -", ticketStatus);
 
       if (ticketStatus && ticketStatus.length > 0) {
         ticketNumber = ticketStatus[0].id;
