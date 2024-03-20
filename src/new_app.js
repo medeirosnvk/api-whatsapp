@@ -902,23 +902,28 @@ class StateMachine {
 
   async handleNewContact(phoneNumber, response) {
     try {
-      // Verifica se o número já possui um ticket registrado
-      await this._getServiceStatusDB(phoneNumber);
-      console.log(
-        `Já existe um ticket para o número ${phoneNumber}. Não é necessário responder.`
-      );
-      return;
+      const serviceStatus = await this._getServiceStatusDB(phoneNumber);
+      console.log("serviceStatus -", serviceStatus);
+
+      // if (serviceStatus) {
+      //   console.log(
+      //     `Já existe um ticket para o número ${phoneNumber}. Não é necessário responder.`
+      //   );
+      //   return;
+      // }
+
+      await this._getInsertClientNumberDB(phoneNumber);
+      console.log("_getInsertClientNumberDB -", this._getInsertClientNumberDB);
+
+      await this._getInsertTicketDB(phoneNumber);
+      console.log("_getInsertTicketDB -", this._getInsertTicketDB);
+
+      console.log(`Novo ticket criado para o número ${phoneNumber}.`);
+
+      await handleMessage(phoneNumber, response);
     } catch (error) {
       if (error.message.includes("Nao existe atendimento registrado")) {
-        console.log(
-          `Não existe um ticket para o número ${phoneNumber}. Criando um novo ticket...`
-        );
-        // Se não houver um ticket registrado, insere o número do cliente e cria um novo ticket
-        await this._getInsertClientNumberDB(phoneNumber);
-        await this._getInsertTicketDB(phoneNumber);
-        console.log(`Novo ticket criado para o número ${phoneNumber}.`);
-        // Continua o fluxo de atendimento normal
-        await handleMessage(phoneNumber, response);
+        console.error("Erro ao criar um novo ticket:", error);
       } else {
         console.error("Erro ao verificar o status do serviço:", error);
         // Insira aqui o tratamento de erro adequado, se necessário
