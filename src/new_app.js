@@ -19,8 +19,11 @@ const customDbConfig = {
 };
 
 const client = new Client({
+  // clientId: "client-id",
+  // dataPath: "./session.json",
   authStrategy: new LocalAuth(),
   puppeteer: {
+    // headless: true,
     args: ["--no-sandbox"],
   },
 });
@@ -137,6 +140,121 @@ class StateMachine {
     }
 
     throw new Error(`Nao existe credor vinculado ao numero ${phoneNumber}.`);
+  }
+
+  async _getServiceStatusDB(phoneNumber) {
+    if (!this.userStates[phoneNumber]) {
+      this.userStates[phoneNumber] = {}; // inicialize o objeto se não existir
+    }
+
+    const dbQuery = `
+    select
+      bt.id,
+      bot_idstatus,
+      bot_contato_id,
+      idresponsavel,
+      bt.inclusao,
+      encerrado
+    from
+      bot_ticket bt,
+      bot_contato bc
+    where
+      bc.telefone = ${phoneNumber}
+      and bc.id = bt.bot_contato_id
+    `;
+
+    const dbResponse = await executeQuery(dbQuery, customDbConfig);
+
+    if (dbResponse && dbResponse.length) {
+      this._setCredor(phoneNumber, dbResponse[0]);
+      return dbResponse[0];
+    }
+
+    throw new Error(
+      `Nao existe atendimento registrado ao numero ${phoneNumber} no banco.`
+    );
+  }
+
+  async _getInsertClientNumberDB(phoneNumber) {
+    if (!this.userStates[phoneNumber]) {
+      this.userStates[phoneNumber] = {}; // inicialize o objeto se não existir
+    }
+
+    const dbQuery = `
+    INSERT INTO
+      cobrance.bot_contato (
+        telefone
+      ) 
+    VALUES(
+      ${phoneNumber}
+    )`;
+
+    const dbResponse = await executeQuery(dbQuery, customDbConfig);
+
+    if (dbResponse && dbResponse.length) {
+      this._setCredor(phoneNumber, dbResponse[0]);
+      return dbResponse[0];
+    }
+
+    throw new Error(
+      `Nao existe atendimento registrado ao numero ${phoneNumber} no banco.`
+    );
+  }
+
+  async _getInsertTicketDB(phoneNumber) {
+    if (!this.userStates[phoneNumber]) {
+      this.userStates[phoneNumber] = {}; // inicialize o objeto se não existir
+    }
+
+    const dbQuery = `
+    INSERT INTO
+      bot_ticket (
+        bot_idstatus,
+        bot_contato_id,
+        idresponsavel
+      )
+    VALUES(
+      1,
+      (select	last_insert_id()),
+      1
+    )`;
+
+    const dbResponse = await executeQuery(dbQuery, customDbConfig);
+
+    if (dbResponse && dbResponse.length) {
+      this._setCredor(phoneNumber, dbResponse[0]);
+      return dbResponse[0];
+    }
+
+    throw new Error(
+      `Erro ao inserir ticket ao numero ${phoneNumber} no banco.`
+    );
+  }
+
+  async handleNewContact(phoneNumber) {
+    try {
+      // Verifica se o número já possui um ticket registrado
+      await this._getServiceStatusDB(phoneNumber);
+      console.log(
+        `Já existe um ticket para o número ${phoneNumber}. Não é necessário responder.`
+      );
+      return;
+    } catch (error) {
+      if (error.message.includes("Nao existe atendimento registrado")) {
+        console.log(
+          `Não existe um ticket para o número ${phoneNumber}. Criando um novo ticket...`
+        );
+        // Se não houver um ticket registrado, insere o número do cliente e cria um novo ticket
+        await this._getInsertClientNumberDB(phoneNumber);
+        await this._getInsertTicketDB(phoneNumber);
+        console.log(`Novo ticket criado para o número ${phoneNumber}.`);
+        // Continua o fluxo de atendimento normal
+        // Insira aqui o código para responder ao usuário ou seguir o fluxo de atendimento normal já definido
+      } else {
+        console.error("Erro ao verificar o status do serviço:", error);
+        // Insira aqui o tratamento de erro adequado, se necessário
+      }
+    }
   }
 
   async _getWhaticketStatus(phoneNumber) {
@@ -819,11 +937,19 @@ client.on("ready", () => {
   console.log("Client is ready!");
 });
 
-client.on("message", async (response) => {
-  const phoneNumber = response.from
-    .replace(/[^\d]/g, "")
-    .replace(/^.*?(\d{8})$/, "$1");
+client.on("message", async (message) => {
+  const phoneNumber = message.from.split("@")[0];
+  const response = {
+    from: message.from,
+    body: message.body,
+  };
+
   await stateMachine.handleMessage(phoneNumber, response);
+});
+
+client.on("contactAdded", async (contact) => {
+  const phoneNumber = contact.split("@")[0];
+  await stateMachine.handleNewContact(phoneNumber);
 });
 
 client.initialize();
