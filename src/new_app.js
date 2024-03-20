@@ -901,7 +901,6 @@ class StateMachine {
       }
 
       await this._getInsertClientNumberDB(phoneNumber);
-      console.log("_getInsertClientNumberDB -", this._getInsertClientNumberDB);
 
       console.log(`Ticket Number: ${ticketNumber}`);
 
@@ -928,16 +927,27 @@ client.on("ready", () => {
 });
 
 client.on("message", async (message) => {
-  const phoneNumber = message.from
-    .replace(/[^\d]/g, "")
-    .replace(/^.*?(\d{8})$/, "$1");
+  const { from: phoneNumber, body: messageBody } = message;
 
-  const response = {
-    from: message.from,
-    body: message.body,
-  };
+  if (!phoneNumber || !messageBody) {
+    console.log("Invalid message received:", message);
+    return;
+  }
 
-  await stateMachine.handleNewContact(phoneNumber, response);
+  try {
+    await stateMachine.handleMessage(phoneNumber, message);
+  } catch (error) {
+    console.error("Error while handling message:", error);
+    // Handle the error appropriately
+  }
+});
+
+client.on("auth_failure", () => {
+  console.error("Authentication failed. Please check your credentials.");
+});
+
+client.on("disconnected", () => {
+  console.log("Client was disconnected.");
 });
 
 client.initialize();
