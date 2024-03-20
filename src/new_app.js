@@ -826,24 +826,25 @@ class StateMachine {
   }
 
   async handleMessage(phoneNumber, response) {
-    const { credor, currentState } = this._getState(phoneNumber);
-    const origin = response.from;
-    let ticketNumber = 0;
-
-    console.log(`[${phoneNumber} - ${currentState}]`);
-
-    if (this.timer[phoneNumber]) {
-      clearTimeout(this.timer[phoneNumber]);
-    }
-
-    // Configurar um novo temporizador para reiniciar o atendimento após 60 segundos
-    this.timer[phoneNumber] = setTimeout(async () => {
-      console.log(`Timeout para ${phoneNumber}. Reiniciando atendimento.`);
-      await this._resetUserState(phoneNumber);
-      await this._handleInitialState(response.from, phoneNumber);
-    }, 300000); // 300 segundos
-
     try {
+      const { credor, currentState } = this._getState(phoneNumber);
+      const origin = response.from;
+
+      console.log(`[${phoneNumber} - ${currentState}]`);
+
+      if (this.timer[phoneNumber]) {
+        clearTimeout(this.timer[phoneNumber]);
+      }
+
+      // Configurar um novo temporizador para reiniciar o atendimento após 60 segundos
+      this.timer[phoneNumber] = setTimeout(async () => {
+        console.log(`Timeout para ${phoneNumber}. Reiniciando atendimento.`);
+        await this._resetUserState(phoneNumber);
+        await this._handleInitialState(response.from, phoneNumber);
+      }, 300000); // 300 segundos
+
+      let ticketNumber = 0;
+
       const ticketStatus = await this._getTicketStatusDB(phoneNumber);
 
       if (ticketStatus && ticketStatus.length > 0) {
@@ -862,8 +863,6 @@ class StateMachine {
       }
 
       await this._getInsertClientNumberDB(phoneNumber);
-
-      console.log(`Ticket Number: ${ticketNumber}`);
 
       switch (currentState) {
         case "INICIO":
@@ -905,42 +904,6 @@ class StateMachine {
         console.error("Erro ao criar um novo ticket:", error);
       } else {
         console.error("Erro ao verificar o status do serviço:", error);
-      }
-    }
-  }
-
-  async handleNewContact(phoneNumber, response) {
-    try {
-      let ticketNumber = 0;
-
-      const ticketStatus = await this._getTicketStatusDB(phoneNumber);
-
-      if (ticketStatus && ticketStatus.length > 0) {
-        ticketNumber = ticketStatus[0].id;
-        console.log(
-          `Já existe um ticket para o número ${phoneNumber} - ${ticketNumber}`
-        );
-      } else {
-        const insertTicketResponse = await this._getInsertTicketDB(phoneNumber);
-        if (insertTicketResponse && insertTicketResponse.insertId) {
-          ticketNumber = insertTicketResponse.insertId;
-          console.log(
-            `Novo ticket criado para o número ${phoneNumber} - ${ticketNumber}.`
-          );
-        }
-      }
-
-      await this._getInsertClientNumberDB(phoneNumber);
-
-      console.log(`Ticket Number: ${ticketNumber}`);
-
-      await this.handleMessage(phoneNumber, response);
-    } catch (error) {
-      if (error.message.includes("Nao existe atendimento registrado")) {
-        console.error("Erro ao criar um novo ticket:", error);
-      } else {
-        console.error("Erro ao verificar o status do serviço:", error);
-        // Insira aqui o tratamento de erro adequado, se necessário
       }
     }
   }
