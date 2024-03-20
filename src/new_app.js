@@ -164,6 +164,7 @@ class StateMachine {
     `;
 
     const dbResponse = await executeQuery(dbQuery, customDbConfig);
+    console.log("_getTicketStatusDB -", dbResponse);
 
     return dbResponse;
   }
