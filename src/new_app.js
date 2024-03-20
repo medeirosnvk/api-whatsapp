@@ -828,6 +828,7 @@ class StateMachine {
   async handleMessage(phoneNumber, response) {
     const { credor, currentState } = this._getState(phoneNumber);
     const origin = response.from;
+    let ticketNumber = 0;
 
     console.log(`[${phoneNumber} - ${currentState}]`);
 
@@ -842,60 +843,73 @@ class StateMachine {
       await this._handleInitialState(response.from, phoneNumber);
     }, 300000); // 300 segundos
 
-    switch (currentState) {
-      case "INICIO":
-        await this._handleInitialState(origin, phoneNumber, response); // Alterado para passar phoneNumber
-        this._setCurrentState(phoneNumber, "MENU");
-        break;
+    try {
+      const ticketStatus = await this._getTicketStatusDB(phoneNumber);
 
-      case "MENU":
-        await this._handleMenuState(origin, phoneNumber, response); // Alterado para passar phoneNumber
-        break;
+      if (ticketStatus && ticketStatus.length > 0) {
+        ticketNumber = ticketStatus[0].id;
+        console.log(
+          `Já existe um ticket para o número ${phoneNumber} - ${ticketNumber}`
+        );
+      } else {
+        const insertTicketResponse = await this._getInsertTicketDB(phoneNumber);
+        if (insertTicketResponse && insertTicketResponse.insertId) {
+          ticketNumber = insertTicketResponse.insertId;
+          console.log(
+            `Novo ticket criado para o número ${phoneNumber} - ${ticketNumber}.`
+          );
+        }
+      }
 
-      case "CREDOR":
-        await this._handleCredorState(origin, phoneNumber, response); // Alterado para passar phoneNumber
-        this._setCurrentState(phoneNumber, "OFERTA");
-        break;
+      await this._getInsertClientNumberDB(phoneNumber);
 
-      case "OFERTA":
-        await this._handleOfertaState(origin, phoneNumber, response); // Alterado para passar phoneNumber
-        this._setCurrentState(phoneNumber, "INICIO");
-        break;
+      console.log(`Ticket Number: ${ticketNumber}`);
 
-      case "VER_ACORDOS":
-        await this._handleAcordoState(origin, phoneNumber, response); // Alterado para passar phoneNumber
-        this._setCurrentState(phoneNumber, "INICIO");
-        break;
+      switch (currentState) {
+        case "INICIO":
+          await this._handleInitialState(origin, phoneNumber, response); // Alterado para passar phoneNumber
+          this._setCurrentState(phoneNumber, "MENU");
+          break;
 
-      case "VER_LINHA_DIGITAVEL":
-        await this._handleBoletoState(origin, phoneNumber, response); // Alterado para passar phoneNumber
-        this._setCurrentState(phoneNumber, "INICIO");
-        break;
+        case "MENU":
+          await this._handleMenuState(origin, phoneNumber, response); // Alterado para passar phoneNumber
+          break;
 
-      case "VER_CODIGO_PIX":
-        await this._handlePixState(origin, phoneNumber, response); // Alterado para passar phoneNumber
-        this._setCurrentState(phoneNumber, "INICIO");
-        break;
+        case "CREDOR":
+          await this._handleCredorState(origin, phoneNumber, response); // Alterado para passar phoneNumber
+          this._setCurrentState(phoneNumber, "OFERTA");
+          break;
+
+        case "OFERTA":
+          await this._handleOfertaState(origin, phoneNumber, response); // Alterado para passar phoneNumber
+          this._setCurrentState(phoneNumber, "INICIO");
+          break;
+
+        case "VER_ACORDOS":
+          await this._handleAcordoState(origin, phoneNumber, response); // Alterado para passar phoneNumber
+          this._setCurrentState(phoneNumber, "INICIO");
+          break;
+
+        case "VER_LINHA_DIGITAVEL":
+          await this._handleBoletoState(origin, phoneNumber, response); // Alterado para passar phoneNumber
+          this._setCurrentState(phoneNumber, "INICIO");
+          break;
+
+        case "VER_CODIGO_PIX":
+          await this._handlePixState(origin, phoneNumber, response); // Alterado para passar phoneNumber
+          this._setCurrentState(phoneNumber, "INICIO");
+          break;
+      }
+    } catch (error) {
+      if (error.message.includes("Nao existe atendimento registrado")) {
+        console.error("Erro ao criar um novo ticket:", error);
+      } else {
+        console.error("Erro ao verificar o status do serviço:", error);
+      }
     }
   }
 
   async handleNewContact(phoneNumber, response) {
-    const { credor, currentState } = this._getState(phoneNumber);
-    const origin = response.from;
-
-    console.log(`[${phoneNumber} - ${currentState}]`);
-
-    if (this.timer[phoneNumber]) {
-      clearTimeout(this.timer[phoneNumber]);
-    }
-
-    // Configurar um novo temporizador para reiniciar o atendimento após 60 segundos
-    this.timer[phoneNumber] = setTimeout(async () => {
-      console.log(`Timeout para ${phoneNumber}. Reiniciando atendimento.`);
-      await this._resetUserState(phoneNumber);
-      await this._handleInitialState(response.from, phoneNumber);
-    }, 300000); // 300 segundos
-
     try {
       let ticketNumber = 0;
 
