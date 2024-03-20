@@ -142,7 +142,7 @@ class StateMachine {
     throw new Error(`Nao existe credor vinculado ao numero ${phoneNumber}.`);
   }
 
-  async _getServiceStatusDB(phoneNumber) {
+  async _getTicketStatusDB(phoneNumber) {
     if (!this.userStates[phoneNumber]) {
       this.userStates[phoneNumber] = {}; // inicialize o objeto se não existir
     }
@@ -166,8 +166,7 @@ class StateMachine {
     const dbResponse = await executeQuery(dbQuery, customDbConfig);
 
     if (dbResponse && dbResponse.length) {
-      this._setCredor(phoneNumber, dbResponse[0]);
-      return dbResponse[0];
+      return dbResponse;
     }
 
     throw new Error(
@@ -192,8 +191,7 @@ class StateMachine {
     const dbResponse = await executeQuery(dbQuery, customDbConfig);
 
     if (dbResponse && dbResponse.length) {
-      this._setCredor(phoneNumber, dbResponse[0]);
-      return dbResponse[0];
+      return dbResponse;
     }
 
     throw new Error(
@@ -222,8 +220,7 @@ class StateMachine {
     const dbResponse = await executeQuery(dbQuery, customDbConfig);
 
     if (dbResponse && dbResponse.length) {
-      this._setCredor(phoneNumber, dbResponse[0]);
-      return dbResponse[0];
+      return dbResponse;
     }
 
     throw new Error(
@@ -902,10 +899,10 @@ class StateMachine {
 
   async handleNewContact(phoneNumber, response) {
     try {
-      const serviceStatus = await this._getServiceStatusDB(phoneNumber);
-      console.log("serviceStatus -", serviceStatus);
+      const ticketStatus = await this._getTicketStatusDB(phoneNumber);
+      console.log("serviceStatus -", ticketStatus);
 
-      // if (serviceStatus) {
+      // if (ticketStatus) {
       //   console.log(
       //     `Já existe um ticket para o número ${phoneNumber}. Não é necessário responder.`
       //   );
