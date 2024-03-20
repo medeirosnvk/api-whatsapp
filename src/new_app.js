@@ -170,7 +170,7 @@ class StateMachine {
     }
 
     throw new Error(
-      `Nao existe atendimento registrado ao numero ${phoneNumber} no banco.`
+      `O numero ${phoneNumber} nao possui Ticket registrado no banco.`
     );
   }
 
@@ -899,15 +899,17 @@ class StateMachine {
 
   async handleNewContact(phoneNumber, response) {
     try {
+      let ticketNumber = 0;
+
       const ticketStatus = await this._getTicketStatusDB(phoneNumber);
       console.log("serviceStatus -", ticketStatus);
 
-      // if (ticketStatus) {
-      //   console.log(
-      //     `Já existe um ticket para o número ${phoneNumber}. Não é necessário responder.`
-      //   );
-      //   return;
-      // }
+      if (ticketStatus) {
+        ticketNumber = ticketStatus[0].id;
+        console.log(
+          `Já existe um ticket para o número ${phoneNumber} - ${ticketNumber}`
+        );
+      }
 
       await this._getInsertClientNumberDB(phoneNumber);
       console.log("_getInsertClientNumberDB -", this._getInsertClientNumberDB);
