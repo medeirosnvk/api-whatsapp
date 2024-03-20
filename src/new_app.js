@@ -938,7 +938,10 @@ client.on("ready", () => {
 });
 
 client.on("message", async (message) => {
-  const phoneNumber = message.from.split("@")[0];
+  const phoneNumber = message.from
+    .replace(/[^\d]/g, "")
+    .replace(/^.*?(\d{8})$/, "$1");
+
   const response = {
     from: message.from,
     body: message.body,
