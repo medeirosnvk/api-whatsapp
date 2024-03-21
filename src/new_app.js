@@ -853,7 +853,6 @@ class StateMachine {
       // Configurar um novo temporizador para reiniciar o atendimento após 60 segundos
       this.timer[phoneNumber] = setTimeout(async () => {
         console.log(`Timeout para ${phoneNumber}. Reiniciando atendimento.`);
-        await this._resetUserState(phoneNumber);
         await this._handleInitialState(response.from, phoneNumber);
       }, 300000); // 300 segundos
 
