@@ -11,7 +11,7 @@ module.exports = {
       },
     },
     {
-      name: "frontend",
+      name: "api-whatsapp-frontend",
       script: "npm",
       args: "front", // Use o script 'front' definido no package.json
       watch: true,
