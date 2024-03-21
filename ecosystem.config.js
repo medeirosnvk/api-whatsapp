@@ -3,7 +3,7 @@ module.exports = {
     {
       name: "api-whatsapp",
       script: "npm",
-      args: "start",
+      args: "run server",
       watch: true,
       cwd: "src",
       env: {
