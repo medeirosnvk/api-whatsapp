@@ -830,6 +830,10 @@ class StateMachine {
       const { credor, currentState } = this._getState(phoneNumber);
       const origin = response.from;
 
+      if (!currentState) {
+        currentState = "INICIO";
+      }
+
       console.log(`[${phoneNumber} - ${currentState}]`);
 
       if (this.timer[phoneNumber]) {
