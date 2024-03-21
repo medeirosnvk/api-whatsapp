@@ -19,8 +19,11 @@ const customDbConfig = {
 };
 
 const client = new Client({
+  // clientId: "client-id",
+  // dataPath: "./session.json",
   authStrategy: new LocalAuth(),
   puppeteer: {
+    // headless: true,
     args: ["--no-sandbox"],
   },
 });
@@ -32,6 +35,7 @@ class StateMachine {
     this.document = null;
     this.idDevedor = null;
     this.globalData = {};
+    this.timer = {};
   }
 
   _getCredor(phoneNumber) {
@@ -105,6 +109,10 @@ class StateMachine {
   }
 
   async _getCredorFromDB(phoneNumber) {
+    if (!this.userStates[phoneNumber]) {
+      this.userStates[phoneNumber] = {}; // inicialize o objeto se não existir
+    }
+
     const dbQuery = `
       select
       d.iddevedor,
@@ -132,6 +140,74 @@ class StateMachine {
     }
 
     throw new Error(`Nao existe credor vinculado ao numero ${phoneNumber}.`);
+  }
+
+  async _getTicketStatusDB(phoneNumber) {
+    if (!this.userStates[phoneNumber]) {
+      this.userStates[phoneNumber] = {}; // inicialize o objeto se não existir
+    }
+
+    const dbQuery = `
+    select
+      bt.id,
+      bot_idstatus,
+      bot_contato_id,
+      idresponsavel,
+      bt.inclusao,
+      encerrado
+    from
+      bot_ticket bt,
+      bot_contato bc
+    where
+      bc.telefone = ${phoneNumber}
+      and bc.id = bt.bot_contato_id
+    `;
+
+    const dbResponse = await executeQuery(dbQuery, customDbConfig);
+
+    return dbResponse;
+  }
+
+  async _getInsertClientNumberDB(phoneNumber) {
+    if (!this.userStates[phoneNumber]) {
+      this.userStates[phoneNumber] = {}; // inicialize o objeto se não existir
+    }
+
+    const dbQuery = `
+    INSERT ignore INTO
+      cobrance.bot_contato (
+        telefone
+      ) 
+    VALUES(
+      ${phoneNumber}
+    )`;
+
+    const dbResponse = await executeQuery(dbQuery, customDbConfig);
+
+    return dbResponse;
+  }
+
+  async _getInsertTicketDB(phoneNumber) {
+    if (!this.userStates[phoneNumber]) {
+      this.userStates[phoneNumber] = {}; // inicialize o objeto se não existir
+    }
+
+    const dbQuery = `
+    insert into
+      bot_ticket (
+        bot_idstatus,
+        bot_contato_id,
+        idresponsavel
+    )
+    values(
+      1,
+      (select id from bot_contato bc where telefone =${phoneNumber}),
+      1
+    )`;
+
+    const dbResponse = await executeQuery(dbQuery, customDbConfig);
+
+    return dbResponse;
   }
 
   async _getWhaticketStatus(phoneNumber) {
@@ -169,16 +245,15 @@ class StateMachine {
           const credorInfo = await requests.getCredorInfo(document);
 
           if (!credorInfo || credorInfo.length === 0) {
-            const messageErro = `Você não possui dívidas ou ofertas disponíveis.\n\n_Digite a tecla 5 para voltar._`;
+            const messageErro = `Você não possui dívidas ou ofertas disponíveis.`;
             await this._postMessage(origin, messageErro);
-            this._setCurrentState(phoneNumber, "INICIO");
+            await this._handleInitialState(origin, phoneNumber, response);
           } else {
             const credorMessage = utils.formatCredorInfo(credorInfo);
             const messageSucess = `${credorMessage}\n\n_Selecione o credor (por exemplo, responda com "1" ou "2")_`;
 
             await this._postMessage(origin, messageSucess);
             this._setCurrentState(phoneNumber, "CREDOR");
-            await this._handleInitialState(origin, phoneNumber, response); // Alterado para passar phoneNumber
           }
         } catch (error) {
           console.error("Case 1 retornou um erro - ", error.message);
@@ -233,7 +308,7 @@ class StateMachine {
 
   async _handleInitialState(origin, phoneNumber, response) {
     const { nome: userName } = await this._getCredorFromDB(phoneNumber);
-    const message = `Olá *${userName}*,\n\nPor favor, escolha uma opção:\n\n1) Credores\n2) Ver Acordos\n3) Linha Digitável\n4) Pix Copia e Cola\n5) Voltar`;
+    const message = `Olá *${userName}*,\n\nPor favor, escolha uma opção:\n\n1) Credores\n2) Ver Acordos\n3) Linha Digitável\n4) Pix Copia e Cola`;
 
     await this._postMessage(origin, message);
   }
@@ -570,6 +645,7 @@ class StateMachine {
 
         await this._postMessage(origin, mensagem);
         await this._postMessage(origin, media);
+        await this._handleInitialState(origin, phoneNumber, response);
       } else {
         await this._postMessage(
           origin,
@@ -591,15 +667,15 @@ class StateMachine {
       const acordosFirmados = await requests.getAcordosFirmados(document);
 
       if (!acordosFirmados || acordosFirmados.length === 0) {
-        const message = `Você não possui acordos efetuados a listar.\n\n_Digite a tecla 5 para voltar._`;
+        const message = `Você não possui acordos efetuados a listar.`;
         await this._postMessage(origin, message);
-        this._setCurrentState(phoneNumber, "INICIO");
+        await this._handleInitialState(origin, phoneNumber, response);
       } else {
         const formatAcordos = utils.formatCredorAcordos(acordosFirmados);
 
-        const message = `${formatAcordos}\n\n_Digite a tecla 5 para voltar._`;
+        const message = `*Os seguintes acordos firmados foram encontrados:*\n\n${formatAcordos}`;
         await this._postMessage(origin, message);
-        this._setCurrentState(phoneNumber, "INICIO");
+        await this._handleInitialState(origin, phoneNumber, response);
       }
     } catch (error) {
       console.error("Case 2 retornou um erro - ", error.message);
@@ -616,12 +692,11 @@ class StateMachine {
       const { cpfcnpj: document } = await this._getCredorFromDB(phoneNumber);
 
       const acordosFirmados = await requests.getAcordosFirmados(document);
-      console.log("acordosFirmados -", acordosFirmados);
 
       if (!acordosFirmados || acordosFirmados.length === 0) {
-        const message = `Você não possui acordos nem Linhas Digitáveis a listar.\n\n_Digite a tecla 5 para voltar._`;
+        const message = `Você não possui acordos nem Linhas Digitáveis a listar.`;
         await this._postMessage(origin, message);
-        this._setCurrentState(phoneNumber, "INICIO");
+        await this._handleInitialState(origin, phoneNumber, response);
       } else {
         const responseBoletoPixArray = [];
 
@@ -652,22 +727,25 @@ class StateMachine {
           }
         }
 
-        // Verificar se acordosFirmados tem dados e responseBoletoPixArray está vazio ou indefinido
-        if (
-          acordosFirmados.length > 0 &&
-          responseBoletoPixArray &&
-          responseBoletoPixArray.length === 0
+        console.log("acordosFirmados -", acordosFirmados);
+        console.log("responseBoletoPixArray -", responseBoletoPixArray);
+
+        if (acordosFirmados.length > 0 && responseBoletoPixArray.length === 0) {
+          await this._postMessage(origin, "Boleto vencido ou não disponível.");
+          await this._handleInitialState(origin, phoneNumber, response);
+        } else if (
+          responseBoletoPixArray.length === 1 &&
+          responseBoletoPixArray[0].length === 0
         ) {
-          await this._postMessage(origin, "Boleto vencido ou não disponível");
-          this._setCurrentState(phoneNumber, "INICIO");
+          await this._postMessage(origin, "Boleto vencido ou não disponível.");
+          await this._handleInitialState(origin, phoneNumber, response);
         } else {
           const formatBoletoPixArray = utils.formatCodigoBoleto(
             responseBoletoPixArray
           );
-
-          const message = `${formatBoletoPixArray}\n\n_Digite a tecla 5 para voltar._`;
+          const message = `${formatBoletoPixArray}`;
           await this._postMessage(origin, message);
-          this._setCurrentState(phoneNumber, "INICIO");
+          await this._handleInitialState(origin, phoneNumber, response);
         }
       }
     } catch (error) {
@@ -688,9 +766,9 @@ class StateMachine {
       console.log("acordosFirmados -", acordosFirmados);
 
       if (!acordosFirmados || acordosFirmados.length === 0) {
-        const message = `Você não possui acordos nem Códigos PIX a listar.\n\n_Digite a tecla 5 para voltar._`;
+        const message = `Você não possui acordos nem Códigos PIX a listar.`;
         await this._postMessage(origin, message);
-        this._setCurrentState(phoneNumber, "INICIO");
+        await this._handleInitialState(origin, phoneNumber, response);
       } else {
         const responseBoletoPixArray = [];
 
@@ -722,24 +800,29 @@ class StateMachine {
         }
 
         // Verificar se acordosFirmados tem dados e responseBoletoPixArray está vazio ou indefinido
-        if (
-          acordosFirmados.length > 0 &&
-          responseBoletoPixArray &&
-          responseBoletoPixArray.length === 0
+        if (acordosFirmados.length > 0 && responseBoletoPixArray.length === 0) {
+          await this._postMessage(
+            origin,
+            "Código PIX vencido ou não disponível."
+          );
+          await this._handleInitialState(origin, phoneNumber, response);
+        } else if (
+          responseBoletoPixArray.length === 1 &&
+          responseBoletoPixArray[0].length === 0
         ) {
           await this._postMessage(
             origin,
-            "Código PIX vencido ou não disponível"
+            "Código PIX vencido ou não disponível."
           );
-          this._setCurrentState(phoneNumber, "INICIO");
+          await this._handleInitialState(origin, phoneNumber, response);
         } else {
           const formatBoletoPixArray = utils.formatCodigoPix(
             responseBoletoPixArray
           );
 
-          const message = `${formatBoletoPixArray}\n\n_Digite a tecla 5 para voltar._`;
+          const message = `${formatBoletoPixArray}`;
           await this._postMessage(origin, message);
-          this._setCurrentState(phoneNumber, "INICIO");
+          await this._handleInitialState(origin, phoneNumber, response);
         }
       }
     } catch (error) {
@@ -753,45 +836,88 @@ class StateMachine {
   }
 
   async handleMessage(phoneNumber, response) {
-    const { credor, currentState } = this._getState(phoneNumber);
-    const origin = response.from;
+    try {
+      const { credor, currentState } = this._getState(phoneNumber);
+      const origin = response.from;
 
-    console.log(`[${phoneNumber} - ${currentState}]`);
+      if (!currentState) {
+        currentState = "INICIO";
+      }
 
-    switch (currentState) {
-      case "INICIO":
-        await this._handleInitialState(origin, phoneNumber, response); // Alterado para passar phoneNumber
-        this._setCurrentState(phoneNumber, "MENU");
-        break;
+      console.log(`[${phoneNumber} - ${currentState}]`);
 
-      case "MENU":
-        await this._handleMenuState(origin, phoneNumber, response); // Alterado para passar phoneNumber
-        break;
+      if (this.timer[phoneNumber]) {
+        clearTimeout(this.timer[phoneNumber]);
+      }
 
-      case "CREDOR":
-        await this._handleCredorState(origin, phoneNumber, response); // Alterado para passar phoneNumber
-        this._setCurrentState(phoneNumber, "OFERTA");
-        break;
+      // Configurar um novo temporizador para reiniciar o atendimento após 60 segundos
+      this.timer[phoneNumber] = setTimeout(async () => {
+        console.log(`Timeout para ${phoneNumber}. Reiniciando atendimento.`);
+        await this._handleInitialState(response.from, phoneNumber);
+      }, 300000); // 300 segundos
 
-      case "OFERTA":
-        await this._handleOfertaState(origin, phoneNumber, response); // Alterado para passar phoneNumber
-        this._setCurrentState(phoneNumber, "INICIO");
-        break;
+      let ticketNumber = 0;
 
-      case "VER_ACORDOS":
-        await this._handleAcordoState(origin, phoneNumber, response); // Alterado para passar phoneNumber
-        this._setCurrentState(phoneNumber, "INICIO");
-        break;
+      const ticketStatus = await this._getTicketStatusDB(phoneNumber);
 
-      case "VER_LINHA_DIGITAVEL":
-        await this._handleBoletoState(origin, phoneNumber, response); // Alterado para passar phoneNumber
-        this._setCurrentState(phoneNumber, "INICIO");
-        break;
+      if (ticketStatus && ticketStatus.length > 0) {
+        ticketNumber = ticketStatus[0].id;
+        console.log(
+          `Já existe um ticket para o número ${phoneNumber} - ${ticketNumber}`
+        );
+      } else {
+        const insertTicketResponse = await this._getInsertTicketDB(phoneNumber);
+        if (insertTicketResponse && insertTicketResponse.insertId) {
+          ticketNumber = insertTicketResponse.insertId;
+          console.log(
+            `Novo ticket criado para o número ${phoneNumber} - ${ticketNumber}.`
+          );
+        }
+      }
 
-      case "VER_CODIGO_PIX":
-        await this._handlePixState(origin, phoneNumber, response); // Alterado para passar phoneNumber
-        this._setCurrentState(phoneNumber, "INICIO");
-        break;
+      await this._getInsertClientNumberDB(phoneNumber);
+
+      switch (currentState) {
+        case "INICIO":
+          await this._handleInitialState(origin, phoneNumber, response); // Alterado para passar phoneNumber
+          this._setCurrentState(phoneNumber, "MENU");
+          break;
+
+        case "MENU":
+          await this._handleMenuState(origin, phoneNumber, response); // Alterado para passar phoneNumber
+          break;
+
+        case "CREDOR":
+          await this._handleCredorState(origin, phoneNumber, response); // Alterado para passar phoneNumber
+          this._setCurrentState(phoneNumber, "OFERTA");
+          break;
+
+        case "OFERTA":
+          await this._handleOfertaState(origin, phoneNumber, response); // Alterado para passar phoneNumber
+          this._setCurrentState(phoneNumber, "INICIO");
+          break;
+
+        case "VER_ACORDOS":
+          await this._handleAcordoState(origin, phoneNumber, response); // Alterado para passar phoneNumber
+          this._setCurrentState(phoneNumber, "INICIO");
+          break;
+
+        case "VER_LINHA_DIGITAVEL":
+          await this._handleBoletoState(origin, phoneNumber, response); // Alterado para passar phoneNumber
+          this._setCurrentState(phoneNumber, "INICIO");
+          break;
+
+        case "VER_CODIGO_PIX":
+          await this._handlePixState(origin, phoneNumber, response); // Alterado para passar phoneNumber
+          this._setCurrentState(phoneNumber, "INICIO");
+          break;
+      }
+    } catch (error) {
+      if (error.message.includes("Nao existe atendimento registrado")) {
+        console.error("Erro ao criar um novo ticket:", error);
+      } else {
+        console.error("Erro ao verificar o status do serviço:", error);
+      }
     }
   }
 }
@@ -806,11 +932,34 @@ client.on("ready", () => {
   console.log("Client is ready!");
 });
 
-client.on("message", async (response) => {
-  const phoneNumber = response.from
+client.on("auth_failure", () => {
+  console.error("Authentication failed. Please check your credentials.");
+});
+
+client.on("disconnected", () => {
+  console.log("Client was disconnected.");
+});
+
+client.on("message", async (message) => {
+  const phoneNumber = message.from
     .replace(/[^\d]/g, "")
     .replace(/^.*?(\d{8})$/, "$1");
-  await stateMachine.handleMessage(phoneNumber, response);
+
+  const response = {
+    from: message.from,
+    body: message.body,
+  };
+
+  if (!phoneNumber || !response) {
+    console.log("Invalid message received:", message);
+    return;
+  }
+
+  try {
+    await stateMachine.handleMessage(phoneNumber, response);
+  } catch (error) {
+    console.error("Error while handling message:", error);
+  }
 });
 
 client.initialize();
