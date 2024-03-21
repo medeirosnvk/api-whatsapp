@@ -13,11 +13,11 @@ module.exports = {
     {
       name: "api-whatsapp-frontend",
       script: "npm",
-      args: "front", // Use o script 'front' definido no package.json
+      args: "run front",
       watch: true,
       cwd: "src/frontend",
       env: {
-        PORT: 3003,
+        PORT: 5175,
       },
     },
   ],
