@@ -731,7 +731,7 @@ class StateMachine {
         console.log("responseBoletoPixArray -", responseBoletoPixArray);
 
         if (acordosFirmados.length > 0 && responseBoletoPixArray.length === 0) {
-          await this._postMessage(origin, "Boleto vencido ou não disponível");
+          await this._postMessage(origin, "Boleto vencido ou não disponível.");
           await this._handleInitialState(origin, phoneNumber, response);
         } else if (
           responseBoletoPixArray.length === 1 &&
@@ -800,14 +800,19 @@ class StateMachine {
         }
 
         // Verificar se acordosFirmados tem dados e responseBoletoPixArray está vazio ou indefinido
-        if (
-          acordosFirmados.length > 0 &&
-          responseBoletoPixArray &&
-          responseBoletoPixArray.length === 0
+        if (acordosFirmados.length > 0 && responseBoletoPixArray.length === 0) {
+          await this._postMessage(
+            origin,
+            "Código PIX vencido ou não disponível."
+          );
+          await this._handleInitialState(origin, phoneNumber, response);
+        } else if (
+          responseBoletoPixArray.length === 1 &&
+          responseBoletoPixArray[0].length === 0
         ) {
           await this._postMessage(
             origin,
-            "Código PIX vencido ou não disponível"
+            "Código PIX vencido ou não disponível."
           );
           await this._handleInitialState(origin, phoneNumber, response);
         } else {
