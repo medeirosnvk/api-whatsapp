@@ -737,7 +737,7 @@ class StateMachine {
           responseBoletoPixArray.length === 1 &&
           responseBoletoPixArray[0].length === 0
         ) {
-          await this._postMessage(origin, "Boleto vencido ou não disponível");
+          await this._postMessage(origin, "Boleto vencido ou não disponível.");
           await this._handleInitialState(origin, phoneNumber, response);
         } else {
           const formatBoletoPixArray = utils.formatCodigoBoleto(
