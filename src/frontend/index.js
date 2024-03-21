@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from "react";
-import { executeQuery } from "./dbconfig";
+const React = require("react");
+const { executeQuery } = require("./dbconfig");
 
 function TicketTable() {
   const [tickets, setTickets] = useState([]);
