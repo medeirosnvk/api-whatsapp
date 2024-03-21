@@ -733,11 +733,16 @@ class StateMachine {
         if (acordosFirmados.length > 0 && responseBoletoPixArray.length === 0) {
           await this._postMessage(origin, "Boleto vencido ou não disponível");
           await this._handleInitialState(origin, phoneNumber, response);
+        } else if (
+          responseBoletoPixArray.length === 1 &&
+          responseBoletoPixArray[0].length === 0
+        ) {
+          await this._postMessage(origin, "Boleto vencido ou não disponível");
+          await this._handleInitialState(origin, phoneNumber, response);
         } else {
           const formatBoletoPixArray = utils.formatCodigoBoleto(
             responseBoletoPixArray
           );
-
           const message = `${formatBoletoPixArray}`;
           await this._postMessage(origin, message);
           await this._handleInitialState(origin, phoneNumber, response);
