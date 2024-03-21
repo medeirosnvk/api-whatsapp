@@ -11,7 +11,7 @@
   "scripts": {
     "start": "concurrently \"npm run server\" \"npm run front\"",
     "server": "nodemon src/app.js",
-    "front": "nodemon src/frontend/index.js"
+    "front": "nodemon src/frontend/index.jsx"
   },
   "devDependencies": {
     "concurrently": "^8.2.2",
