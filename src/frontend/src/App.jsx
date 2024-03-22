@@ -1,5 +1,5 @@
-const React = require("react");
-const { executeQuery } = require("./dbconfig");
+import { useState, useEffect } from "react";
+import { executeQuery } from "./dbconfig";
 
 function TicketTable() {
   const [tickets, setTickets] = useState([]);
@@ -39,6 +39,7 @@ function TicketTable() {
     fetchTickets();
   }, []);
 
+  // Função para renderizar a tabela separada por status
   const renderTicketsByStatus = (status) => {
     const filteredTickets = tickets.filter(
       (ticket) => ticket.bot_idstatus === status
