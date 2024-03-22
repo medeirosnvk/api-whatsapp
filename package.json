@@ -9,9 +9,7 @@
     "whatsapp-web.js": "https://github.com/Julzk/whatsapp-web.js/tarball/jkr_hotfix_7"
   },
   "scripts": {
-    "start": "concurrently \"npm run server\" \"npm run front\"",
-    "server": "nodemon src/app.js",
-    "front": "nodemon src/frontend/index.jsx"
+    "server": "nodemon src/app.js"
   },
   "devDependencies": {
     "concurrently": "^8.2.2",
