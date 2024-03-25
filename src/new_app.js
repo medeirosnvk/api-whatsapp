@@ -986,23 +986,21 @@ client.on("disconnected", () => {
 });
 
 client.on("message", async (message) => {
-  console.log("message -", message);
-
-  const fromPhoneNumber = message.from
-    .replace(/[^\d]/g, "")
-    .replace(/^.*?(\d{8})$/, "$1");
-
-  const response = {
-    from: message.from,
-    body: message.body,
-  };
-
-  if (!fromPhoneNumber || !response) {
-    console.log("Invalid message received:", message);
-    return;
-  }
-
   try {
+    const fromPhoneNumber = message.from
+      .replace(/[^\d]/g, "")
+      .replace(/^.*?(\d{8})$/, "$1");
+
+    const response = {
+      from: message.from,
+      body: message.body,
+    };
+
+    if (!fromPhoneNumber || !response) {
+      console.log("Invalid message received:", message);
+      return;
+    }
+
     const dateTime = new Date(message.timestamp * 1000).toISOString(); // Converter o timestamp em uma data ISO
     const botTicketId = this.ticketNumber; // Substitua pelo valor apropriado do ticket
 
