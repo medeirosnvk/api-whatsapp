@@ -955,6 +955,8 @@ client.on("disconnected", () => {
 });
 
 client.on("message", async (message) => {
+  console.log(message);
+
   try {
     const fromPhoneNumber = utils.formatPhoneNumber(message.from);
 
@@ -1002,6 +1004,7 @@ client.on("message", async (message) => {
 
     // Determinar se a mensagem foi enviada pelo cliente ou recebida dele
     const demim = message.fromMe ? 1 : 0;
+    console.log("demim -", demim);
 
     // Extrair o conteúdo da mensagem e as informações do remetente
     const { body, from, to } = message;
