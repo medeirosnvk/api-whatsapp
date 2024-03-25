@@ -36,6 +36,7 @@ class StateMachine {
     this.idDevedor = null;
     this.globalData = {};
     this.timer = {};
+    this.ticketNumber = 0;
   }
 
   _getCredor(phoneNumber) {
@@ -210,9 +211,16 @@ class StateMachine {
     return dbResponse;
   }
 
-  async _getRegisterMessagesDB(phoneNumber) {
-    if (!this.userStates[phoneNumber]) {
-      this.userStates[phoneNumber] = {}; // inicialize o objeto se não existir
+  async _getRegisterMessagesDB(
+    from,
+    to,
+    message,
+    dateTime,
+    botTicketId,
+    demim
+  ) {
+    if (!this.userStates[from]) {
+      this.userStates[from] = {}; // inicialize o objeto se não existir
     }
 
     const dbQuery = `
@@ -226,12 +234,12 @@ class StateMachine {
         demim
       )
       values(
-        '',
-        '',
-        '',
-        '',
-        0,
-        0
+        '${from}',
+        '${to}',
+        '${message}',
+        '${dateTime}',
+        '${botTicketId}',
+        '${demim}'
       )
     `;
 
@@ -886,16 +894,14 @@ class StateMachine {
         await this._handleInitialState(response.from, phoneNumber);
       }, 300000); // 300 segundos
 
-      let ticketNumber = 0;
-
       // Primeiro verifica se existe ticket para este numero
       const ticketStatus = await this._getTicketStatusDB(phoneNumber);
 
       // Se tiver ticket, entao assume o valor do banco
       if (ticketStatus && ticketStatus.length > 0) {
-        ticketNumber = ticketStatus[0].id;
+        this.ticketNumber = ticketStatus[0].id;
         console.log(
-          `Já existe um ticket para o número ${phoneNumber} - ${ticketNumber}`
+          `Já existe um ticket para o número ${phoneNumber} - ${this.ticketNumber}`
         );
       } else {
         // Se nao tiver ticket, faz um insert do cliente no banco
@@ -905,9 +911,9 @@ class StateMachine {
         const insertTicketResponse = await this._getInsertTicketDB(phoneNumber);
 
         if (insertTicketResponse && insertTicketResponse.insertId) {
-          ticketNumber = insertTicketResponse.insertId;
+          this.ticketNumber = insertTicketResponse.insertId;
           console.log(
-            `Novo ticket criado para o número ${phoneNumber} - ${ticketNumber}.`
+            `Novo ticket criado para o número ${phoneNumber} - ${this.ticketNumber}.`
           );
         }
         console.log(
@@ -982,7 +988,7 @@ client.on("disconnected", () => {
 client.on("message", async (message) => {
   console.log("message -", message);
 
-  const phoneNumber = message.from
+  const fromPhoneNumber = message.from
     .replace(/[^\d]/g, "")
     .replace(/^.*?(\d{8})$/, "$1");
 
@@ -991,15 +997,35 @@ client.on("message", async (message) => {
     body: message.body,
   };
 
-  if (!phoneNumber || !response) {
+  if (!fromPhoneNumber || !response) {
     console.log("Invalid message received:", message);
     return;
   }
 
   try {
-    await stateMachine.handleMessage(phoneNumber, response);
+    const dateTime = new Date(message.timestamp * 1000).toISOString(); // Converter o timestamp em uma data ISO
+    const botTicketId = this.ticketNumber; // Substitua pelo valor apropriado do ticket
+
+    // Determinar se a mensagem foi enviada pelo cliente ou recebida dele
+    const demim = message.fromMe ? 1 : 0;
+
+    // Extrair o conteúdo da mensagem e as informações do remetente
+    const { body, from, to } = message;
+
+    // Inserir os dados no banco de dados
+    await stateMachine._getRegisterMessagesDB(
+      from,
+      to,
+      body,
+      dateTime,
+      botTicketId,
+      demim
+    );
+
+    // Manipular a mensagem
+    await stateMachine.handleMessage(fromPhoneNumber, response);
   } catch (error) {
-    console.error("Error while handling message:", error);
+    console.error("Erro ao lidar com a mensagem:", error);
   }
 });
 
