@@ -224,20 +224,21 @@ class StateMachine {
     }
 
     function formatDate(dateTime) {
-      const year = dateTime.getFullYear();
-      const month = String(dateTime.getMonth() + 1).padStart(2, "0");
-      const day = String(dateTime.getDate()).padStart(2, "0");
-      const hours = String(dateTime.getHours()).padStart(2, "0");
-      const minutes = String(dateTime.getMinutes()).padStart(2, "0");
-      const seconds = String(dateTime.getSeconds()).padStart(2, "0");
+      if (dateTime instanceof Date) {
+        const year = dateTime.getFullYear();
+        const month = String(dateTime.getMonth() + 1).padStart(2, "0");
+        const day = String(dateTime.getDate()).padStart(2, "0");
+        const hours = String(dateTime.getHours()).padStart(2, "0");
+        const minutes = String(dateTime.getMinutes()).padStart(2, "0");
+        const seconds = String(dateTime.getSeconds()).padStart(2, "0");
 
-      return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
+        return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
+      } else {
+        return "0000-00-00 00:00:00";
+      }
     }
 
-    // Converter a data e hora para o formato desejado
-    const formattedDateTime = dateTime
-      ? formatDate(dateTime)
-      : "0000-00-00 00:00:00";
+    const formattedDateTime = formatDate(dateTime);
 
     const dbQuery = `
       INSERT INTO
