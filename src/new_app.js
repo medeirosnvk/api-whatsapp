@@ -894,11 +894,13 @@ class StateMachine {
       // Primeiro verifica se existe ticket para este numero
       const ticketStatus = await this._getTicketStatusDB(phoneNumber);
 
+      let ticketId = this.ticketNumber;
+
       // Se tiver ticket, entao assume o valor do banco
       if (ticketStatus && ticketStatus.length > 0) {
-        this.ticketNumber = ticketStatus[0].id;
+        ticketId = ticketStatus[0].id; // Define ticketId com o valor do banco
         console.log(
-          `Já existe um ticket para o número ${phoneNumber} - ${this.ticketNumber}`
+          `Já existe um ticket para o número ${phoneNumber} - ${ticketId}`
         );
       } else {
         // Se nao tiver ticket, faz um insert do cliente no banco
@@ -908,9 +910,9 @@ class StateMachine {
         const insertTicketResponse = await this._getInsertTicketDB(phoneNumber);
 
         if (insertTicketResponse && insertTicketResponse.insertId) {
-          this.ticketNumber = insertTicketResponse.insertId;
+          ticketId = insertTicketResponse.insertId; // Define ticketId com o novo ticket criado
           console.log(
-            `Novo ticket criado para o número ${phoneNumber} - ${this.ticketNumber}.`
+            `Novo ticket criado para o número ${phoneNumber} - ${ticketId}.`
           );
         }
         console.log(
@@ -1007,7 +1009,7 @@ client.on("message", async (message) => {
       from,
       to,
       body,
-      this.ticketNumber,
+      stateMachine.ticketNumber,
       demim
     );
 
