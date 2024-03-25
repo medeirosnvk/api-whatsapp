@@ -956,36 +956,6 @@ client.on("disconnected", () => {
 
 client.on("message", async (message) => {
   try {
-    let ticketId = this.ticketNumber;
-
-    // Primeiro verifica se existe ticket para este numero
-    const ticketStatus = await this._getTicketStatusDB(phoneNumber);
-
-    // Se tiver ticket, entao assume o valor do banco
-    if (ticketStatus && ticketStatus.length > 0) {
-      ticketId = ticketStatus[0].id; // Define ticketId com o valor do banco
-      console.log(
-        `Já existe um ticket para o número ${phoneNumber} - ${ticketId}`
-      );
-    } else {
-      // Se nao tiver ticket, faz um insert do cliente no banco
-      await this._getInsertClientNumberDB(phoneNumber);
-
-      // E captura o novo numero to ticket
-      const insertTicketResponse = await this._getInsertTicketDB(phoneNumber);
-
-      if (insertTicketResponse && insertTicketResponse.insertId) {
-        ticketId = insertTicketResponse.insertId; // Define ticketId com o novo ticket criado
-        console.log(
-          `Novo ticket criado para o número ${phoneNumber} - ${ticketId}.`
-        );
-      }
-      console.log(
-        `Erro ao executar insertTicketResponse, novo ticket nao criado.`
-      );
-      return;
-    }
-
     const fromPhoneNumber = utils.formatPhoneNumber(message.from);
 
     const response = {
@@ -995,6 +965,38 @@ client.on("message", async (message) => {
 
     if (!fromPhoneNumber || !response) {
       console.log("Invalid message received:", message);
+      return;
+    }
+
+    let ticketId = this.ticketNumber;
+
+    // Primeiro verifica se existe ticket para este numero
+    const ticketStatus = await this._getTicketStatusDB(fromPhoneNumber);
+
+    // Se tiver ticket, entao assume o valor do banco
+    if (ticketStatus && ticketStatus.length > 0) {
+      ticketId = ticketStatus[0].id; // Define ticketId com o valor do banco
+      console.log(
+        `Já existe um ticket para o número ${fromPhoneNumber} - ${ticketId}`
+      );
+    } else {
+      // Se nao tiver ticket, faz um insert do cliente no banco
+      await this._getInsertClientNumberDB(fromPhoneNumber);
+
+      // E captura o novo numero to ticket
+      const insertTicketResponse = await this._getInsertTicketDB(
+        fromPhoneNumber
+      );
+
+      if (insertTicketResponse && insertTicketResponse.insertId) {
+        ticketId = insertTicketResponse.insertId; // Define ticketId com o novo ticket criado
+        console.log(
+          `Novo ticket criado para o número ${fromPhoneNumber} - ${ticketId}.`
+        );
+      }
+      console.log(
+        `Erro ao executar insertTicketResponse, novo ticket nao criado.`
+      );
       return;
     }
 
