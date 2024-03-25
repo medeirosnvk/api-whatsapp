@@ -956,10 +956,10 @@ client.on("disconnected", () => {
 
 client.on("message", async (message) => {
   try {
+    let ticketId = this.ticketNumber;
+
     // Primeiro verifica se existe ticket para este numero
     const ticketStatus = await this._getTicketStatusDB(phoneNumber);
-
-    let ticketId = this.ticketNumber;
 
     // Se tiver ticket, entao assume o valor do banco
     if (ticketStatus && ticketStatus.length > 0) {
@@ -1005,13 +1005,7 @@ client.on("message", async (message) => {
     const { body, from, to } = message;
 
     // Inserir os dados no banco de dados
-    await stateMachine._getRegisterMessagesDB(
-      from,
-      to,
-      body,
-      stateMachine.ticketNumber,
-      demim
-    );
+    await stateMachine._getRegisterMessagesDB(from, to, body, ticketId, demim);
 
     // Manipular a mensagem
     await stateMachine.handleMessage(fromPhoneNumber, response);
