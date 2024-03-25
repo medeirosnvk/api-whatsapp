@@ -211,7 +211,7 @@ class StateMachine {
     return dbResponse;
   }
 
-  async _getRegisterMessagesDB(from, to, message, botTicketId, demim) {
+  async _getRegisterMessagesDB(from, to, message, ticketId, demim) {
     if (!this.userStates[from]) {
       this.userStates[from] = {}; // inicialize o objeto se não existir
     }
@@ -235,7 +235,7 @@ class StateMachine {
         '${formatToNumber}',
         '${message}',
         '${formatDateTime}',
-        '${botTicketId}',
+        '${ticketId}',
         '${demim}'
       )
     `;
@@ -996,8 +996,6 @@ client.on("message", async (message) => {
       return;
     }
 
-    const botTicketId = this.ticketNumber; // Substitua pelo valor apropriado do ticket
-
     // Determinar se a mensagem foi enviada pelo cliente ou recebida dele
     const demim = message.fromMe ? 1 : 0;
 
@@ -1009,7 +1007,7 @@ client.on("message", async (message) => {
       from,
       to,
       body,
-      botTicketId,
+      this.ticketNumber,
       demim
     );
 
