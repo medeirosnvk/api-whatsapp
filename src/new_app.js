@@ -873,12 +873,17 @@ class StateMachine {
 
         // E captura o novo numero to ticket
         const insertTicketResponse = await this._getInsertTicketDB(phoneNumber);
+
         if (insertTicketResponse && insertTicketResponse.insertId) {
           ticketNumber = insertTicketResponse.insertId;
           console.log(
             `Novo ticket criado para o número ${phoneNumber} - ${ticketNumber}.`
           );
         }
+        console.log(
+          `Erro ao executar insertTicketResponse, novo ticket nao criado.`
+        );
+        return;
       }
 
       switch (currentState) {
