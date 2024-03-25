@@ -872,7 +872,7 @@ class StateMachine {
 
   async handleMessage(phoneNumber, response) {
     try {
-      const { credor, currentState } = this._getState(phoneNumber);
+      let { credor, currentState } = this._getState(phoneNumber); // Alterado para "let"
       const origin = response.from;
 
       if (!currentState) {
