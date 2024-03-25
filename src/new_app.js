@@ -211,34 +211,14 @@ class StateMachine {
     return dbResponse;
   }
 
-  async _getRegisterMessagesDB(
-    from,
-    to,
-    message,
-    dateTime,
-    botTicketId,
-    demim
-  ) {
+  async _getRegisterMessagesDB(from, to, message, botTicketId, demim) {
     if (!this.userStates[from]) {
       this.userStates[from] = {}; // inicialize o objeto se não existir
     }
 
-    function formatDate(dateTime) {
-      if (dateTime instanceof Date) {
-        const year = dateTime.getFullYear();
-        const month = String(dateTime.getMonth() + 1).padStart(2, "0");
-        const day = String(dateTime.getDate()).padStart(2, "0");
-        const hours = String(dateTime.getHours()).padStart(2, "0");
-        const minutes = String(dateTime.getMinutes()).padStart(2, "0");
-        const seconds = String(dateTime.getSeconds()).padStart(2, "0");
-
-        return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
-      } else {
-        return "0000-00-00 00:00:00";
-      }
-    }
-
-    const formattedDateTime = formatDate(dateTime);
+    const formatDateTime = utils.getCurrentDateTime();
+    const formatFromNumber = utils.formatPhoneNumber(from);
+    const formatToNumber = utils.formatPhoneNumber(to);
 
     const dbQuery = `
       INSERT INTO
@@ -251,10 +231,10 @@ class StateMachine {
         demim
       )
       values(
-        '${from}',
-        '${to}',
+        '${formatFromNumber}',
+        '${formatToNumber}',
         '${message}',
-        '${formattedDateTime}',
+        '${formatDateTime}',
         '${botTicketId}',
         '${demim}'
       )
@@ -1004,9 +984,7 @@ client.on("disconnected", () => {
 
 client.on("message", async (message) => {
   try {
-    const fromPhoneNumber = message.from
-      .replace(/[^\d]/g, "")
-      .replace(/^.*?(\d{8})$/, "$1");
+    const fromPhoneNumber = utils.formatPhoneNumber(message.from);
 
     const response = {
       from: message.from,
@@ -1018,7 +996,6 @@ client.on("message", async (message) => {
       return;
     }
 
-    const dateTime = new Date(message.timestamp * 1000).toISOString(); // Converter o timestamp em uma data ISO
     const botTicketId = this.ticketNumber; // Substitua pelo valor apropriado do ticket
 
     // Determinar se a mensagem foi enviada pelo cliente ou recebida dele
@@ -1032,7 +1009,6 @@ client.on("message", async (message) => {
       from,
       to,
       body,
-      dateTime,
       botTicketId,
       demim
     );

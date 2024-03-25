@@ -4,6 +4,26 @@ const fs = require("fs");
 const fetch = require("node-fetch");
 const { promisify } = require("util");
 
+function formatPhoneNumber(phoneNumber) {
+  // Remover todos os caracteres que não são dígitos
+  const cleanedPhoneNumber = phoneNumber.replace(/[^\d]/g, "");
+  // Extrair os últimos 8 dígitos, se disponíveis
+  const formattedPhoneNumber = cleanedPhoneNumber.replace(/^.*?(\d{8})$/, "$1");
+  return formattedPhoneNumber;
+}
+
+function getCurrentDateTime() {
+  const now = new Date();
+  const year = now.getFullYear();
+  const month = String(now.getMonth() + 1).padStart(2, "0");
+  const day = String(now.getDate()).padStart(2, "0");
+  const hours = String(now.getHours()).padStart(2, "0");
+  const minutes = String(now.getMinutes()).padStart(2, "0");
+  const seconds = String(now.getSeconds()).padStart(2, "0");
+
+  return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
+}
+
 function formatValue(number) {
   if (number !== undefined && number !== null) {
     return number.toLocaleString("pt-BR", {
@@ -671,4 +691,6 @@ module.exports = {
   saveQRCodeImageToLocal,
   formatCodigoBoleto,
   formatCodigoPix,
+  formatPhoneNumber,
+  getCurrentDateTime,
 };
