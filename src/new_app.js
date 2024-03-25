@@ -850,7 +850,7 @@ class StateMachine {
         clearTimeout(this.timer[phoneNumber]);
       }
 
-      // Configurar um novo temporizador para reiniciar o atendimento após 60 segundos
+      // Configura um novo temporizador para reiniciar o atendimento após 60 segundos
       this.timer[phoneNumber] = setTimeout(async () => {
         console.log(`Timeout para ${phoneNumber}. Reiniciando atendimento.`);
         await this._handleInitialState(response.from, phoneNumber);
@@ -858,14 +858,20 @@ class StateMachine {
 
       let ticketNumber = 0;
 
+      // Primeiro verifica se existe ticket para este numero
       const ticketStatus = await this._getTicketStatusDB(phoneNumber);
 
+      // Se tiver ticket, entao assume o valor do banco
       if (ticketStatus && ticketStatus.length > 0) {
         ticketNumber = ticketStatus[0].id;
         console.log(
           `Já existe um ticket para o número ${phoneNumber} - ${ticketNumber}`
         );
       } else {
+        // Se nao tiver ticket, faz um insert do cliente no banco
+        await this._getInsertClientNumberDB(phoneNumber);
+
+        // E captura o novo numero to ticket
         const insertTicketResponse = await this._getInsertTicketDB(phoneNumber);
         if (insertTicketResponse && insertTicketResponse.insertId) {
           ticketNumber = insertTicketResponse.insertId;
@@ -874,8 +880,6 @@ class StateMachine {
           );
         }
       }
-
-      await this._getInsertClientNumberDB(phoneNumber);
 
       switch (currentState) {
         case "INICIO":
