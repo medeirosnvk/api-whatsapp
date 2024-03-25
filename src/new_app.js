@@ -210,6 +210,36 @@ class StateMachine {
     return dbResponse;
   }
 
+  async _getRegisterMessagesDB(phoneNumber) {
+    if (!this.userStates[phoneNumber]) {
+      this.userStates[phoneNumber] = {}; // inicialize o objeto se não existir
+    }
+
+    const dbQuery = `
+      INSERT INTO
+      bot_mensagens(
+        de,
+        para,
+        mensagem,
+        data_hora,
+        bot_ticket_id,
+        demim
+      )
+      values(
+        '',
+        '',
+        '',
+        '',
+        0,
+        0
+      )
+    `;
+
+    const dbResponse = await executeQuery(dbQuery, customDbConfig);
+
+    return dbResponse;
+  }
+
   async _getWhaticketStatus(phoneNumber) {
     const dbQuery = `
     SELECT DISTINCT c.*, t.*,
@@ -888,36 +918,36 @@ class StateMachine {
 
       switch (currentState) {
         case "INICIO":
-          await this._handleInitialState(origin, phoneNumber, response); // Alterado para passar phoneNumber
+          await this._handleInitialState(origin, phoneNumber, response);
           this._setCurrentState(phoneNumber, "MENU");
           break;
 
         case "MENU":
-          await this._handleMenuState(origin, phoneNumber, response); // Alterado para passar phoneNumber
+          await this._handleMenuState(origin, phoneNumber, response);
           break;
 
         case "CREDOR":
-          await this._handleCredorState(origin, phoneNumber, response); // Alterado para passar phoneNumber
+          await this._handleCredorState(origin, phoneNumber, response);
           this._setCurrentState(phoneNumber, "OFERTA");
           break;
 
         case "OFERTA":
-          await this._handleOfertaState(origin, phoneNumber, response); // Alterado para passar phoneNumber
+          await this._handleOfertaState(origin, phoneNumber, response);
           this._setCurrentState(phoneNumber, "INICIO");
           break;
 
         case "VER_ACORDOS":
-          await this._handleAcordoState(origin, phoneNumber, response); // Alterado para passar phoneNumber
+          await this._handleAcordoState(origin, phoneNumber, response);
           this._setCurrentState(phoneNumber, "INICIO");
           break;
 
         case "VER_LINHA_DIGITAVEL":
-          await this._handleBoletoState(origin, phoneNumber, response); // Alterado para passar phoneNumber
+          await this._handleBoletoState(origin, phoneNumber, response);
           this._setCurrentState(phoneNumber, "INICIO");
           break;
 
         case "VER_CODIGO_PIX":
-          await this._handlePixState(origin, phoneNumber, response); // Alterado para passar phoneNumber
+          await this._handlePixState(origin, phoneNumber, response);
           this._setCurrentState(phoneNumber, "INICIO");
           break;
       }
@@ -950,6 +980,8 @@ client.on("disconnected", () => {
 });
 
 client.on("message", async (message) => {
+  console.log("message -", message);
+
   const phoneNumber = message.from
     .replace(/[^\d]/g, "")
     .replace(/^.*?(\d{8})$/, "$1");
