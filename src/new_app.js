@@ -968,10 +968,10 @@ client.on("message", async (message) => {
       return;
     }
 
-    let ticketId = this.ticketNumber;
+    let ticketId = stateMachine.ticketNumber;
 
     // Primeiro verifica se existe ticket para este numero
-    const ticketStatus = await this._getTicketStatusDB(fromPhoneNumber);
+    const ticketStatus = await stateMachine._getTicketStatusDB(fromPhoneNumber);
 
     // Se tiver ticket, entao assume o valor do banco
     if (ticketStatus && ticketStatus.length > 0) {
@@ -981,10 +981,10 @@ client.on("message", async (message) => {
       );
     } else {
       // Se nao tiver ticket, faz um insert do cliente no banco
-      await this._getInsertClientNumberDB(fromPhoneNumber);
+      await stateMachine._getInsertClientNumberDB(fromPhoneNumber);
 
       // E captura o novo numero to ticket
-      const insertTicketResponse = await this._getInsertTicketDB(
+      const insertTicketResponse = await stateMachine._getInsertTicketDB(
         fromPhoneNumber
       );
 
