@@ -223,10 +223,9 @@ class StateMachine {
       this.userStates[from] = {}; // inicialize o objeto se não existir
     }
 
-    const formattedDateTime =
-      dateTime !== null
-        ? dateTime.toISOString().slice(0, 19).replace("T", " ")
-        : "0000-00-00 00:00:00";
+    const formattedDateTime = dateTime
+      ? formatDate(dateTime)
+      : "0000-00-00 00:00:00";
 
     const dbQuery = `
       INSERT INTO
