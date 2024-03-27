@@ -106,6 +106,22 @@ class StateMachine {
 
   async _postMessage(origin, message) {
     console.log(`Horário da mensagem enviada ao cliente: ${new Date()}`);
+
+    const demim = message.fromMe ? 1 : 0;
+    console.log("demim -", demim);
+
+    // Extrair o conteúdo da mensagem e as informações do remetente
+    const { body, from, to } = message;
+
+    // Inserir os dados no banco de dados
+    await stateMachine._getRegisterMessagesDB(
+      from,
+      to,
+      body,
+      this.ticketId,
+      demim
+    );
+
     await this.client.sendMessage(origin, message);
   }
 
