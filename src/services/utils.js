@@ -5,11 +5,18 @@ const fetch = require("node-fetch");
 const { promisify } = require("util");
 
 function formatPhoneNumber(phoneNumber) {
-  // Remover todos os caracteres que não são dígitos
-  const cleanedPhoneNumber = phoneNumber.replace(/[^\d]/g, "");
-  // Extrair os últimos 8 dígitos, se disponíveis
-  const formattedPhoneNumber = cleanedPhoneNumber.replace(/^.*?(\d{8})$/, "$1");
-  return formattedPhoneNumber;
+  if (!phoneNumber) {
+    console.error("Phone number is undefined or null");
+    return ""; // Ou outra ação apropriada, dependendo do seu caso
+  }
+
+  // Realizar formatação apenas se phoneNumber for uma string
+  if (typeof phoneNumber === "string") {
+    return phoneNumber.replace(/[^\d]/g, "").replace(/^.*?(\d{8})$/, "$1");
+  } else {
+    console.error("Phone number is not a string");
+    return ""; // Ou outra ação apropriada, dependendo do seu caso
+  }
 }
 
 function getCurrentDateTime() {
