@@ -316,6 +316,40 @@ class StateMachine {
     return dbResponse;
   }
 
+  async _getRegisterMessagesDB(from, to, message, ticketId, demim) {
+    if (!this.userStates[from]) {
+      this.userStates[from] = {}; // inicialize o objeto se não existir
+    }
+
+    const formatDateTime = utils.getCurrentDateTime();
+    const formatFromNumber = utils.formatPhoneNumber(from);
+    const formatToNumber = utils.formatPhoneNumber(to);
+
+    const dbQuery = `
+      INSERT INTO
+      bot_mensagens(
+        de,
+        para,
+        mensagem,
+        data_hora,
+        bot_ticket_id,
+        demim
+      )
+      values(
+        '${formatFromNumber}',
+        '${formatToNumber}',
+        '${message}',
+        '${formatDateTime}',
+        '${ticketId}',
+        '${demim}'
+      )
+    `;
+
+    const dbResponse = await executeQuery(dbQuery, customDbConfig);
+
+    return dbResponse;
+  }
+
   async _getWhaticketStatus(phoneNumber) {
     const dbQuery = `
     SELECT DISTINCT c.*, t.*,
