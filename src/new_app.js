@@ -124,6 +124,10 @@ client.on("message", async (message) => {
     // Extrair o conteúdo da mensagem e as informações do remetente
     const { body, from, to } = message;
 
+    stateMachine._setTicketId(ticketId);
+    stateMachine._setFromNumber(from);
+    stateMachine._setToNumber(to);
+
     // Inserir os dados no banco de dados
     await stateMachine._getRegisterMessagesDB(from, to, body, ticketId, demim);
 
@@ -137,48 +141,26 @@ client.on("message", async (message) => {
 class StateMachine {
   constructor() {
     this.userStates = {};
+    this.globalData = {};
+    this.timer = {};
     this.client = client;
     this.document = null;
     this.idDevedor = null;
-    this.globalData = {};
-    this.timer = {};
+    this.ticketId = null;
+    this.fromNumber = null;
+    this.toNumber = null;
   }
 
-  _getCredor(phoneNumber) {
-    return this.userStates[phoneNumber].credor;
+  _setTicketId(ticketId) {
+    this.ticketId = ticketId;
   }
 
-  _getState(phoneNumber) {
-    if (this.userStates[phoneNumber]) {
-      return this.userStates[phoneNumber];
-    }
-
-    this.userStates[phoneNumber] = {
-      currentState: "INICIO",
-      credor: {},
-      data: {
-        CREDOR: {},
-        OFERTA: {},
-      },
-    };
-
-    return this.userStates[phoneNumber];
+  _setFromNumber(from) {
+    this.fromNumber = from;
   }
 
-  _setCredor(phoneNumber, credor) {
-    this.userStates[phoneNumber].credor = credor;
-  }
-
-  _setCurrentState(phoneNumber, newState) {
-    if (!this.userStates[phoneNumber]) {
-      this.userStates[phoneNumber] = { currentState: "INICIO" };
-    }
-
-    this.userStates[phoneNumber].currentState = newState;
-  }
-
-  _resetUserState(phoneNumber) {
-    delete this.userStates[phoneNumber];
+  _setToNumber(to) {
+    this.toNumber = to;
   }
 
   _setDataMenu(phoneNumber, data) {
@@ -209,20 +191,57 @@ class StateMachine {
     this.userStates[phoneNumber].data.BOLETO = data;
   }
 
+  _setCredor(phoneNumber, credor) {
+    this.userStates[phoneNumber].credor = credor;
+  }
+
+  _setCurrentState(phoneNumber, newState) {
+    if (!this.userStates[phoneNumber]) {
+      this.userStates[phoneNumber] = { currentState: "INICIO" };
+    }
+
+    this.userStates[phoneNumber].currentState = newState;
+  }
+
+  _getCredor(phoneNumber) {
+    return this.userStates[phoneNumber].credor;
+  }
+
+  _getState(phoneNumber) {
+    if (this.userStates[phoneNumber]) {
+      return this.userStates[phoneNumber];
+    }
+
+    this.userStates[phoneNumber] = {
+      currentState: "INICIO",
+      credor: {},
+      data: {
+        CREDOR: {},
+        OFERTA: {},
+      },
+    };
+
+    return this.userStates[phoneNumber];
+  }
+
+  _resetUserState(phoneNumber) {
+    delete this.userStates[phoneNumber];
+  }
+
   async _postMessage(origin, body) {
     console.log(`Horário da mensagem ENVIADA ao cliente: ${new Date()}`);
 
-    // const demim = 1;
+    const demim = 1;
 
-    // await stateMachine._getRegisterMessagesDB(
-    //   from,
-    //   to,
-    //   body,
-    //   this.ticketId,
-    //   demim
-    // );
+    await stateMachine._getRegisterMessagesDB(
+      this.fromNumber,
+      this.toNumber,
+      body,
+      this.ticketId,
+      demim
+    );
 
-    await this.client.sendMessage(origin, message);
+    await this.client.sendMessage(origin, body);
   }
 
   async _getCredorFromDB(phoneNumber) {
