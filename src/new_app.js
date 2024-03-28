@@ -18,19 +18,76 @@ const customDbConfig = {
   charset: process.env.MY_SQL_CHARSET,
 };
 
+const SESSION_FILE_PATH = "./session.json";
+
+let sessionData;
+
+if (fs.existsSync(SESSION_FILE_PATH)) {
+  sessionData = require(SESSION_FILE_PATH);
+}
+
 const client = new Client({
-  // clientId: "client-id",
-  // dataPath: "./session.json",
   authStrategy: new LocalAuth(),
   puppeteer: {
+    // executablePath: "C:Program FilesGoogleChromeApplicationchrome.exe",
     // headless: true,
     args: ["--no-sandbox"],
   },
   webVersionCache: {
-    tipo: "remote",
+    type: "remote",
     remotePath:
-      "https://raw.githubusercontent.com/wppconnect-team/wa-version/main/html/2.2410.1.html",
+      "https://raw.githubusercontent.com/wppconnect-team/wa-version/main/html/2.2407.1.html",
   },
+});
+
+client.on("qr", (qr) => {
+  qrcode.generate(qr, { small: true });
+});
+
+client.on("ready", () => {
+  console.log("Client is ready!");
+});
+
+client.on("auth_failure", () => {
+  console.error("Authentication failed. Please check your credentials.");
+});
+
+client.on("disconnected", () => {
+  console.log("Client was disconnected.");
+});
+
+client.on("authenticated", (session) => {
+  console.log("Conection success!");
+  sessionData = session;
+  if (sessionData) {
+    fs.writeFile(SESSION_FILE_PATH, JSON.stringify(session), (err) => {
+      if (err) {
+        console.error(err);
+      }
+    });
+  }
+});
+
+client.on("message", async (message) => {
+  const phoneNumber = message.from
+    .replace(/[^\d]/g, "")
+    .replace(/^.*?(\d{8})$/, "$1");
+
+  const response = {
+    from: message.from,
+    body: message.body,
+  };
+
+  if (!phoneNumber || !response) {
+    console.log("Invalid message received:", message);
+    return;
+  }
+
+  try {
+    await stateMachine.handleMessage(phoneNumber, response);
+  } catch (error) {
+    console.error("Error while handling message:", error);
+  }
 });
 
 class StateMachine {
@@ -937,43 +994,5 @@ class StateMachine {
 }
 
 const stateMachine = new StateMachine();
-
-client.on("qr", (qr) => {
-  qrcode.generate(qr, { small: true });
-});
-
-client.on("ready", () => {
-  console.log("Client is ready!");
-});
-
-client.on("auth_failure", () => {
-  console.error("Authentication failed. Please check your credentials.");
-});
-
-client.on("disconnected", () => {
-  console.log("Client was disconnected.");
-});
-
-client.on("message", async (message) => {
-  const phoneNumber = message.from
-    .replace(/[^\d]/g, "")
-    .replace(/^.*?(\d{8})$/, "$1");
-
-  const response = {
-    from: message.from,
-    body: message.body,
-  };
-
-  if (!phoneNumber || !response) {
-    console.log("Invalid message received:", message);
-    return;
-  }
-
-  try {
-    await stateMachine.handleMessage(phoneNumber, response);
-  } catch (error) {
-    console.error("Error while handling message:", error);
-  }
-});
 
 client.initialize();
