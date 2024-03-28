@@ -119,7 +119,6 @@ client.on("message", async (message) => {
     }
 
     const demim = 0;
-    console.log("demim RECEBIDO -", demim);
 
     // Extrair o conteúdo da mensagem e as informações do remetente
     const { body, from, to } = message;
