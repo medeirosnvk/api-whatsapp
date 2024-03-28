@@ -70,6 +70,7 @@ client.on("authenticated", (session) => {
 });
 
 client.on("message", async (message) => {
+  console.log(message);
   console.log(`Horário da mensagem RECEBIDA do cliente: ${new Date()}`);
 
   try {
@@ -117,7 +118,7 @@ client.on("message", async (message) => {
       return;
     }
 
-    const demim = message.fromMe ? 1 : 0;
+    const demim = 0;
     console.log("demim RECEBIDO -", demim);
 
     // Extrair o conteúdo da mensagem e as informações do remetente
@@ -208,23 +209,18 @@ class StateMachine {
     this.userStates[phoneNumber].data.BOLETO = data;
   }
 
-  async _postMessage(origin, message) {
+  async _postMessage(origin, body) {
     console.log(`Horário da mensagem ENVIADA ao cliente: ${new Date()}`);
 
-    const demim = message.fromMe ? 1 : 0;
-    console.log("demim ENVIADO -", demim);
+    // const demim = 1;
 
-    // Extrair o conteúdo da mensagem e as informações do remetente
-    const { body, from, to } = message;
-
-    // Inserir os dados no banco de dados
-    await stateMachine._getRegisterMessagesDB(
-      from,
-      to,
-      body,
-      this.ticketId,
-      demim
-    );
+    // await stateMachine._getRegisterMessagesDB(
+    //   from,
+    //   to,
+    //   body,
+    //   this.ticketId,
+    //   demim
+    // );
 
     await this.client.sendMessage(origin, message);
   }
