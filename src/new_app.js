@@ -117,7 +117,6 @@ client.on("message", async (message) => {
       return;
     }
 
-    // Determinar se a mensagem foi enviada pelo cliente ou recebida dele
     const demim = message.fromMe ? 1 : 0;
     console.log("demim RECEBIDO -", demim);
 
@@ -211,6 +210,22 @@ class StateMachine {
 
   async _postMessage(origin, message) {
     console.log(`Horário da mensagem ENVIADA ao cliente: ${new Date()}`);
+
+    const demim = message.fromMe ? 1 : 0;
+    console.log("demim ENVIADO -", demim);
+
+    // Extrair o conteúdo da mensagem e as informações do remetente
+    const { body, from, to } = message;
+
+    // Inserir os dados no banco de dados
+    await stateMachine._getRegisterMessagesDB(
+      from,
+      to,
+      body,
+      this.ticketId,
+      demim
+    );
+
     await this.client.sendMessage(origin, message);
   }
 
