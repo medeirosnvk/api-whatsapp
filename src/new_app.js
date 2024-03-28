@@ -26,6 +26,11 @@ const client = new Client({
     // headless: true,
     args: ["--no-sandbox"],
   },
+  webVersionCache: {
+    tipo: "remote",
+    remotePath:
+      "https://raw.githubusercontent.com/wppconnect-team/wa-version/main/html/2.2410.1.html",
+  },
 });
 
 class StateMachine {
