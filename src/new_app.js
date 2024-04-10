@@ -74,12 +74,14 @@ client.on("message", async (message) => {
   console.log(`Horário da mensagem RECEBIDA do cliente: ${new Date()}`);
 
   try {
-    const fromPhoneNumber = utils.formatPhoneNumber(message.from);
+    const { body, from, to } = message;
 
     const response = {
       from: message.from,
       body: message.body,
     };
+
+    const fromPhoneNumber = utils.formatPhoneNumber(message.from);
 
     if (!fromPhoneNumber || !response) {
       console.log("Invalid message received:", message);
@@ -120,17 +122,11 @@ client.on("message", async (message) => {
 
     const demim = 0;
 
-    // Extrair o conteúdo da mensagem e as informações do remetente
-    const { body, from, to } = message;
-
     stateMachine._setTicketId(ticketId);
     stateMachine._setFromNumber(from);
     stateMachine._setToNumber(to);
 
-    // Inserir os dados no banco de dados
     await stateMachine._getRegisterMessagesDB(from, to, body, ticketId, demim);
-
-    // Manipular a mensagem
     await stateMachine.handleMessage(fromPhoneNumber, response);
   } catch (error) {
     console.error("Erro ao lidar com a mensagem:", error);
