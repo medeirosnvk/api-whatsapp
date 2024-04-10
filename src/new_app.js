@@ -70,72 +70,92 @@ client.on("authenticated", (session) => {
 });
 
 client.on("message", async (message) => {
-  const phoneNumber = message.from
-    .replace(/[^\d]/g, "")
-    .replace(/^.*?(\d{8})$/, "$1");
-
-  const response = {
-    from: message.from,
-    body: message.body,
-  };
-
-  if (!phoneNumber || !response) {
-    console.log("Invalid message received:", message);
-    return;
-  }
+  console.log(message);
+  console.log(`Horário da mensagem RECEBIDA do cliente: ${new Date()}`);
 
   try {
-    await stateMachine.handleMessage(phoneNumber, response);
+    const { body, from, to } = message;
+
+    const response = {
+      from: message.from,
+      body: message.body,
+    };
+
+    const fromPhoneNumber = utils.formatPhoneNumber(message.from);
+
+    if (!fromPhoneNumber || !response) {
+      console.log("Invalid message received:", message);
+      return;
+    }
+
+    let ticketId = stateMachine.ticketNumber;
+
+    // Primeiro verifica se existe ticket para este numero
+    const ticketStatus = await stateMachine._getTicketStatusDB(fromPhoneNumber);
+
+    // Se tiver ticket, entao assume o valor do banco
+    if (ticketStatus && ticketStatus.length > 0) {
+      ticketId = ticketStatus[0].id; // Define ticketId com o valor do banco
+      console.log(
+        `Já existe um ticket para o número ${fromPhoneNumber} - ${ticketId}`
+      );
+    } else {
+      // Se nao tiver ticket, faz um insert do cliente no banco
+      await stateMachine._getInsertClientNumberDB(fromPhoneNumber);
+
+      // E captura o novo numero to ticket
+      const insertTicketResponse = await stateMachine._getInsertTicketDB(
+        fromPhoneNumber
+      );
+
+      if (insertTicketResponse && insertTicketResponse.insertId) {
+        ticketId = insertTicketResponse.insertId; // Define ticketId com o novo ticket criado
+        console.log(
+          `Novo ticket criado para o número ${fromPhoneNumber} - ${ticketId}.`
+        );
+      }
+      console.log(
+        `Erro ao executar insertTicketResponse, novo ticket nao criado.`
+      );
+      return;
+    }
+
+    const demim = 0;
+
+    stateMachine._setTicketId(ticketId);
+    stateMachine._setFromNumber(from);
+    stateMachine._setToNumber(to);
+
+    await stateMachine._getRegisterMessagesDB(from, to, body, ticketId, demim);
+    await stateMachine.handleMessage(fromPhoneNumber, response);
   } catch (error) {
-    console.error("Error while handling message:", error);
+    console.error("Erro ao lidar com a mensagem:", error);
   }
 });
 
 class StateMachine {
   constructor() {
     this.userStates = {};
+    this.globalData = {};
+    this.timer = {};
     this.client = client;
     this.document = null;
     this.idDevedor = null;
-    this.globalData = {};
-    this.timer = {};
+    this.ticketId = null;
+    this.fromNumber = null;
+    this.toNumber = null;
   }
 
-  _getCredor(phoneNumber) {
-    return this.userStates[phoneNumber].credor;
+  _setTicketId(ticketId) {
+    this.ticketId = ticketId;
   }
 
-  _getState(phoneNumber) {
-    if (this.userStates[phoneNumber]) {
-      return this.userStates[phoneNumber];
-    }
-
-    this.userStates[phoneNumber] = {
-      currentState: "INICIO",
-      credor: {},
-      data: {
-        CREDOR: {},
-        OFERTA: {},
-      },
-    };
-
-    return this.userStates[phoneNumber];
+  _setFromNumber(from) {
+    this.fromNumber = from;
   }
 
-  _setCredor(phoneNumber, credor) {
-    this.userStates[phoneNumber].credor = credor;
-  }
-
-  _setCurrentState(phoneNumber, newState) {
-    if (!this.userStates[phoneNumber]) {
-      this.userStates[phoneNumber] = { currentState: "INICIO" };
-    }
-
-    this.userStates[phoneNumber].currentState = newState;
-  }
-
-  _resetUserState(phoneNumber) {
-    delete this.userStates[phoneNumber];
+  _setToNumber(to) {
+    this.toNumber = to;
   }
 
   _setDataMenu(phoneNumber, data) {
@@ -166,9 +186,57 @@ class StateMachine {
     this.userStates[phoneNumber].data.BOLETO = data;
   }
 
-  async _postMessage(origin, message) {
-    console.log(`Horário da mensagem enviada ao cliente: ${new Date()}`);
-    await this.client.sendMessage(origin, message);
+  _setCredor(phoneNumber, credor) {
+    this.userStates[phoneNumber].credor = credor;
+  }
+
+  _setCurrentState(phoneNumber, newState) {
+    if (!this.userStates[phoneNumber]) {
+      this.userStates[phoneNumber] = { currentState: "INICIO" };
+    }
+
+    this.userStates[phoneNumber].currentState = newState;
+  }
+
+  _getCredor(phoneNumber) {
+    return this.userStates[phoneNumber].credor;
+  }
+
+  _getState(phoneNumber) {
+    if (this.userStates[phoneNumber]) {
+      return this.userStates[phoneNumber];
+    }
+
+    this.userStates[phoneNumber] = {
+      currentState: "INICIO",
+      credor: {},
+      data: {
+        CREDOR: {},
+        OFERTA: {},
+      },
+    };
+
+    return this.userStates[phoneNumber];
+  }
+
+  _resetUserState(phoneNumber) {
+    delete this.userStates[phoneNumber];
+  }
+
+  async _postMessage(origin, body) {
+    console.log(`Horário da mensagem ENVIADA ao cliente: ${new Date()}`);
+
+    const demim = 1;
+
+    await stateMachine._getRegisterMessagesDB(
+      this.fromNumber,
+      this.toNumber,
+      body,
+      this.ticketId,
+      demim
+    );
+
+    await this.client.sendMessage(origin, body);
   }
 
   async _getCredorFromDB(phoneNumber) {
@@ -267,6 +335,40 @@ class StateMachine {
       (select id from bot_contato bc where telefone =${phoneNumber}),
       1
     )`;
+
+    const dbResponse = await executeQuery(dbQuery, customDbConfig);
+
+    return dbResponse;
+  }
+
+  async _getRegisterMessagesDB(from, to, message, ticketId, demim) {
+    if (!this.userStates[from]) {
+      this.userStates[from] = {}; // inicialize o objeto se não existir
+    }
+
+    const formatDateTime = utils.getCurrentDateTime();
+    const formatFromNumber = utils.formatPhoneNumber(from);
+    const formatToNumber = utils.formatPhoneNumber(to);
+
+    const dbQuery = `
+      INSERT INTO
+      bot_mensagens(
+        de,
+        para,
+        mensagem,
+        data_hora,
+        bot_ticket_id,
+        demim
+      )
+      values(
+        '${formatFromNumber}',
+        '${formatToNumber}',
+        '${message}',
+        '${formatDateTime}',
+        '${ticketId}',
+        '${demim}'
+      )
+    `;
 
     const dbResponse = await executeQuery(dbQuery, customDbConfig);
 
@@ -900,7 +1002,7 @@ class StateMachine {
 
   async handleMessage(phoneNumber, response) {
     try {
-      const { credor, currentState } = this._getState(phoneNumber);
+      let { credor, currentState } = this._getState(phoneNumber); // Alterado para "let"
       const origin = response.from;
 
       if (!currentState) {
@@ -919,68 +1021,38 @@ class StateMachine {
         await this._handleInitialState(response.from, phoneNumber);
       }, 300000); // 300 segundos
 
-      let ticketNumber = 0;
-
-      // Primeiro verifica se existe ticket para este numero
-      const ticketStatus = await this._getTicketStatusDB(phoneNumber);
-
-      // Se tiver ticket, entao assume o valor do banco
-      if (ticketStatus && ticketStatus.length > 0) {
-        ticketNumber = ticketStatus[0].id;
-        console.log(
-          `Já existe um ticket para o número ${phoneNumber} - ${ticketNumber}`
-        );
-      } else {
-        // Se nao tiver ticket, faz um insert do cliente no banco
-        await this._getInsertClientNumberDB(phoneNumber);
-
-        // E captura o novo numero to ticket
-        const insertTicketResponse = await this._getInsertTicketDB(phoneNumber);
-
-        if (insertTicketResponse && insertTicketResponse.insertId) {
-          ticketNumber = insertTicketResponse.insertId;
-          console.log(
-            `Novo ticket criado para o número ${phoneNumber} - ${ticketNumber}.`
-          );
-        }
-        console.log(
-          `Erro ao executar insertTicketResponse, novo ticket nao criado.`
-        );
-        return;
-      }
-
       switch (currentState) {
         case "INICIO":
-          await this._handleInitialState(origin, phoneNumber, response); // Alterado para passar phoneNumber
+          await this._handleInitialState(origin, phoneNumber, response);
           this._setCurrentState(phoneNumber, "MENU");
           break;
 
         case "MENU":
-          await this._handleMenuState(origin, phoneNumber, response); // Alterado para passar phoneNumber
+          await this._handleMenuState(origin, phoneNumber, response);
           break;
 
         case "CREDOR":
-          await this._handleCredorState(origin, phoneNumber, response); // Alterado para passar phoneNumber
+          await this._handleCredorState(origin, phoneNumber, response);
           this._setCurrentState(phoneNumber, "OFERTA");
           break;
 
         case "OFERTA":
-          await this._handleOfertaState(origin, phoneNumber, response); // Alterado para passar phoneNumber
+          await this._handleOfertaState(origin, phoneNumber, response);
           this._setCurrentState(phoneNumber, "INICIO");
           break;
 
         case "VER_ACORDOS":
-          await this._handleAcordoState(origin, phoneNumber, response); // Alterado para passar phoneNumber
+          await this._handleAcordoState(origin, phoneNumber, response);
           this._setCurrentState(phoneNumber, "INICIO");
           break;
 
         case "VER_LINHA_DIGITAVEL":
-          await this._handleBoletoState(origin, phoneNumber, response); // Alterado para passar phoneNumber
+          await this._handleBoletoState(origin, phoneNumber, response);
           this._setCurrentState(phoneNumber, "INICIO");
           break;
 
         case "VER_CODIGO_PIX":
-          await this._handlePixState(origin, phoneNumber, response); // Alterado para passar phoneNumber
+          await this._handlePixState(origin, phoneNumber, response);
           this._setCurrentState(phoneNumber, "INICIO");
           break;
       }
