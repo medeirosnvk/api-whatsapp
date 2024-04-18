@@ -50,7 +50,7 @@ function TicketTable() {
     const fetchTickets = async () => {
       try {
         const response = await axios.get(
-          `https://191.252.214.9:3030/ticket-status`
+          `http://191.252.214.9:3030/ticket-status`
         );
         const ticketStatus = response.data;
         console.log("Buscando novos tickets...");
@@ -84,9 +84,9 @@ function TicketTable() {
       let url = "";
 
       if (status === 1) {
-        url = `https://191.252.214.9:3030/atendimento-humano-abrir?id=${ticketId}`;
+        url = `http://191.252.214.9:3030/atendimento-humano-abrir?id=${ticketId}`;
       } else if (status === 2) {
-        url = `https://191.252.214.9:3030/atendimento-humano-fechar?id=${ticketId}`;
+        url = `http://191.252.214.9:3030/atendimento-humano-fechar?id=${ticketId}`;
       }
 
       const response = await axios.get(url);
