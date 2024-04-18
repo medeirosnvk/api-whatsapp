@@ -372,7 +372,7 @@ async function getDataBoletoPix(iddevedor) {
 async function getTicketStatusByPhoneNumber(phoneNumber) {
   try {
     const response = await axiosApiInstance.get(
-      `/ticket-status-phone-number"?phoneNumber=${phoneNumber}`
+      `/ticket-status-phone-number?phoneNumber=${phoneNumber}`
     );
     return response.data;
   } catch (error) {
@@ -384,7 +384,7 @@ async function getTicketStatusByPhoneNumber(phoneNumber) {
 async function getAbrirAtendimentoBot(ticketId) {
   try {
     const response = await axiosApiInstance.get(
-      `/atendimento-bot"?id=${ticketId}`
+      `/atendimento-bot?id=${ticketId}`
     );
     return response.data;
   } catch (error) {
@@ -396,7 +396,7 @@ async function getAbrirAtendimentoBot(ticketId) {
 async function getAbrirAtendimentoHumano(ticketId) {
   try {
     const response = await axiosApiInstance.get(
-      `/atendimento-humano-abrir"?id=${ticketId}`
+      `/atendimento-humano-abrir?id=${ticketId}`
     );
     return response.data;
   } catch (error) {
@@ -408,7 +408,7 @@ async function getAbrirAtendimentoHumano(ticketId) {
 async function getFecharAtendimentoHumano(ticketId) {
   try {
     const response = await axiosApiInstance.get(
-      `/atendimento-humano-fechar"?id=${ticketId}`
+      `/atendimento-humano-fechar?id=${ticketId}`
     );
     return response.data;
   } catch (error) {
@@ -420,7 +420,7 @@ async function getFecharAtendimentoHumano(ticketId) {
 async function getInserirNumeroCliente(phoneNumber) {
   try {
     const response = await axiosApiInstance.get(
-      `/inserir-numero-cliente"?phoneNumber=${phoneNumber}`
+      `/inserir-numero-cliente?phoneNumber=${phoneNumber}`
     );
     return response.data;
   } catch (error) {
@@ -432,7 +432,7 @@ async function getInserirNumeroCliente(phoneNumber) {
 async function getInserirNovoTicket(phoneNumber) {
   try {
     const response = await axiosApiInstance.get(
-      `/inserir-numero-ticket"?phoneNumber=${phoneNumber}`
+      `/inserir-numero-ticket?phoneNumber=${phoneNumber}`
     );
     return response.data;
   } catch (error) {
