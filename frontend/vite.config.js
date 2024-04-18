@@ -5,7 +5,7 @@ import react from "@vitejs/plugin-react";
 export default defineConfig({
   plugins: [react()],
   server: {
-    port: 3174,
+    port: 5174,
   },
   // optimizeDeps: {
   //   include: ["events", "stream", "buffer"],
