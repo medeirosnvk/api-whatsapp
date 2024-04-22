@@ -6,6 +6,7 @@ const Container = styled.div`
   font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
   padding-left: 30px;
   width: 100%;
+  background-color: #242424;
 `;
 
 const Table = styled.table`
