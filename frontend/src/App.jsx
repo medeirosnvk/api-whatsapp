@@ -3,10 +3,13 @@ import axios from "axios";
 import styled, { css } from "styled-components";
 
 const Container = styled.div`
+  font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
+  background-color: #242424;
   padding-left: 30px;
 `;
 
 const Table = styled.table`
+  font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
   width: 100%;
   border-collapse: collapse;
 
@@ -26,9 +29,11 @@ const Table = styled.table`
 `;
 
 const Button = styled.button`
+  font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
   padding: 8px 16px;
   border: none;
   cursor: pointer;
+
   ${(props) =>
     props.status === 1 &&
     css`
@@ -146,10 +151,10 @@ function TicketTable() {
 
   // Verifica se há tickets e se todos têm o mesmo status
   return (
-    <div>
+    <Container>
       {renderTicketTable(1)}
       {renderTicketTable(2)}
-    </div>
+    </Container>
   );
 }
 
