@@ -844,6 +844,12 @@ class StateMachine {
 
           await this._postMessage(origin, mensagem);
           await this._postMessage(origin, media);
+
+          console.log(
+            "Caminho do arquivo do QR Code:",
+            `src/qrcodes/${idboleto}.png`
+          );
+
           await this._handleInitialState(origin, phoneNumber, response);
         } else {
           await this._postMessage(
