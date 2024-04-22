@@ -95,6 +95,7 @@ client.on("message", async (message) => {
 
     if (bot_idstatus === 2) {
       console.log("Usuario em atendimento humano -", bot_idstatus);
+      await stateMachine._postMessage(from, message);
       return;
     }
 
