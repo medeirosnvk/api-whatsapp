@@ -309,6 +309,7 @@ async function getImagemQrCode(props) {
     );
 
     // Verifica se a resposta é um redirecionamento (código de status 302)
+    console.log("Response status:", response.status);
     if (response.status === 302) {
       // A nova URL estará no cabeçalho "Location" da resposta
       const newURL = response.headers.location;
@@ -316,9 +317,11 @@ async function getImagemQrCode(props) {
 
       // Trate o redirecionamento manualmente, fazendo outra solicitação para a nova URL, se necessário
       const responseImageQrCode = await axios.get(newURL);
+      console.log("Response image QR Code:", responseImageQrCode);
       return responseImageQrCode.data;
     }
     // Se não for um redirecionamento, retorne os dados da resposta normalmente
+    console.log("Response data:", response.data);
     return response.data;
   } catch (error) {
     console.error("Erro ao buscar dados no servidor: ", error);
