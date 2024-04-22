@@ -8,7 +8,7 @@ export default defineConfig({
     port: 5174,
     proxy: {
       "/ws": {
-        target: "ws://191.101.70.186", // Altere para o endereço do seu servidor WebSocket
+        target: "ws://10.0.0.103", // Altere para o endereço do seu servidor WebSocket
         changeOrigin: true,
         ws: true,
       },
