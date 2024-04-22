@@ -662,10 +662,6 @@ function handleCopyPix() {
 
 async function saveQRCodeImageToLocal(url, idboleto) {
   try {
-    // Verifica se a URL é válida
-    console.log("URL do QR Code:", url);
-    console.log("ID do Boleto:", idboleto);
-
     if (!url || typeof url !== "string") {
       throw new Error("URL inválida");
     }
@@ -673,7 +669,6 @@ async function saveQRCodeImageToLocal(url, idboleto) {
     const response = await fetch(url);
 
     // Verifica se a resposta está ok
-    console.log("Response status:", response.status);
     if (!response.ok) {
       throw new Error(
         `Erro ao baixar a imagem do QR Code. Status: ${response.status} - ${response.statusText}`
@@ -686,6 +681,15 @@ async function saveQRCodeImageToLocal(url, idboleto) {
     console.log("Imagem do QR Code salva localmente com sucesso.");
   } catch (error) {
     console.error("Erro ao salvar imagem do QR Code localmente:", error);
+  }
+}
+
+async function checkIfFileExists(filePath) {
+  try {
+    await fs.promises.access(filePath, fs.constants.F_OK);
+    return true;
+  } catch (error) {
+    return false;
   }
 }
 
@@ -714,4 +718,5 @@ module.exports = {
   formatCodigoPix,
   getCurrentDateTime,
   formatPhoneNumber,
+  checkIfFileExists,
 };
