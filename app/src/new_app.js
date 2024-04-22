@@ -850,6 +850,12 @@ class StateMachine {
             `src/qrcodes/${idboleto}.png`
           );
 
+          // Verifique se a imagem foi salva corretamente
+          const imageExists = await utils.checkIfFileExists(
+            `src/qrcodes/${idboleto}.png`
+          );
+          console.log("A imagem foi salva corretamente:", imageExists);
+
           await this._handleInitialState(origin, phoneNumber, response);
         } else {
           await this._postMessage(
