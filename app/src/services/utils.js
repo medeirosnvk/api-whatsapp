@@ -674,6 +674,7 @@ async function saveQRCodeImageToLocal(url, idboleto) {
     const response = await fetch(url);
 
     // Verifica se a resposta está ok
+    console.log("Response status:", response.status);
     if (!response.ok) {
       throw new Error(
         `Erro ao baixar a imagem do QR Code. Status: ${response.status} - ${response.statusText}`
