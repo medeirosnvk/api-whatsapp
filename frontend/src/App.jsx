@@ -112,15 +112,15 @@ function TicketTable() {
 
     return (
       <Container key={`status-${status}`}>
-        <h2>Status: {status}</h2>
+        <h2>{status === 1 ? "PENDENTE" : "EM ATENDIMENTO"}</h2>
         <Table>
           <thead>
             <tr>
               <th>ID</th>
               <th>Telefone</th>
-              <th>Responsável</th>
+              {/* <th>Responsável</th> */}
               <th>Inclusão</th>
-              <th>Encerrado</th>
+              {/* <th>Encerrado</th> */}
               <th>Status</th>
               <th>Eventos</th>
             </tr>
@@ -130,9 +130,9 @@ function TicketTable() {
               <tr key={ticket.id}>
                 <td>{ticket.id}</td>
                 <td>{ticket.telefone}</td>
-                <td>{ticket.idresponsavel}</td>
+                {/* <td>{ticket.idresponsavel}</td> */}
                 <td>{ticket.inclusao}</td>
-                <td>{ticket.encerrado || "-"}</td>
+                {/* <td>{ticket.encerrado || "-"}</td> */}
                 <td>{ticket.descricao}</td>
                 <td>
                   <Button
