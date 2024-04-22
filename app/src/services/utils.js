@@ -1,7 +1,6 @@
 const requests = require("./requests");
 
-const fs = require("fs").promises;
-const { promisify } = require("util");
+const fs = require("fs");
 const fetch = require("node-fetch");
 
 function formatPhoneNumber(phoneNumber) {
