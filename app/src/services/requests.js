@@ -441,6 +441,18 @@ async function getInserirNovoTicket(phoneNumber) {
   }
 }
 
+async function getStatusAtendimento(phoneNumber) {
+  try {
+    const response = await axiosApiInstance.get(
+      `/status-atendimento?phoneNumber=${phoneNumber}`
+    );
+    return response.data;
+  } catch (error) {
+    console.error("Erro ao buscar dados no servidor: ", error);
+    return { error: "Erro ao buscar dados no servidor." };
+  }
+}
+
 module.exports = {
   getAcordosFirmados,
   getAcordosFirmadosDetalhado,
@@ -467,4 +479,5 @@ module.exports = {
   getFecharAtendimentoHumano,
   getInserirNumeroCliente,
   getInserirNovoTicket,
+  getStatusAtendimento,
 };

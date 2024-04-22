@@ -88,6 +88,16 @@ client.on("message", async (message) => {
       return;
     }
 
+    const statusAtendimento = await requests.getStatusAtendimento(
+      fromPhoneNumber
+    );
+    const { bot_idstatus } = statusAtendimento[0];
+
+    if (bot_idstatus === 2) {
+      console.log("Usuario em atendimento humano -", bot_idstatus);
+      return;
+    }
+
     let ticketId = stateMachine.ticketNumber;
 
     // Primeiro verifica se existe ticket para este numero
