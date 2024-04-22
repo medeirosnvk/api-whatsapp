@@ -151,10 +151,12 @@ function TicketTable() {
 
   // Verifica se há tickets e se todos têm o mesmo status
   return (
-    <Container>
-      {renderTicketTable(1)}
-      {renderTicketTable(2)}
-    </Container>
+    <body style={{ backgroundColor: "#242424" }}>
+      <Container>
+        {renderTicketTable(1)}
+        {renderTicketTable(2)}
+      </Container>
+    </body>
   );
 }
 
