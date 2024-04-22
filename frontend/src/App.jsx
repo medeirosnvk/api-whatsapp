@@ -4,8 +4,8 @@ import styled, { css } from "styled-components";
 
 const Container = styled.div`
   font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
-  background-color: #242424;
   padding-left: 30px;
+  width: 100%;
 `;
 
 const Table = styled.table`
@@ -151,12 +151,10 @@ function TicketTable() {
 
   // Verifica se há tickets e se todos têm o mesmo status
   return (
-    <body style={{ backgroundColor: "#242424" }}>
-      <Container>
-        {renderTicketTable(1)}
-        {renderTicketTable(2)}
-      </Container>
-    </body>
+    <Container>
+      {renderTicketTable(1)}
+      {renderTicketTable(2)}
+    </Container>
   );
 }
 
