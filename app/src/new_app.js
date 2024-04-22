@@ -563,7 +563,8 @@ class StateMachine {
           iddevedor,
         } = credorInfo[0];
 
-        const credorOfertas = await requests.getCredorOfertas(this.idDevedor); // Acesse aqui
+        const credorOfertas = await requests.getCredorOfertas(this.idDevedor);
+        console.log("credorOfertas:", credorOfertas);
 
         if (
           selectedOptionParcelamento >= 1 &&
@@ -614,12 +615,17 @@ class StateMachine {
             this.idDevedor,
             ultimaDataFormat
           );
+          console.log("responseDividasCredores:", responseDividasCredores);
 
           const responseDividasCredoresTotais =
             await requests.getCredorDividasTotais(
               this.idDevedor,
               ultimaDataFormat
             );
+          console.log(
+            "responseDividasCredoresTotais:",
+            responseDividasCredoresTotais
+          );
 
           const {
             juros_percentual,
@@ -643,19 +649,18 @@ class StateMachine {
             parcelasArray,
           });
 
+          console.log("parsedData:", parsedData);
+
           const idacordo = await requests.postDadosAcordo(parsedData);
           console.log("idacordo -", idacordo);
-
-          // await this._postMessage(
-          //   origin,
-          //   "Acordo realizado com sucesso - " + JSON.stringify(idacordo)
-          // );
 
           const parsedData2 = utils.parseDadosPromessa({
             idacordo,
             iddevedor: this.idDevedor,
             plano,
           });
+
+          console.log("parsedData2:", parsedData2);
 
           let contratos = "";
           const contratosIncluidos = new Set();
@@ -706,11 +711,6 @@ class StateMachine {
           }
 
           const responsePromessas = await Promise.all(promises);
-          // await this._postMessage(
-          //   origin,
-          //   "Promessas realizadas com sucesso - " +
-          //     JSON.stringify(responsePromessas)
-          // );
 
           const [ultimoIdPromessa] = responsePromessas.slice(-1);
 
@@ -738,6 +738,8 @@ class StateMachine {
             idempresa,
           });
 
+          console.log("parsedData3:", parsedData3);
+
           const responseRecibo = await requests.postDadosRecibo(parsedData3);
 
           if (
@@ -749,7 +751,7 @@ class StateMachine {
             return;
           }
 
-          // await this._postMessage(origin, "Recibo inserido com sucesso!");
+          console.log("responseRecibo:", responseRecibo);
 
           await requests.getAtualizarPromessas(idacordo);
           await requests.getAtualizarValores(idacordo);
@@ -769,16 +771,12 @@ class StateMachine {
             tarifa_boleto
           );
 
+          console.log("responseBoleto:", responseBoleto);
+
           this._setDataBoleto(phoneNumber, responseBoleto);
 
           const responseIdBoleto = await requests.getIdBoleto(idacordo);
           console.log("responseIdBoleto -", responseIdBoleto);
-
-          // await this._postMessage(
-          //   origin,
-          //   "getAtualizarPromessas, getAtualizarValores e postDadosBoleto realizado com sucesso!" +
-          //     JSON.stringify(responseBoleto, undefined, 2)
-          // );
 
           const { idboleto } = responseIdBoleto[0];
           const { banco } = responseIdBoleto[0];
@@ -805,26 +803,30 @@ class StateMachine {
             return;
           }
 
+          console.log("updateValoresBoleto:", updateValoresBoleto);
+
           const parsedData4 = utils.parseDadosImagemBoleto({
             idacordo,
             idboleto,
             banco,
           });
 
+          console.log("parsedData4:", parsedData4);
+
           const responseBoletoContent = await requests.getImagemBoleto(
             parsedData4
           );
 
+          console.log("responseBoletoContent:", responseBoletoContent);
+
           const parsedData5 = utils.parseDadosImagemQrCode({ idboleto });
+
+          console.log("parsedData5:", parsedData5);
 
           const responseQrcodeContent = await requests.getImagemQrCode(
             parsedData5
           );
-          console.log(responseQrcodeContent.url);
-
-          const parsedData6 = utils.parseDadosEmv({ idboleto });
-
-          const responseEmvContent = await requests.getDataEmv(parsedData6);
+          console.log("responseQrcodeContent:", responseQrcodeContent);
 
           await utils.saveQRCodeImageToLocal(
             responseQrcodeContent.url,
@@ -834,7 +836,11 @@ class StateMachine {
             `src/qrcodes/${idboleto}.png`
           );
 
+          console.log("media:", media);
+
           const mensagem = `*ACORDO REALIZADO COM SUCESSO!*\n\nPague a primeira parcela através do QRCODE ou link do BOLETO abaixo:\n\nhttp://cobrance.com.br/acordo/boleto.php?idboleto=${responseBoletoContent.idboleto}&email=2`;
+
+          console.log("mensagem:", mensagem);
 
           await this._postMessage(origin, mensagem);
           await this._postMessage(origin, media);
