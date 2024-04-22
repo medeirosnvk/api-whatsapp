@@ -826,12 +826,15 @@ class StateMachine {
 
           const responseEmvContent = await requests.getDataEmv(parsedData6);
 
-          await utils.saveQRCodeImageToLocal(responseQrcodeContent.url);
-          const media = MessageMedia.fromFilePath("qrcode.png");
+          await utils.saveQRCodeImageToLocal(
+            responseQrcodeContent.url,
+            idboleto
+          );
+          const media = MessageMedia.fromFilePath(
+            `src/qrcodes/${idboleto}.png`
+          );
 
           const mensagem = `*ACORDO REALIZADO COM SUCESSO!*\n\nPague a primeira parcela através do QRCODE ou link do BOLETO abaixo:\n\nhttp://cobrance.com.br/acordo/boleto.php?idboleto=${responseBoletoContent.idboleto}&email=2`;
-
-          await this._postMessage(origin, `MENSAGEM TESTE`);
 
           await this._postMessage(origin, mensagem);
           await this._postMessage(origin, media);

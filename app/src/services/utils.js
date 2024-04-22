@@ -1,8 +1,8 @@
 const requests = require("./requests");
 
-const fs = require("fs");
-const fetch = require("node-fetch");
+const fs = require("fs").promises;
 const { promisify } = require("util");
+const fetch = require("node-fetch");
 
 function formatPhoneNumber(phoneNumber) {
   if (!phoneNumber) {
@@ -661,7 +661,7 @@ function handleCopyPix() {
   }
 }
 
-async function saveQRCodeImageToLocal(url) {
+async function saveQRCodeImageToLocal(url, idBoleto) {
   try {
     // Verifica se a URL é válida
     if (!url || typeof url !== "string") {
@@ -678,7 +678,8 @@ async function saveQRCodeImageToLocal(url) {
     }
 
     const buffer = await response.buffer();
-    await promisify(fs.writeFile)("qrcode.png", buffer);
+    await fs.mkdir("src/qrcodes", { recursive: true }); // Cria a pasta qrcodes se ela não existir
+    await promisify(fs.writeFile)(`src/qrcodes/${idBoleto}.png`, buffer);
     console.log("Imagem do QR Code salva localmente com sucesso.");
   } catch (error) {
     console.error("Erro ao salvar imagem do QR Code localmente:", error);
