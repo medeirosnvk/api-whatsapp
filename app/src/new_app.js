@@ -84,20 +84,20 @@ client.on("message", async (message) => {
     const fromPhoneNumber = utils.formatPhoneNumber(message.from);
 
     if (!fromPhoneNumber || !response) {
-      console.log("Invalid message received:", message);
+      console.log("Mensagem invalida recebida", message);
       return;
     }
 
-    // const statusAtendimento = await requests.getStatusAtendimento(
-    //   fromPhoneNumber
-    // );
-    // const { bot_idstatus } = statusAtendimento[0];
+    const statusAtendimento = await requests.getStatusAtendimento(
+      fromPhoneNumber
+    );
+    const { bot_idstatus } = statusAtendimento[0];
 
-    // if (bot_idstatus === 2) {
-    //   console.log("Usuario em atendimento humano -", bot_idstatus);
-    //   await stateMachine._postMessage(from, message);
-    //   return;
-    // }
+    if (bot_idstatus === 2) {
+      console.log("Usuario em atendimento humano -", bot_idstatus);
+      await stateMachine._postMessage(from, message);
+      return;
+    }
 
     let ticketId = stateMachine.ticketNumber;
 

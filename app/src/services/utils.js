@@ -663,10 +663,20 @@ function handleCopyPix() {
 
 async function saveQRCodeImageToLocal(url) {
   try {
-    const response = await fetch(url);
-    if (!response.ok) {
-      throw new Error("Erro ao baixar a imagem do QR Code");
+    // Verifica se a URL é válida
+    if (!url || typeof url !== "string") {
+      throw new Error("URL inválida");
     }
+
+    const response = await fetch(url);
+
+    // Verifica se a resposta está ok
+    if (!response.ok) {
+      throw new Error(
+        `Erro ao baixar a imagem do QR Code. Status: ${response.status} - ${response.statusText}`
+      );
+    }
+
     const buffer = await response.buffer();
     await promisify(fs.writeFile)("qrcode.png", buffer);
     console.log("Imagem do QR Code salva localmente com sucesso.");
