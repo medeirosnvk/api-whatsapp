@@ -255,9 +255,9 @@ class StateMachine {
       );
 
       await this.client.sendMessage(origin, body);
+    } else {
+      await this.client.sendMessage(origin, body);
     }
-
-    await this.client.sendMessage(origin, body);
   }
 
   async _getCredorFromDB(phoneNumber) {
