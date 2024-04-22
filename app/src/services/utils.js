@@ -661,9 +661,12 @@ function handleCopyPix() {
   }
 }
 
-async function saveQRCodeImageToLocal(url, idBoleto) {
+async function saveQRCodeImageToLocal(url, idboleto) {
   try {
     // Verifica se a URL é válida
+    console.log("URL do QR Code:", url);
+    console.log("ID do Boleto:", idboleto);
+
     if (!url || typeof url !== "string") {
       throw new Error("URL inválida");
     }
@@ -678,8 +681,7 @@ async function saveQRCodeImageToLocal(url, idBoleto) {
     }
 
     const buffer = await response.buffer();
-    await fs.mkdir("src/qrcodes", { recursive: true }); // Cria a pasta qrcodes se ela não existir
-    await promisify(fs.writeFile)(`src/qrcodes/${idBoleto}.png`, buffer);
+    await promisify(fs.writeFile)(`src/qrcodes/${idboleto}.png`, buffer);
     console.log("Imagem do QR Code salva localmente com sucesso.");
   } catch (error) {
     console.error("Erro ao salvar imagem do QR Code localmente:", error);
