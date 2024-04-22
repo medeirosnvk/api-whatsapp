@@ -245,13 +245,17 @@ class StateMachine {
 
     const demim = 1;
 
-    await stateMachine._getRegisterMessagesDB(
-      this.fromNumber,
-      this.toNumber,
-      body,
-      this.ticketId,
-      demim
-    );
+    if (typeof body === "string") {
+      await stateMachine._getRegisterMessagesDB(
+        this.fromNumber,
+        this.toNumber,
+        body,
+        this.ticketId,
+        demim
+      );
+
+      await this.client.sendMessage(origin, body);
+    }
 
     await this.client.sendMessage(origin, body);
   }
@@ -826,9 +830,7 @@ class StateMachine {
         const mensagem = `*ACORDO REALIZADO COM SUCESSO!*\n\nPague a primeira parcela através do QRCODE ou link do BOLETO abaixo:\n\nhttp://cobrance.com.br/acordo/boleto.php?idboleto=${responseBoletoContent.idboleto}&email=2`;
 
         await this._postMessage(origin, mensagem);
-        // await this._postMessage(origin, media);
-        await sendMessage(origin, media);
-
+        await this._postMessage(origin, media);
         await this._handleInitialState(origin, phoneNumber, response);
       } else {
         await this._postMessage(
