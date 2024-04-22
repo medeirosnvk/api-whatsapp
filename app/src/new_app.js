@@ -827,7 +827,7 @@ class StateMachine {
 
         await this._postMessage(origin, mensagem);
         // await this._postMessage(origin, media);
-        await this.client.sendMessage(origin, media);
+        await sendMessage(origin, media);
 
         await this._handleInitialState(origin, phoneNumber, response);
       } else {
