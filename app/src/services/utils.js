@@ -685,6 +685,7 @@ async function saveQRCodeImageToLocal(url, idboleto) {
     console.log("Buffer length:", buffer.length);
     await promisify(fs.writeFile)(`src/qrcodes/${idboleto}.png`, buffer);
     console.log("Imagem do QR Code salva localmente com sucesso.");
+    console.log("> start");
   } catch (error) {
     console.error("Erro ao salvar imagem do QR Code localmente:", error);
   }
