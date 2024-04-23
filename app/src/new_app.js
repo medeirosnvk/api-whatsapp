@@ -95,7 +95,7 @@ client.on("message", async (message) => {
         "Credor sem cadastro no banco de dados. Atendimento chatbot não iniciado para -",
         fromPhoneNumber
       );
-      await requests.getFecharAtendimentoHumano(ticketId);
+      // await requests.getFecharAtendimentoHumano(ticketId);
       return;
     }
 
