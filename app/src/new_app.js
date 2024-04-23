@@ -88,6 +88,17 @@ client.on("message", async (message) => {
       return;
     }
 
+    const credorExistsFromDB = stateMachine._getCredorFromDB(fromPhoneNumber);
+
+    if (credorExistsFromDB.length === 0) {
+      console.log(
+        "Credor sem cadastro no banco de dados. Atendimento chatbot não iniciado para -",
+        fromPhoneNumber
+      );
+      await requests.getFecharAtendimentoHumano(ticketId);
+      return;
+    }
+
     let ticketId = stateMachine.ticketNumber;
 
     // Primeiro verifica se existe ticket para este numero
@@ -123,17 +134,6 @@ client.on("message", async (message) => {
       console.log(
         `Erro ao executar insertTicketResponse, novo ticket nao criado.`
       );
-      return;
-    }
-
-    const credorExistsFromDB = stateMachine._getCredorFromDB(fromPhoneNumber);
-
-    if (credorExistsFromDB.length === 0) {
-      console.log(
-        "Credor sem cadastro no banco de dados. Atendimento chatbot não iniciado para -",
-        fromPhoneNumber
-      );
-      await requests.getFecharAtendimentoHumano(ticketId);
       return;
     }
 
