@@ -302,7 +302,7 @@ class StateMachine {
       return dbResponse[0];
     }
 
-    throw new Error(`Nao existe credor vinculado ao numero ${phoneNumber}.`);
+    console.log(`Nao existe credor vinculado ao numero ${phoneNumber}.`);
   }
 
   async _getTicketStatusDB(phoneNumber) {
