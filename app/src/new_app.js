@@ -109,7 +109,7 @@ client.on("message", async (message) => {
       console.log("Usuario em atendimento humano -", bot_idstatus);
       await client.sendMessage(
         from,
-        "Estamos redirecionando voces para um atendente humano, por favor aguarde..."
+        "Estamos redirecionando você para um atendente humano, por favor aguarde..."
       );
 
       return;
