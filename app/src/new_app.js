@@ -114,6 +114,24 @@ client.on("message", async (message) => {
         `Já existe um ticket para o número ${fromPhoneNumber} - ${ticketId}`
       );
     } else {
+      const statusAtendimento = await requests.getStatusAtendimento(
+        fromPhoneNumber
+      );
+
+      const { bot_idstatus } = statusAtendimento[0];
+
+      if (bot_idstatus === 2) {
+        console.log("Usuario em atendimento humano -", bot_idstatus);
+        await stateMachine._postMessage(
+          fromPhoneNumber,
+          "Você está sendo redirecionado para um atendente humano, por favor aguarde..."
+        );
+        return;
+      }
+
+      if (bot_idstatus === 1) {
+        console.log("Usuario em atendimento automático -", bot_idstatus);
+      }
       // Se nao tiver ticket, faz um insert do cliente no banco
       await requests.getInserirNumeroCliente(fromPhoneNumber);
 
@@ -134,25 +152,6 @@ client.on("message", async (message) => {
         `Erro ao executar insertTicketResponse, novo ticket nao criado.`
       );
       return;
-    }
-
-    const statusAtendimento = await requests.getStatusAtendimento(
-      fromPhoneNumber
-    );
-
-    const { bot_idstatus } = statusAtendimento[0];
-
-    if (bot_idstatus === 2) {
-      console.log("Usuario em atendimento humano -", bot_idstatus);
-      await stateMachine._postMessage(
-        fromPhoneNumber,
-        "Você está sendo redirecionado para um atendente humano, por favor aguarde..."
-      );
-      return;
-    }
-
-    if (bot_idstatus === 1) {
-      console.log("Usuario em atendimento automático -", bot_idstatus);
     }
 
     const demim = 0;
