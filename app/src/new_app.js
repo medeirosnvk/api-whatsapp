@@ -140,11 +140,16 @@ client.on("message", async (message) => {
     const statusAtendimento = await requests.getStatusAtendimento(
       fromPhoneNumber
     );
+
     const { bot_idstatus } = statusAtendimento[0];
 
     if (bot_idstatus === 2) {
       console.log("Usuario em atendimento humano -", bot_idstatus);
-      await stateMachine._postMessage(from, message);
+
+      await stateMachine._postMessage(
+        from,
+        "Voce está sendo redirecionado para um atendente humano, por favor aguarde."
+      );
       return;
     }
 
