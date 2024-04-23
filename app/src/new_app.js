@@ -146,7 +146,7 @@ client.on("message", async (message) => {
       console.log("Usuario em atendimento humano -", bot_idstatus);
 
       await stateMachine._postMessage(
-        from,
+        fromPhoneNumber,
         `Voce está sendo redirecionado para um atendente humano, por favor aguarde...`
       );
       return;
