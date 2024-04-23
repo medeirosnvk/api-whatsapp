@@ -504,7 +504,9 @@ class StateMachine {
   }
 
   async _handleInitialState(origin, phoneNumber, response) {
-    const { nome: userName } = await this._getCredorFromDB(phoneNumber);
+    const { nome: userName } = (await this._getCredorFromDB(phoneNumber)) || {
+      nome: "",
+    };
     const message = `Olá *${userName}*,\n\nPor favor, escolha uma opção:\n\n1) Credores\n2) Ver Acordos\n3) Linha Digitável\n4) Pix Copia e Cola`;
 
     await this._postMessage(origin, message);
