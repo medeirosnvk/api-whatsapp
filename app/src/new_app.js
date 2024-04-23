@@ -106,10 +106,10 @@ client.on("message", async (message) => {
 
     if (bot_idstatus === 2) {
       console.log("Usuario em atendimento humano -", bot_idstatus);
-      // await stateMachine._postMessage(
-      //   fromPhoneNumber,
-      //   `Você está sendo redirecionado para um atendente humano, por favor aguarde...`
-      // );
+      await stateMachine._postMessage(
+        fromPhoneNumber,
+        "Você está sendo redirecionado para um atendente humano, por favor aguarde..."
+      );
       return;
     }
 
