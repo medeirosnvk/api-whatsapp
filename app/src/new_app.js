@@ -104,11 +104,11 @@ client.on("message", async (message) => {
 
     const { bot_idstatus } = statusAtendimento[0];
 
-    if (statusAtendimento && bot_idstatus === 2) {
+    if (bot_idstatus === 2) {
       console.log("Usuario em atendimento humano -", bot_idstatus);
 
       await stateMachine._postMessage(
-        fromPhoneNumber,
+        from,
         `Voce está sendo redirecionado para um atendente humano, por favor aguarde...`
       );
       return;
