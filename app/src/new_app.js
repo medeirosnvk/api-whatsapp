@@ -88,20 +88,6 @@ client.on("message", async (message) => {
       return;
     }
 
-    const credorExistsFromDB = stateMachine._getCredorFromDB(fromPhoneNumber);
-
-    if (!credorExistsFromDB || credorExistsFromDB.length === 0) {
-      console.log(
-        "Credor sem cadastro no banco de dados. Atendimento chatbot não iniciado para -",
-        fromPhoneNumber
-      );
-      return;
-    }
-
-    const statusAtendimento = await requests.getStatusAtendimento(
-      fromPhoneNumber
-    );
-
     const { bot_idstatus } = statusAtendimento[0];
 
     if (bot_idstatus === 2) {
@@ -154,6 +140,20 @@ client.on("message", async (message) => {
       );
       return;
     }
+
+    const credorExistsFromDB = stateMachine._getCredorFromDB(fromPhoneNumber);
+
+    if (!credorExistsFromDB || credorExistsFromDB.length === 0) {
+      console.log(
+        "Credor sem cadastro no banco de dados. Atendimento chatbot não iniciado para -",
+        fromPhoneNumber
+      );
+      return;
+    }
+
+    const statusAtendimento = await requests.getStatusAtendimento(
+      fromPhoneNumber
+    );
 
     const demim = 0;
 
