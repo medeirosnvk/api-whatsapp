@@ -105,11 +105,11 @@ client.on("message", async (message) => {
     const { bot_idstatus } = statusAtendimento[0];
 
     if (bot_idstatus === 2) {
-      console.log("Usuario não está em atendimento humano -", bot_idstatus);
-      await stateMachine._postMessage(
-        fromPhoneNumber,
-        `Você está sendo redirecionado para um atendente humano, por favor aguarde...`
-      );
+      console.log("Usuario em atendimento humano -", bot_idstatus);
+      // await stateMachine._postMessage(
+      //   fromPhoneNumber,
+      //   `Você está sendo redirecionado para um atendente humano, por favor aguarde...`
+      // );
       return;
     }
 
@@ -268,8 +268,8 @@ class StateMachine {
 
     if (typeof body === "string") {
       await stateMachine._getRegisterMessagesDB(
-        this.fromNumber,
         this.toNumber,
+        this.fromNumber,
         body,
         this.ticketId,
         demim
