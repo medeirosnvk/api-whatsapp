@@ -147,7 +147,7 @@ client.on("message", async (message) => {
 
       await stateMachine._postMessage(
         from,
-        "Voce está sendo redirecionado para um atendente humano, por favor aguarde."
+        `Voce está sendo redirecionado para um atendente humano, por favor aguarde...`
       );
       return;
     }
@@ -579,6 +579,11 @@ class StateMachine {
 
   async _handleOfertaState(origin, phoneNumber, response) {
     try {
+      await this._postMessage(
+        origin,
+        `Aguarde, estamos gerando o seu acordo...`
+      );
+
       if (response && response.body.trim().match(/^\d+$/)) {
         const selectedOptionParcelamento = parseInt(response.body.trim());
         const credorInfo = await requests.getCredorInfo(this.document);
