@@ -88,19 +88,14 @@ client.on("message", async (message) => {
       return;
     }
 
-    const { bot_idstatus } = statusAtendimento[0];
+    const credorExistsFromDB = stateMachine._getCredorFromDB(fromPhoneNumber);
 
-    if (bot_idstatus === 2) {
-      console.log("Usuario em atendimento humano -", bot_idstatus);
-      await stateMachine._postMessage(
-        fromPhoneNumber,
-        "Você está sendo redirecionado para um atendente humano, por favor aguarde..."
+    if (!credorExistsFromDB || credorExistsFromDB.length === 0) {
+      console.log(
+        "Credor sem cadastro no banco de dados. Atendimento chatbot não iniciado para -",
+        fromPhoneNumber
       );
       return;
-    }
-
-    if (bot_idstatus === 1) {
-      console.log("Usuario em atendimento automático -", bot_idstatus);
     }
 
     let ticketId = stateMachine.ticketNumber;
@@ -141,19 +136,24 @@ client.on("message", async (message) => {
       return;
     }
 
-    const credorExistsFromDB = stateMachine._getCredorFromDB(fromPhoneNumber);
+    const statusAtendimento = await requests.getStatusAtendimento(
+      fromPhoneNumber
+    );
 
-    if (!credorExistsFromDB || credorExistsFromDB.length === 0) {
-      console.log(
-        "Credor sem cadastro no banco de dados. Atendimento chatbot não iniciado para -",
-        fromPhoneNumber
+    const { bot_idstatus } = statusAtendimento[0];
+
+    if (bot_idstatus === 2) {
+      console.log("Usuario em atendimento humano -", bot_idstatus);
+      await stateMachine._postMessage(
+        fromPhoneNumber,
+        "Você está sendo redirecionado para um atendente humano, por favor aguarde..."
       );
       return;
     }
 
-    const statusAtendimento = await requests.getStatusAtendimento(
-      fromPhoneNumber
-    );
+    if (bot_idstatus === 1) {
+      console.log("Usuario em atendimento automático -", bot_idstatus);
+    }
 
     const demim = 0;
 
