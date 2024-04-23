@@ -107,7 +107,7 @@ client.on("message", async (message) => {
     if (bot_idstatus === 2) {
       console.log("Usuario em atendimento humano -", bot_idstatus);
       await client.sendMessage(
-        origin,
+        fromPhoneNumber,
         "Estamos redirecionando voces para um atendente humano, por favor aguarde..."
       );
 
