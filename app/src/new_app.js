@@ -82,6 +82,7 @@ client.on("message", async (message) => {
     };
 
     const fromPhoneNumber = utils.formatPhoneNumber(message.from);
+    console.log("fromPhoneNumber -", fromPhoneNumber);
 
     if (!fromPhoneNumber || !response) {
       console.log("Mensagem invalida recebida", message);
