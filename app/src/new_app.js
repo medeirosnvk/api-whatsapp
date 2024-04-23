@@ -90,7 +90,7 @@ client.on("message", async (message) => {
 
     const credorExistsFromDB = stateMachine._getCredorFromDB(fromPhoneNumber);
 
-    if (credorExistsFromDB.length === 0) {
+    if (!credorExistsFromDB || credorExistsFromDB.length === 0) {
       console.log(
         "Credor sem cadastro no banco de dados. Atendimento chatbot não iniciado para -",
         fromPhoneNumber
