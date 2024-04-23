@@ -90,7 +90,7 @@ client.on("message", async (message) => {
 
     const credorExistsFromDB = stateMachine._getCredorFromDB(fromPhoneNumber);
 
-    if (credorExistsFromDB.length === 0) {
+    if (!credorExistsFromDB || credorExistsFromDB.length === 0) {
       console.log(
         "Credor sem cadastro no banco de dados. Atendimento chatbot não iniciado para -",
         fromPhoneNumber
@@ -195,6 +195,9 @@ class StateMachine {
   }
 
   _setDataCredores(phoneNumber, data) {
+    if (!this.userStates[phoneNumber].data) {
+      this.userStates[phoneNumber].data = {}; // Inicializa o objeto se não existir
+    }
     this.userStates[phoneNumber].data.CREDORES = data;
   }
 
@@ -1087,11 +1090,10 @@ class StateMachine {
         clearTimeout(this.timer[phoneNumber]);
       }
 
-      // Configura um novo temporizador para reiniciar o atendimento após 60 segundos
       this.timer[phoneNumber] = setTimeout(async () => {
         console.log(`Timeout para ${phoneNumber}. Reiniciando atendimento.`);
         await this._handleInitialState(response.from, phoneNumber);
-      }, 300000); // 300 segundos
+      }, 300000); // 300 segundos = 5 min
 
       switch (currentState) {
         case "INICIO":
