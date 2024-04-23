@@ -276,9 +276,9 @@ class StateMachine {
   }
 
   async _getCredorFromDB(phoneNumber) {
-    // if (!this.userStates[phoneNumber]) {
-    //   this.userStates[phoneNumber] = {}; // inicialize o objeto se não existir
-    // }
+    if (!this.userStates[phoneNumber]) {
+      this.userStates[phoneNumber] = {}; // inicialize o objeto se não existir
+    }
 
     const dbQuery = `
       select
@@ -301,12 +301,12 @@ class StateMachine {
 
     const dbResponse = await executeQuery(dbQuery, customDbConfig);
 
-    // if (dbResponse && dbResponse.length) {
-    //   this._setCredor(phoneNumber, dbResponse[0]);
-    //   return dbResponse[0];
-    // }
+    if (dbResponse && dbResponse.length) {
+      this._setCredor(phoneNumber, dbResponse[0]);
+      return dbResponse[0];
+    }
 
-    // console.log(`Nao existe credor vinculado ao numero ${phoneNumber}.`);
+    console.log(`Nao existe credor vinculado ao numero ${phoneNumber}.`);
   }
 
   async _getTicketStatusDB(phoneNumber) {
@@ -508,9 +508,7 @@ class StateMachine {
   }
 
   async _handleInitialState(origin, phoneNumber, response) {
-    const credor = (await this._getCredorFromDB(phoneNumber)) || {
-      nome: "",
-    };
+    const credor = await this._getCredorFromDB(phoneNumber);
 
     if (credor.length === 0) {
       console.log(
