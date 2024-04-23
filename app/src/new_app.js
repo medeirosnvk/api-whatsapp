@@ -126,6 +126,17 @@ client.on("message", async (message) => {
       return;
     }
 
+    const credorExistsFromDB = stateMachine._getCredorFromDB(fromPhoneNumber);
+
+    if (credorExistsFromDB.length === 0) {
+      console.log(
+        "Credor sem cadastro no banco de dados. Atendimento chatbot não iniciado para -",
+        fromPhoneNumber
+      );
+      await requests.getFecharAtendimentoHumano(ticketId);
+      return;
+    }
+
     const statusAtendimento = await requests.getStatusAtendimento(
       fromPhoneNumber
     );
@@ -281,7 +292,7 @@ class StateMachine {
       right(t.telefone,8) = '${phoneNumber}'
       and d.idusuario not in (11, 14)
       and s.idstatustelefone = t.idstatustelefone
-      and s.fila = 's' ;
+      and s.fila = 's'
     `;
 
     const dbResponse = await executeQuery(dbQuery, customDbConfig);
