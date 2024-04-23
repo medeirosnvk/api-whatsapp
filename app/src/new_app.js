@@ -258,8 +258,8 @@ class StateMachine {
 
     if (typeof body === "string") {
       await stateMachine._getRegisterMessagesDB(
-        this.fromNumber,
         this.toNumber,
+        this.fromNumber,
         body,
         this.ticketId,
         demim
