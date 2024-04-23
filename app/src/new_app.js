@@ -510,7 +510,7 @@ class StateMachine {
   async _handleInitialState(origin, phoneNumber, response) {
     const credor = await this._getCredorFromDB(phoneNumber);
 
-    if (credor.length === 0) {
+    if (!credor || credor.length === 0) {
       console.log(
         "Credor sem cadastro no banco de dados. Atendimento chatbot não iniciado para -",
         phoneNumber
