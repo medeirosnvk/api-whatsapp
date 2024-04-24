@@ -111,7 +111,17 @@ client.on("message", async (message) => {
       return;
     }
 
-    const { bot_idstatus } = statusAtendimento[0];
+    let bot_idstatus;
+
+    if (statusAtendimento[0] && statusAtendimento[0].bot_idstatus) {
+      bot_idstatus = statusAtendimento[0].bot_idstatus;
+    } else {
+      console.log(
+        "Status de atendimento não encontrado para o usuário -",
+        fromPhoneNumber
+      );
+      return;
+    }
 
     if (bot_idstatus === 1) {
       console.log("Usuário em atendimento automático -", bot_idstatus);
