@@ -85,7 +85,7 @@ client.on("message", async (message) => {
     console.log("fromPhoneNumber -", fromPhoneNumber);
 
     if (!fromPhoneNumber || !response) {
-      console.log("Mensagem invalida recebida", message);
+      console.log("Mensagem inválida recebida", message);
       return;
     }
 
@@ -99,6 +99,33 @@ client.on("message", async (message) => {
       return;
     }
 
+    const statusAtendimento = await requests.getStatusAtendimento(
+      fromPhoneNumber
+    );
+
+    if (!statusAtendimento || statusAtendimento.length === 0) {
+      console.log(
+        "Não foi possível encontrar informações de atendimento para o usuário -",
+        fromPhoneNumber
+      );
+      return;
+    }
+
+    const { bot_idstatus } = statusAtendimento[0];
+
+    if (bot_idstatus === 1) {
+      console.log("Usuário em atendimento automático -", bot_idstatus);
+    }
+
+    if (bot_idstatus === 2) {
+      console.log("Usuário em atendimento humano -", bot_idstatus);
+      await client.sendMessage(
+        from,
+        "Estamos redirecionando você para um atendente humano, por favor aguarde..."
+      );
+      return;
+    }
+
     let ticketId = stateMachine.ticketNumber;
 
     // Primeiro verifica se existe ticket para este numero
@@ -106,7 +133,7 @@ client.on("message", async (message) => {
       fromPhoneNumber
     );
 
-    // Se tiver ticket, entao assume o valor do banco
+    // Se tiver ticket, então assume o valor do banco
     if (ticketStatus && ticketStatus.length > 0) {
       ticketId = ticketStatus[0].id; // Define ticketId com o valor do banco
       await requests.getAbrirAtendimentoBot(ticketId);
@@ -115,7 +142,7 @@ client.on("message", async (message) => {
         `Iniciando atendimento Bot para ${fromPhoneNumber} no Ticket - ${ticketId}`
       );
     } else {
-      // Se nao tiver ticket, faz um insert do cliente no banco
+      // Se não tiver ticket, faz um insert do cliente no banco
       await requests.getInserirNumeroCliente(fromPhoneNumber);
 
       // E captura o novo numero to ticket
@@ -130,61 +157,10 @@ client.on("message", async (message) => {
         console.log(
           `Iniciando atendimento Bot para ${fromPhoneNumber} no Ticket - ${ticketId} (NOVO)`
         );
-
-        const statusAtendimento = await requests.getStatusAtendimento(
-          fromPhoneNumber
-        );
-
-        if (!statusAtendimento || statusAtendimento.length === 0) {
-          console.log(
-            "Não foi possível encontrar informações de atendimento para o usuário -",
-            fromPhoneNumber
-          );
-        }
-
-        const { bot_idstatus } = statusAtendimento[0];
-
-        if (bot_idstatus === 1) {
-          console.log("Usuario em atendimento automático -", bot_idstatus);
-        }
-
-        if (bot_idstatus === 2) {
-          console.log("Usuario em atendimento humano -", bot_idstatus);
-          await client.sendMessage(
-            from,
-            "Estamos redirecionando você para um atendente humano, por favor aguarde..."
-          );
-          return;
-        }
+      } else {
+        console.log(`Erro ao criar novo número de Ticket no banco.`);
+        return;
       }
-      console.log(`Erro ao criar novo numero de Ticket no banco.`);
-      return;
-    }
-
-    const statusAtendimento = await requests.getStatusAtendimento(
-      fromPhoneNumber
-    );
-
-    if (!statusAtendimento || statusAtendimento.length === 0) {
-      console.log(
-        "Não foi possível encontrar informações de atendimento para o usuário -",
-        fromPhoneNumber
-      );
-    }
-
-    const { bot_idstatus } = statusAtendimento[0];
-
-    if (bot_idstatus === 1) {
-      console.log("Usuario em atendimento automático -", bot_idstatus);
-    }
-
-    if (bot_idstatus === 2) {
-      console.log("Usuario em atendimento humano -", bot_idstatus);
-      await client.sendMessage(
-        from,
-        "Estamos redirecionando você para um atendente humano, por favor aguarde..."
-      );
-      return;
     }
 
     const demim = 0;
