@@ -96,6 +96,10 @@ client.on("message", async (message) => {
         "Credor sem cadastro no banco de dados. Atendimento chatbot não iniciado para -",
         fromPhoneNumber
       );
+      await client.sendMessage(
+        from,
+        "Estamos redirecionando seu atendimento para um humano, por favor aguarde..."
+      );
       return;
     }
 
@@ -118,7 +122,7 @@ client.on("message", async (message) => {
       console.log("Usuário em atendimento humano -", bot_idstatus);
       await client.sendMessage(
         from,
-        "Usuário redirecionado para um atendente humano, por favor aguarde..."
+        "Estamos redirecionando seu atendimento para um humano, por favor aguarde..."
       );
       return;
     }
