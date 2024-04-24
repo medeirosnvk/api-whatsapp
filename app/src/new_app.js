@@ -103,6 +103,14 @@ client.on("message", async (message) => {
       fromPhoneNumber
     );
 
+    if (!statusAtendimento || statusAtendimento.length === 0) {
+      console.log(
+        "Não foi possível encontrar informações de atendimento para o usuário -",
+        fromPhoneNumber
+      );
+      return;
+    }
+
     const { bot_idstatus } = statusAtendimento[0];
 
     if (bot_idstatus === 2) {
@@ -111,7 +119,6 @@ client.on("message", async (message) => {
         from,
         "Estamos redirecionando você para um atendente humano, por favor aguarde..."
       );
-
       return;
     }
 
