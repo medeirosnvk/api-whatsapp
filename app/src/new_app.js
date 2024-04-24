@@ -128,12 +128,10 @@ client.on("message", async (message) => {
         await requests.getAbrirAtendimentoBot(ticketId);
 
         console.log(
-          `Novo ticket criado para o número ${fromPhoneNumber} - ${ticketId}.`
+          `Iniciando atendimento Bot para ${fromPhoneNumber} no Ticket - ${ticketId} (NOVO)`
         );
       }
-      console.log(
-        `Erro ao executar insertTicketResponse, novo ticket nao criado.`
-      );
+      console.log(`Erro ao criar novo numero de Ticket no banco.`);
       return;
     }
 
@@ -878,14 +876,13 @@ class StateMachine {
             `src/qrcodes/${idboleto}.png`
           );
 
-          console.log("media:", media);
+          const mensagemAcordo = `*ACORDO REALIZADO COM SUCESSO!*\n\nPague a primeira parcela através do QRCODE ou link do BOLETO abaixo:\n\nhttp://cobrance.com.br/acordo/boleto.php?idboleto=${responseBoletoContent.idboleto}&email=2`;
 
-          const mensagem = `*ACORDO REALIZADO COM SUCESSO!*\n\nPague a primeira parcela através do QRCODE ou link do BOLETO abaixo:\n\nhttp://cobrance.com.br/acordo/boleto.php?idboleto=${responseBoletoContent.idboleto}&email=2`;
+          const mensagemRecibo = `Por favor, nos envie o *comprovante* assim que possivel!\n\nAtendimento finalizado, obrigado.`;
 
-          console.log("mensagem:", mensagem);
-
-          await this._postMessage(origin, mensagem);
+          await this._postMessage(origin, mensagemAcordo);
           await this._postMessage(origin, media);
+          await this._postMessage(origin, mensagemRecibo);
 
           console.log(
             "Caminho do arquivo do QR Code:",
@@ -898,7 +895,7 @@ class StateMachine {
           );
           console.log("A imagem foi salva corretamente:", imageExists);
 
-          await this._handleInitialState(origin, phoneNumber, response);
+          await requests.getFecharAtendimentoHumano(this.ticketId);
         } else {
           await this._postMessage(
             origin,
