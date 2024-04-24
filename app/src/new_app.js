@@ -99,32 +99,6 @@ client.on("message", async (message) => {
       return;
     }
 
-    const statusAtendimento = await requests.getStatusAtendimento(
-      fromPhoneNumber
-    );
-
-    if (!statusAtendimento || statusAtendimento.length === 0) {
-      console.log(
-        "Não foi possível encontrar informações de atendimento para o usuário -",
-        fromPhoneNumber
-      );
-    }
-
-    const { bot_idstatus } = statusAtendimento[0];
-
-    if (bot_idstatus === 2) {
-      console.log("Usuario em atendimento humano -", bot_idstatus);
-      await client.sendMessage(
-        from,
-        "Estamos redirecionando você para um atendente humano, por favor aguarde..."
-      );
-      return;
-    }
-
-    if (bot_idstatus === 1) {
-      console.log("Usuario em atendimento automático -", bot_idstatus);
-    }
-
     let ticketId = stateMachine.ticketNumber;
 
     // Primeiro verifica se existe ticket para este numero
@@ -161,6 +135,32 @@ client.on("message", async (message) => {
         `Erro ao executar insertTicketResponse, novo ticket nao criado.`
       );
       return;
+    }
+
+    const statusAtendimento = await requests.getStatusAtendimento(
+      fromPhoneNumber
+    );
+
+    if (!statusAtendimento || statusAtendimento.length === 0) {
+      console.log(
+        "Não foi possível encontrar informações de atendimento para o usuário -",
+        fromPhoneNumber
+      );
+    }
+
+    const { bot_idstatus } = statusAtendimento[0];
+
+    if (bot_idstatus === 2) {
+      console.log("Usuario em atendimento humano -", bot_idstatus);
+      await client.sendMessage(
+        from,
+        "Estamos redirecionando você para um atendente humano, por favor aguarde..."
+      );
+      return;
+    }
+
+    if (bot_idstatus === 1) {
+      console.log("Usuario em atendimento automático -", bot_idstatus);
     }
 
     const demim = 0;
