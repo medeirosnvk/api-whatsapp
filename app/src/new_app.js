@@ -112,7 +112,7 @@ client.on("message", async (message) => {
       await requests.getAbrirAtendimentoBot(ticketId);
 
       console.log(
-        `Já existe um ticket para o número ${fromPhoneNumber} - ${ticketId}`
+        `Iniciando atendimento Bot para ${fromPhoneNumber} no Ticket - ${ticketId}`
       );
     } else {
       // Se nao tiver ticket, faz um insert do cliente no banco
