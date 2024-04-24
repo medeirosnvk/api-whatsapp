@@ -108,7 +108,6 @@ client.on("message", async (message) => {
         "Não foi possível encontrar informações de atendimento para o usuário -",
         fromPhoneNumber
       );
-      return;
     }
 
     const { bot_idstatus } = statusAtendimento[0];
