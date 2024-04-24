@@ -1150,49 +1150,31 @@ class StateMachine {
           break;
 
         case "MENU":
-          if (!(await this._handleMenuState(origin, phoneNumber, response))) {
-            this._setCurrentState(phoneNumber, "MENU");
-            return;
-          }
+          await this._handleMenuState(origin, phoneNumber, response);
           break;
 
         case "CREDOR":
-          if (!(await this._handleCredorState(origin, phoneNumber, response))) {
-            this._setCurrentState(phoneNumber, "CREDOR");
-            return;
-          }
+          await this._handleCredorState(origin, phoneNumber, response);
           this._setCurrentState(phoneNumber, "OFERTA");
           break;
 
         case "OFERTA":
-          if (!(await this._handleOfertaState(origin, phoneNumber, response))) {
-            this._setCurrentState(phoneNumber, "OFERTA");
-            return;
-          }
+          await this._handleOfertaState(origin, phoneNumber, response);
           this._setCurrentState(phoneNumber, "INICIO");
           break;
 
         case "VER_ACORDOS":
-          if (!(await this._handleAcordoState(origin, phoneNumber, response))) {
-            this._setCurrentState(phoneNumber, "VER_ACORDOS");
-            return;
-          }
+          await this._handleAcordoState(origin, phoneNumber, response);
           this._setCurrentState(phoneNumber, "INICIO");
           break;
 
         case "VER_LINHA_DIGITAVEL":
-          if (!(await this._handleBoletoState(origin, phoneNumber, response))) {
-            this._setCurrentState(phoneNumber, "VER_LINHA_DIGITAVEL");
-            return;
-          }
+          await this._handleBoletoState(origin, phoneNumber, response);
           this._setCurrentState(phoneNumber, "INICIO");
           break;
 
         case "VER_CODIGO_PIX":
-          if (!(await this._handlePixState(origin, phoneNumber, response))) {
-            this._setCurrentState(phoneNumber, "VER_CODIGO_PIX");
-            return;
-          }
+          await this._handlePixState(origin, phoneNumber, response);
           this._setCurrentState(phoneNumber, "INICIO");
           break;
       }
