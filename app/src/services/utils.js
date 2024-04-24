@@ -341,7 +341,7 @@ ${messageTotais}
 
     const bottomMessage = `
   
-\nINCLUÍDO POR: API COBRANCE EM ${currentDateFormat} ${currentTimeFormat}.
+\nINCLUÍDO POR: API CHATBOT EM ${currentDateFormat} ${currentTimeFormat}.
 ---------------------------------------------------------------------------`;
 
     return (
@@ -377,7 +377,7 @@ ${messageTotais}
     codcobradora: null,
     valoroperacao: total_geral,
     dataentrada: null,
-    responsavel: "'API ACORDO'",
+    responsavel: "'API CHATBOT'",
     hora: `'${currentTime}'`,
     database1: `'${ultimaDataVencimento}'`,
     juros: juros_percentual,
@@ -406,7 +406,7 @@ function parseDadosPromessa(props) {
   const { idacordo, iddevedor, plano } = props;
 
   return {
-    responsavel: "API WHATSAPP",
+    responsavel: "API CHATBOT",
     data: "",
     valor: 0,
     iddevedor,
@@ -521,7 +521,7 @@ function parseDadosRecibo(props) {
     percentual_comissao_cobrador,
     idoperacao,
     idempresa,
-    responsavel: "API WHATSAPP",
+    responsavel: "API CHATBOT",
   };
 }
 
@@ -567,7 +567,7 @@ function parseDadosBoleto(props) {
     ACEITE: "'N'",
     IMP: "'N'",
     inclusao: `curdate()`,
-    responsavel: "'API WHATSAPP'",
+    responsavel: "'API CHATBOT'",
     destino: "'e-mail'",
     email: `left(BuscaEmailConcat(${cpfcnpj}),100)`,
     chave: `${chave}`,
