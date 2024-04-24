@@ -91,7 +91,7 @@ client.on("message", async (message) => {
 
     const credorExistsFromDB = stateMachine._getCredorFromDB(fromPhoneNumber);
 
-    if (!credorExistsFromDB || credorExistsFromDB.length === 0) {
+    if (!credorExistsFromDB) {
       console.log(
         "Credor sem cadastro no banco de dados. Atendimento chatbot não iniciado para -",
         fromPhoneNumber
@@ -288,37 +288,46 @@ class StateMachine {
   }
 
   async _getCredorFromDB(phoneNumber) {
-    if (!this.userStates[phoneNumber]) {
-      this.userStates[phoneNumber] = {}; // inicialize o objeto se não existir
+    try {
+      if (!this.userStates[phoneNumber]) {
+        this.userStates[phoneNumber] = {}; // inicialize o objeto se não existir
+      }
+
+      const dbQuery = `
+            select
+                d.iddevedor,
+                d.cpfcnpj,
+                d.nome,
+                t.telefone,
+                t.idtelefones
+            from
+                statustelefone s,
+                telefones2 t
+            left join devedor d on
+                d.cpfcnpj = t.cpfcnpj
+            where
+                right(t.telefone,8) = '${phoneNumber}'
+                and d.idusuario not in (11, 14)
+                and s.idstatustelefone = t.idstatustelefone
+                and s.fila = 's'
+        `;
+
+      const dbResponse = await executeQuery(dbQuery, customDbConfig);
+
+      if (dbResponse && dbResponse.length) {
+        this._setCredor(phoneNumber, dbResponse[0]);
+        return dbResponse[0];
+      } else {
+        console.log(`Nenhum credor encontrado para o número ${phoneNumber}.`);
+        return null;
+      }
+    } catch (error) {
+      console.error(
+        `Erro ao buscar credor para o número ${phoneNumber}:`,
+        error
+      );
+      throw error;
     }
-
-    const dbQuery = `
-      select
-      d.iddevedor,
-      d.cpfcnpj,
-      d.nome,
-      t.telefone,
-      t.idtelefones
-    from
-      statustelefone s,
-      telefones2 t
-    left join devedor d on
-      d.cpfcnpj = t.cpfcnpj
-    where
-      right(t.telefone,8) = '${phoneNumber}'
-      and d.idusuario not in (11, 14)
-      and s.idstatustelefone = t.idstatustelefone
-      and s.fila = 's'
-    `;
-
-    const dbResponse = await executeQuery(dbQuery, customDbConfig);
-
-    if (dbResponse && dbResponse.length) {
-      this._setCredor(phoneNumber, dbResponse[0]);
-      return dbResponse[0];
-    }
-
-    console.log(`Nao existe credor vinculado ao numero ${phoneNumber}.`);
   }
 
   async _getTicketStatusDB(phoneNumber) {
@@ -872,17 +881,10 @@ class StateMachine {
             responseQrcodeContent.url,
             idboleto
           );
+
           const media = MessageMedia.fromFilePath(
             `src/qrcodes/${idboleto}.png`
           );
-
-          const mensagemAcordo = `*ACORDO REALIZADO COM SUCESSO!*\n\nPague a primeira parcela através do QRCODE ou link do BOLETO abaixo:\n\nhttp://cobrance.com.br/acordo/boleto.php?idboleto=${responseBoletoContent.idboleto}&email=2`;
-
-          const mensagemRecibo = `Por favor, nos envie o *comprovante* assim que possivel!\n\nAtendimento finalizado, obrigado.`;
-
-          await this._postMessage(origin, mensagemAcordo);
-          await this._postMessage(origin, media);
-          await this._postMessage(origin, mensagemRecibo);
 
           console.log(
             "Caminho do arquivo do QR Code:",
@@ -895,7 +897,25 @@ class StateMachine {
           );
           console.log("A imagem foi salva corretamente:", imageExists);
 
-          await requests.getFecharAtendimentoHumano(this.ticketId);
+          const mensagemAcordo = `*ACORDO REALIZADO COM SUCESSO!*\n\nPague a primeira parcela através do QRCODE ou link do BOLETO abaixo:\n\nhttp://cobrance.com.br/acordo/boleto.php?idboleto=${responseBoletoContent.idboleto}&email=2`;
+
+          const mensagemRecibo = `Por favor, nos envie o *comprovante* assim que possivel para registro!\n\nAtendimento finalizado, obrigado e tenha um ótimo dia.`;
+
+          try {
+            await this._postMessage(origin, mensagemAcordo);
+            await this._postMessage(origin, media);
+            await this._postMessage(origin, mensagemRecibo);
+            await requests.getFecharAtendimentoHumano(this.ticketId);
+
+            console.log(
+              "mensagemAcordo, media e mensagemRecibo enviadas com sucesso! Atendimento finalizado."
+            );
+          } catch (error) {
+            console.error(
+              "Erro ao enviar as mensagens: mensagemAcordo, media e mensagemRecibo",
+              error
+            );
+          }
         } else {
           await this._postMessage(
             origin,
