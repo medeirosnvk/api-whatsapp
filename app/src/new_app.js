@@ -103,14 +103,6 @@ client.on("message", async (message) => {
       fromPhoneNumber
     );
 
-    if (!statusAtendimento || statusAtendimento.length === 0) {
-      console.log(
-        "Não foi possível encontrar informações de atendimento para o usuário -",
-        fromPhoneNumber
-      );
-      return;
-    }
-
     let bot_idstatus;
 
     if (statusAtendimento[0] && statusAtendimento[0].bot_idstatus) {
@@ -120,20 +112,19 @@ client.on("message", async (message) => {
         "Status de atendimento não encontrado para o usuário -",
         fromPhoneNumber
       );
-      return;
-    }
-
-    if (bot_idstatus === 1) {
-      console.log("Usuário em atendimento automático -", bot_idstatus);
     }
 
     if (bot_idstatus === 2) {
       console.log("Usuário em atendimento humano -", bot_idstatus);
       await client.sendMessage(
         from,
-        "Estamos redirecionando você para um atendente humano, por favor aguarde..."
+        "Usuário redirecionado para um atendente humano, por favor aguarde..."
       );
       return;
+    }
+
+    if (bot_idstatus === 1 || bot_idstatus === 3 || bot_idstatus === "") {
+      console.log("Usuário em atendimento automático -", bot_idstatus);
     }
 
     let ticketId = stateMachine.ticketNumber;
