@@ -58,7 +58,11 @@ function formatCredorOfertas(ofertas) {
       const total =
         parseFloat(detalhe.valor_parcela) + parseFloat(detalhe.tarifa_boleto);
       const totalFormatado = formatarMoeda(total.toFixed(2));
-      return `${index + 1}) Parcelamento em ${index + 1} x ${totalFormatado}`;
+      if (index === 0) {
+        return `${index + 1}) À vista em ${totalFormatado}`;
+      } else {
+        return `${index + 1}) Parcelamento em ${index + 1} x ${totalFormatado}`;
+      }
     })
     .join("\n");
 }
