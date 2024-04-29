@@ -118,7 +118,7 @@ client.on("message", async (message) => {
       console.log("Usuário em atendimento humano -", bot_idstatus);
       await client.sendMessage(
         from,
-        "Estamos redirecionando seu atendimento para um humano, por favor aguarde..."
+        "Estamos redirecionando seu atendimento para um atendente humano, por favor aguarde..."
       );
       return;
     }
@@ -542,7 +542,7 @@ class StateMachine {
       return;
     }
 
-    const message = `Olá *${credor.nome}*,\n\nPor favor, escolha uma opção:\n\n1) Credores\n2) Ver Acordos\n3) Linha Digitável\n4) Pix Copia e Cola`;
+    const message = `Olá *${credor.nome}*,\n\nPor favor, escolha uma opção:\n\n*1)* Ver Dívidas\n*2)* Ver Acordos\n*3)* Linha Digitável\n*4)* Pix Copia e Cola`;
     await this._postMessage(origin, message);
   }
 
@@ -902,7 +902,7 @@ class StateMachine {
 
           const mensagemAcordo = `*ACORDO REALIZADO COM SUCESSO!*\n\nPague a primeira parcela através do QRCODE ou link do BOLETO abaixo:\n\nhttp://cobrance.com.br/acordo/boleto.php?idboleto=${responseBoletoContent.idboleto}&email=2`;
 
-          const mensagemRecibo = `Por favor, nos envie o *comprovante* assim que possivel para registro!\n\nAtendimento finalizado, obrigado e tenha um ótimo dia.`;
+          const mensagemRecibo = `*ATENÇÃO! CONFIRA SEUS DADOS E VALOR NA HORA DO PAGAMENTO!*\n\nPor favor, nos envie o *comprovante* assim que possivel para registro! Atendimento finalizado, obrigado e tenha um ótimo dia.`;
 
           try {
             await this._postMessage(origin, mensagemAcordo);

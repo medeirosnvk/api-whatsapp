@@ -59,9 +59,11 @@ function formatCredorOfertas(ofertas) {
         parseFloat(detalhe.valor_parcela) + parseFloat(detalhe.tarifa_boleto);
       const totalFormatado = formatarMoeda(total.toFixed(2));
       if (index === 0) {
-        return `${index + 1}) À vista em ${totalFormatado}`;
+        return `*${index + 1}*) À vista ${totalFormatado}`;
       } else {
-        return `${index + 1}) Parcelamento em ${index + 1} x ${totalFormatado}`;
+        return `*${index + 1}*) Parcelamento em ${
+          index + 1
+        } x ${totalFormatado}`;
       }
     })
     .join("\n");
@@ -71,7 +73,7 @@ function formatCredorInfo(creditorInfo) {
   return creditorInfo
     .map(
       (info, index) =>
-        `${index + 1})\n` +
+        `*${index + 1}*)\n` +
         `IdDevedor: ${info.iddevedor}\n` +
         `Empresa: ${info.empresa}\n` +
         `Saldo: ${formatValue(info.saldo)}`
@@ -83,7 +85,7 @@ function formatCredorAcordos(creditorAcordos) {
   return creditorAcordos
     .map(
       (info, index) =>
-        `${index + 1})\n` +
+        `*${index + 1}*)\n` +
         `Empresa: ${info.credor}\n` +
         `IdDevedor: ${info.iddevedor}\n` +
         `IdAcordo: ${info.idacordo}\n` +
