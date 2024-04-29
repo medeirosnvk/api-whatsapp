@@ -1,13 +1,34 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+    <link
+      rel="icon"
+      type="cobrance-favicon-icon"
+      href="/src/images/logo_cobrance_favicon.png"
+    />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Vite + React</title>
+    <title>Monitoramento Chatbot Receptivo</title>
   </head>
   <body>
     <div id="root"></div>
     <script type="module" src="/src/main.jsx"></script>
+    <script>
+      // Estabelece a conexão WebSocket
+      const socket = new WebSocket("ws://191.101.70.186");
+
+      // Escuta os eventos da conexão WebSocket
+      socket.addEventListener("open", function (event) {
+        console.log("Conexão WebSocket aberta.");
+      });
+
+      socket.addEventListener("error", function (event) {
+        console.error("Erro na conexão WebSocket:", event);
+      });
+
+      socket.addEventListener("close", function (event) {
+        console.log("Conexão WebSocket fechada.");
+      });
+    </script>
   </body>
 </html>
