@@ -1128,7 +1128,7 @@ class StateMachine {
 
       console.log(`[${phoneNumber} - ${currentState}]`);
 
-      const MAX_RETRY_COUNT = 3;
+      const MAX_RETRY_COUNT = 2;
       let retryCount = 0;
 
       // Verifica se o redirecionamento já foi enviado
