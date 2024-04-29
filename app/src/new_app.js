@@ -481,7 +481,7 @@ class StateMachine {
             await this._handleInitialState(origin, phoneNumber, response);
           } else {
             const credorMessage = utils.formatCredorInfo(credorInfo);
-            const messageSucess = `${credorMessage}\n\n_Selecione o credor (por exemplo, responda com "1" ou "2")_`;
+            const messageSucess = `${credorMessage}\n\n_Selecione a dívida que deseja pagar (por exemplo, responda com 1 caso deseje pagar esta em questão.)_`;
 
             await this._postMessage(origin, messageSucess);
             this._setCurrentState(phoneNumber, "CREDOR");
