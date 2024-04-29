@@ -102,9 +102,9 @@ function TicketTable() {
   }
 
   const renderTicketTable = (status) => {
-    const filteredTickets = tickets.filter(
-      (ticket) => ticket.bot_idstatus === status
-    );
+    const filteredTickets = tickets
+      .filter((ticket) => ticket.bot_idstatus === status)
+      .sort((a, b) => b.id - a.id); // Ordenar da maior para a menor
 
     if (filteredTickets.length === 0) {
       return null;
