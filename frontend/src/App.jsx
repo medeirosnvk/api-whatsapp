@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import axios from "axios";
 import styled, { css } from "styled-components";
+import { format } from "date-fns";
 
 const Container = styled.div`
   font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
@@ -131,7 +132,7 @@ function TicketTable() {
                 <td>{ticket.id}</td>
                 <td>{ticket.telefone}</td>
                 {/* <td>{ticket.idresponsavel}</td> */}
-                <td>{ticket.inclusao}</td>
+                <td>{formatDate(ticket.inclusao)}</td>
                 {/* <td>{ticket.encerrado || "-"}</td> */}
                 <td>{ticket.descricao}</td>
                 <td>
@@ -148,6 +149,11 @@ function TicketTable() {
         </Table>
       </Container>
     );
+  };
+
+  const formatDate = (dateString) => {
+    const date = new Date(dateString);
+    return format(date, "dd/MM/yyyy HH:mm:ss");
   };
 
   // Verifica se há tickets e se todos têm o mesmo status
