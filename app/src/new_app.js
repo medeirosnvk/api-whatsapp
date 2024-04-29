@@ -1131,23 +1131,29 @@ class StateMachine {
       const MAX_RETRY_COUNT = 3;
       let retryCount = 0;
 
-      if (this.timer[phoneNumber]) {
-        clearTimeout(this.timer[phoneNumber]);
-      }
+      // Verifica se o redirecionamento já foi enviado
+      const redirectSent = redirectSentMap.get(phoneNumber);
 
-      this.timer[phoneNumber] = setTimeout(async () => {
-        retryCount++;
-
-        if (retryCount <= MAX_RETRY_COUNT) {
-          console.log(
-            `Timeout para ${phoneNumber}. Reiniciando atendimento. Tentativa ${retryCount}/${MAX_RETRY_COUNT}`
-          );
-          await this._handleInitialState(response.from, phoneNumber);
-        } else {
-          console.log(`Limite de tentativas excedido para ${phoneNumber}.`);
-          // Você pode adicionar um tratamento aqui caso o limite de tentativas seja excedido
+      if (!redirectSent) {
+        // Se o redirecionamento ainda não foi enviado, configura o timeout
+        if (this.timer[phoneNumber]) {
+          clearTimeout(this.timer[phoneNumber]);
         }
-      }, 300000); // 300 segundos = 5 min
+
+        this.timer[phoneNumber] = setTimeout(async () => {
+          retryCount++;
+
+          if (retryCount <= MAX_RETRY_COUNT) {
+            console.log(
+              `Timeout para ${phoneNumber}. Reiniciando atendimento. Tentativa ${retryCount}/${MAX_RETRY_COUNT}`
+            );
+            await this._handleInitialState(response.from, phoneNumber);
+          } else {
+            console.log(`Limite de tentativas excedido para ${phoneNumber}.`);
+            // Você pode adicionar um tratamento aqui caso o limite de tentativas seja excedido
+          }
+        }, 300000); // 300 segundos = 5 min
+      }
 
       switch (currentState) {
         case "INICIO":
