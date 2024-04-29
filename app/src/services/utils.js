@@ -74,8 +74,8 @@ function formatCredorInfo(creditorInfo) {
     .map(
       (info, index) =>
         `*${index + 1}*)\n` +
-        `IdDevedor: ${info.iddevedor}\n` +
         `Empresa: ${info.empresa}\n` +
+        `IdDevedor: ${info.iddevedor}\n` +
         `Saldo: ${formatValue(info.saldo)}`
     )
     .join("\n\n");
