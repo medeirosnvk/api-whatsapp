@@ -22,6 +22,7 @@ const customDbConfig = {
 const SESSION_FILE_PATH = "./session.json";
 
 let sessionData;
+let redirectSentMap = new Map();
 
 if (fs.existsSync(SESSION_FILE_PATH)) {
   sessionData = require(SESSION_FILE_PATH);
@@ -116,10 +117,15 @@ client.on("message", async (message) => {
 
     if (bot_idstatus === 2) {
       console.log("Usuário em atendimento humano -", bot_idstatus);
-      await client.sendMessage(
-        from,
-        "Estamos redirecionando seu atendimento para um atendente humano, por favor aguarde..."
-      );
+      // Verifica se já foi enviado o redirecionamento
+      const redirectSent = redirectSentMap.get(fromPhoneNumber);
+      if (!redirectSent) {
+        await client.sendMessage(
+          from,
+          "Estamos redirecionando seu atendimento para um atendente humano, por favor aguarde..."
+        );
+        redirectSentMap.set(fromPhoneNumber, true);
+      }
       return;
     }
 
