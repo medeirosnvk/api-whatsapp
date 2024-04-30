@@ -108,7 +108,9 @@ client.on("message", async (message) => {
 
     if (statusAtendimento[0] && statusAtendimento[0].bot_idstatus) {
       bot_idstatus = statusAtendimento[0].bot_idstatus;
-    } else {
+    }
+
+    if (!bot_idstatus) {
       console.log(
         "Status de atendimento não encontrado para o usuário -",
         fromPhoneNumber
@@ -133,7 +135,8 @@ client.on("message", async (message) => {
       console.log("Usuário em atendimento automático -", bot_idstatus);
     }
 
-    let ticketId = stateMachine.ticketNumber;
+    // let ticketId = stateMachine.ticketNumber;
+    let ticketId;
 
     // Primeiro verifica se existe ticket para este numero
     const ticketStatus = await requests.getTicketStatusByPhoneNumber(
