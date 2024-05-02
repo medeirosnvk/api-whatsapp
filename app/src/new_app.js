@@ -131,7 +131,12 @@ client.on("message", async (message) => {
       return;
     }
 
-    if (bot_idstatus === 1 || bot_idstatus === 3 || bot_idstatus === "") {
+    if (
+      bot_idstatus === 1 ||
+      bot_idstatus === 3 ||
+      bot_idstatus === "" ||
+      bot_idstatus.length === 0
+    ) {
       console.log("Usuário em atendimento automático -", bot_idstatus);
     }
 
@@ -156,12 +161,12 @@ client.on("message", async (message) => {
       await requests.getInserirNumeroCliente(fromPhoneNumber);
 
       // E captura o novo numero to ticket
-      const insertTicketResponse = await requests.getInserirNovoTicket(
+      const insertNovoTicket = await requests.getInserirNovoTicket(
         fromPhoneNumber
       );
 
-      if (insertTicketResponse && insertTicketResponse.insertId) {
-        ticketId = insertTicketResponse.insertId;
+      if (insertNovoTicket && insertNovoTicket.insertId) {
+        ticketId = insertNovoTicket.insertId;
         await requests.getAbrirAtendimentoBot(ticketId);
 
         console.log(
@@ -561,8 +566,8 @@ class StateMachine {
       const { cpfcnpj: document } = this._getCredor(phoneNumber);
       const credorInfo = await requests.getCredorInfo(document);
 
-      this.document = document; // salvando documento no construtor
-      this._setDataCredores(phoneNumber, credorInfo); // salvando toda a response de credorInfo
+      this.document = document;
+      this._setDataCredores(phoneNumber, credorInfo);
 
       if (selectedOption >= 1 && selectedOption <= credorInfo.length) {
         const selectedCreditor = credorInfo[selectedOption - 1];
@@ -573,7 +578,7 @@ class StateMachine {
           selectedCreditor
         );
 
-        this.idDevedor = selectedCreditor.iddevedor; // Defina o valor aqui
+        this.idDevedor = selectedCreditor.iddevedor;
 
         const idDevedor = selectedCreditor.iddevedor;
         const dataBase = utils.getCurrentDate();
@@ -593,10 +598,12 @@ class StateMachine {
         const terceiraMensagem = `As seguintes dividas foram encontradas para a empresa selecionada:\n\n${formattedResponseDividas}\n\n*Escolha uma das opções abaixo para prosseguirmos no seu acordo:*\n\n${formattedResponseOfertas}`;
 
         await this._postMessage(origin, terceiraMensagem);
+
+        this._setCurrentState(phoneNumber, "OFERTA");
       } else {
         await this._postMessage(
           origin,
-          "Opção inválida. Por favor, escolha uma opção válida."
+          "Resposta inválida. Por favor, escolha uma opção válida."
         );
       }
     } else {
