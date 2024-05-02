@@ -611,11 +611,6 @@ class StateMachine {
 
   async _handleOfertaState(origin, phoneNumber, response) {
     try {
-      await this._postMessage(
-        origin,
-        `Aguarde, estamos gerando o seu acordo...`
-      );
-
       if (response && response.body.trim().match(/^\d+$/)) {
         const selectedOptionParcelamento = parseInt(response.body.trim());
         const credorInfo = await requests.getCredorInfo(this.document);
@@ -633,6 +628,11 @@ class StateMachine {
           selectedOptionParcelamento >= 1 &&
           selectedOptionParcelamento <= credorOfertas.length
         ) {
+          await this._postMessage(
+            origin,
+            `Aguarde, estamos gerando o seu acordo...`
+          );
+
           const ofertaSelecionada =
             credorOfertas[selectedOptionParcelamento - 1];
           this._setDataOferta(phoneNumber, ofertaSelecionada);
