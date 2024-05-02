@@ -933,14 +933,18 @@ class StateMachine {
         } else {
           await this._postMessage(
             origin,
-            "Opção inválida. Por favor, escolha uma opção válida."
+            "Resposta inválida. Por favor, escolha uma opção válida."
           );
+
+          this._setCurrentState(phoneNumber, "CREDOR");
         }
       } else {
         await this._postMessage(
           origin,
           "Resposta inválida. Por favor, escolha uma opção válida."
         );
+
+        this._setCurrentState(phoneNumber, "CREDOR");
       }
     } catch (error) {
       console.error("Erro ao lidar com o estado de oferta:", error);
