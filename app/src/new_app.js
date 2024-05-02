@@ -131,12 +131,7 @@ client.on("message", async (message) => {
       return;
     }
 
-    if (
-      bot_idstatus === 1 ||
-      bot_idstatus === 3 ||
-      bot_idstatus === "" ||
-      bot_idstatus.length === 0
-    ) {
+    if (bot_idstatus === 1 || bot_idstatus === 3 || bot_idstatus === "") {
       console.log("Usuário em atendimento automático -", bot_idstatus);
     }
 
