@@ -453,6 +453,18 @@ async function getStatusAtendimento(phoneNumber) {
   }
 }
 
+async function getCredorByPhoneNumber(phoneNumber) {
+  try {
+    const response = await axiosApiInstance.get(
+      `/credor-db?phoneNumber=${phoneNumber}`
+    );
+    return response.data;
+  } catch (error) {
+    console.error("Erro ao buscar dados no servidor: ", error);
+    return { error: "Erro ao buscar dados no servidor." };
+  }
+}
+
 module.exports = {
   getAcordosFirmados,
   getAcordosFirmadosDetalhado,
@@ -480,4 +492,5 @@ module.exports = {
   getInserirNumeroCliente,
   getInserirNovoTicket,
   getStatusAtendimento,
+  getCredorByPhoneNumber,
 };

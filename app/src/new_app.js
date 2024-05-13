@@ -190,6 +190,7 @@ class StateMachine {
   constructor() {
     this.userStates = {};
     this.globalData = {};
+    this.connectedUsers = {};
     this.timer = {};
     this.client = client;
     this.document = null;
@@ -197,6 +198,23 @@ class StateMachine {
     this.ticketId = null;
     this.fromNumber = null;
     this.toNumber = null;
+  }
+
+  _setConnectedUsers(phoneNumber, ticketId) {
+    if (this.connectedUsers && this.connectedUsers[phoneNumber]) {
+      this.connectedUsers = {
+        ...this.connectedUsers,
+        [phoneNumber]: {
+          algunsDadosQueTuQueira,
+          ticketId: ticketId,
+        },
+      };
+    } else {
+      this.connectedUsers[phoneNumber] = {
+        algunsDadosQueTuQueira,
+        ticketId,
+      };
+    }
   }
 
   _setTicketId(ticketId) {
@@ -613,7 +631,15 @@ class StateMachine {
     try {
       if (response && response.body.trim().match(/^\d+$/)) {
         const selectedOptionParcelamento = parseInt(response.body.trim());
-        const credorInfo = await requests.getCredorInfo(this.document);
+
+        const credorByPhone = await requests.getCredorByPhoneNumber(
+          phoneNumber
+        );
+
+        const { cpfcnpj } = credorByPhone[0];
+
+        const credorInfo = await requests.getCredorInfo(cpfcnpj);
+
         const {
           comissao_comercial,
           idcomercial,
@@ -621,7 +647,7 @@ class StateMachine {
           iddevedor,
         } = credorInfo[0];
 
-        const credorOfertas = await requests.getCredorOfertas(this.idDevedor);
+        const credorOfertas = await requests.getCredorOfertas(iddevedor);
         console.log("credorOfertas:", credorOfertas);
 
         if (
