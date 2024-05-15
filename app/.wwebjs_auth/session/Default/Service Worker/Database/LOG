@@ -1,3 +1,2 @@
-2024/02/26-13:56:15.234 b703 Reusing MANIFEST /Users/kevinmedeiros/Enterprise/Cobrance/api-whatsapp/.wwebjs_auth/session/Default/Service Worker/Database/MANIFEST-000001
-2024/02/26-13:56:15.234 b703 Recovering log #3
-2024/02/26-13:56:15.239 b703 Reusing old log /Users/kevinmedeiros/Enterprise/Cobrance/api-whatsapp/.wwebjs_auth/session/Default/Service Worker/Database/000003.log 
+2024/05/15-12:50:25.455 f803 Creating DB /Users/kevinmedeiros/Enterprise/Cobrance/api-whatsapp/app/.wwebjs_auth/session/Default/Service Worker/Database since it was missing.
+2024/05/15-12:50:25.467 f803 Reusing MANIFEST /Users/kevinmedeiros/Enterprise/Cobrance/api-whatsapp/app/.wwebjs_auth/session/Default/Service Worker/Database/MANIFEST-000001

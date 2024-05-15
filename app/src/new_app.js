@@ -31,14 +31,13 @@ if (fs.existsSync(SESSION_FILE_PATH)) {
 const client = new Client({
   authStrategy: new LocalAuth(),
   puppeteer: {
-    // executablePath: "C:Program FilesGoogleChromeApplicationchrome.exe",
-    // headless: true,
-    args: ["--no-sandbox"],
+    browser: await createBrowserInstance(), // Chame a função para criar a instância do navegador
+    // args: ["--no-sandbox"],
   },
   webVersionCache: {
     type: "remote",
     remotePath:
-      "https://raw.githubusercontent.com/wppconnect-team/wa-version/main/html/2.2407.1.html",
+      "https://raw.githubusercontent.com/wppconnect-team/wa-version/main/html/2.2403.2.html",
   },
 });
 

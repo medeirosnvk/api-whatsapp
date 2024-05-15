@@ -1,3 +1,2 @@
-2024/02/26-13:56:17.098 a003 Reusing MANIFEST /Users/kevinmedeiros/Enterprise/Cobrance/api-whatsapp/.wwebjs_auth/session/Default/Session Storage/MANIFEST-000001
-2024/02/26-13:56:17.098 a003 Recovering log #4
-2024/02/26-13:56:17.099 a003 Reusing old log /Users/kevinmedeiros/Enterprise/Cobrance/api-whatsapp/.wwebjs_auth/session/Default/Session Storage/000004.log 
+2024/05/15-12:50:24.492 8c03 Creating DB /Users/kevinmedeiros/Enterprise/Cobrance/api-whatsapp/app/.wwebjs_auth/session/Default/Session Storage since it was missing.
+2024/05/15-12:50:24.505 8c03 Reusing MANIFEST /Users/kevinmedeiros/Enterprise/Cobrance/api-whatsapp/app/.wwebjs_auth/session/Default/Session Storage/MANIFEST-000001
