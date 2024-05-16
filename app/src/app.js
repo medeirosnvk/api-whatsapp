@@ -332,21 +332,26 @@ class StateMachine {
 
       const dbQuery = `
         select
-          d.iddevedor,
-          d.cpfcnpj,
-          d.nome,
-          t.telefone,
-          t.idtelefones
-        from
-          statustelefone s,
-          telefones2 t
-        left join devedor d on
-          d.cpfcnpj = t.cpfcnpj
-        where
-          right(t.telefone,8) = '${phoneNumber}'
-          and d.idusuario not in (11, 14)
-          and s.idstatustelefone = t.idstatustelefone
-          and s.fila = 's'
+        d.iddevedor,
+        d.cpfcnpj,
+        d.nome,
+        t.telefone,
+        t.idtelefones,
+        d.idusuario
+      from
+        statustelefone s,
+        telefones2 t,
+        devedor d ,
+        credor c
+      where
+        right(t.telefone,8) = '${phoneNumber}'
+        and d.cpfcnpj = t.cpfcnpj
+        and d.idusuario not in (11, 14)
+        and s.idstatustelefone = t.idstatustelefone
+        and s.fila = 's'
+        and c.idcredor = d.idcredor
+        and c.libera_api_acordo = 's'
+        and d.idcredor <> 1011
       `;
 
       const dbResponse = await executeQuery(dbQuery, customDbConfig);
