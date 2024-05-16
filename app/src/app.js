@@ -202,8 +202,6 @@ class StateMachine {
     this.connectedUsers = {};
     this.timer = {};
     this.client = client;
-    this.document = null;
-    this.idDevedor = null;
     this.ticketId = null;
     this.fromNumber = null;
     this.toNumber = null;
@@ -333,23 +331,23 @@ class StateMachine {
       }
 
       const dbQuery = `
-            select
-                d.iddevedor,
-                d.cpfcnpj,
-                d.nome,
-                t.telefone,
-                t.idtelefones
-            from
-                statustelefone s,
-                telefones2 t
-            left join devedor d on
-                d.cpfcnpj = t.cpfcnpj
-            where
-                right(t.telefone,8) = '${phoneNumber}'
-                and d.idusuario not in (11, 14)
-                and s.idstatustelefone = t.idstatustelefone
-                and s.fila = 's'
-        `;
+        select
+          d.iddevedor,
+          d.cpfcnpj,
+          d.nome,
+          t.telefone,
+          t.idtelefones
+        from
+          statustelefone s,
+          telefones2 t
+        left join devedor d on
+          d.cpfcnpj = t.cpfcnpj
+        where
+          right(t.telefone,8) = '${phoneNumber}'
+          and d.idusuario not in (11, 14)
+          and s.idstatustelefone = t.idstatustelefone
+          and s.fila = 's'
+      `;
 
       const dbResponse = await executeQuery(dbQuery, customDbConfig);
 
@@ -588,7 +586,6 @@ class StateMachine {
       const { cpfcnpj: document } = this._getCredor(phoneNumber);
       const credorInfo = await requests.getCredorInfo(document);
 
-      this.document = document;
       this._setDataCredores(phoneNumber, credorInfo);
 
       if (selectedOption >= 1 && selectedOption <= credorInfo.length) {
@@ -599,8 +596,6 @@ class StateMachine {
           `Conteúdo da opção ${selectedOption} armazenado:`,
           selectedCreditor
         );
-
-        this.idDevedor = selectedCreditor.iddevedor;
 
         const idDevedor = selectedCreditor.iddevedor;
         const dataBase = utils.getCurrentDate();
@@ -693,7 +688,7 @@ class StateMachine {
           const formattedDate = newDataBase.toString().substring(0, 10);
 
           const { data: promessas } = await requests.getCredorDividas(
-            this.idDevedor,
+            iddevedor,
             formattedDate
           );
 
@@ -710,16 +705,13 @@ class StateMachine {
           );
 
           const responseDividasCredores = await requests.getCredorDividas(
-            this.idDevedor,
+            iddevedor,
             ultimaDataFormat
           );
           console.log("responseDividasCredores:", responseDividasCredores);
 
           const responseDividasCredoresTotais =
-            await requests.getCredorDividasTotais(
-              this.idDevedor,
-              ultimaDataFormat
-            );
+            await requests.getCredorDividasTotais(iddevedor, ultimaDataFormat);
           console.log(
             "responseDividasCredoresTotais:",
             responseDividasCredoresTotais
@@ -736,7 +728,7 @@ class StateMachine {
             currentTime,
             honorarios_percentual,
             idcredor,
-            iddevedor: this.idDevedor,
+            iddevedor: iddevedor,
             juros_percentual,
             multa_percentual,
             plano,
@@ -754,7 +746,7 @@ class StateMachine {
 
           const parsedData2 = utils.parseDadosPromessa({
             idacordo,
-            iddevedor: this.idDevedor,
+            iddevedor: iddevedor,
             plano,
           });
 
@@ -818,7 +810,7 @@ class StateMachine {
 
           const parsedData3 = utils.parseDadosRecibo({
             comissao_comercial,
-            cpfcnpj: this.document,
+            cpfcnpj: cpfcnpj,
             honorarios_percentual,
             idacordo,
             iddevedor,
@@ -858,7 +850,7 @@ class StateMachine {
             credorInfo,
             idacordo,
             contratosDividas,
-            this.idDevedor,
+            iddevedor,
             idcredor,
             plano,
             total_geral,
