@@ -351,8 +351,8 @@ class StateMachine {
         and s.fila = 's'
         and c.idcredor = d.idcredor
         and c.libera_api_acordo = 's'
-        and d.idcredor <> 1011
-      `;
+        -- and idcredor <> 1011
+        `;
 
       const dbResponse = await executeQuery(dbQuery, customDbConfig);
 
