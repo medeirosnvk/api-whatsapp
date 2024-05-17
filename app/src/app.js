@@ -587,53 +587,57 @@ class StateMachine {
   }
 
   async _handleCredorState(origin, phoneNumber, response) {
-    if (response && response.body.trim().match(/^\d+$/)) {
-      const selectedOption = parseInt(response.body.trim());
-      const { cpfcnpj: document } = this._getCredor(phoneNumber);
-      const credorInfo = await requests.getCredorInfo(document);
+    try {
+      if (response && response.body.trim().match(/^\d+$/)) {
+        const selectedOption = parseInt(response.body.trim());
+        const { cpfcnpj: document } = this._getCredor(phoneNumber);
+        const credorInfo = await requests.getCredorInfo(document);
 
-      this._setDataCredores(phoneNumber, credorInfo);
+        this._setDataCredores(phoneNumber, credorInfo);
 
-      if (selectedOption >= 1 && selectedOption <= credorInfo.length) {
-        const selectedCreditor = credorInfo[selectedOption - 1];
-        this._setDataCredorSelecionado(phoneNumber, selectedCreditor);
+        if (selectedOption >= 1 && selectedOption <= 5 && credorInfo.length) {
+          const selectedCreditor = credorInfo[selectedOption - 1];
+          this._setDataCredorSelecionado(phoneNumber, selectedCreditor);
 
-        console.log(
-          `Conteúdo da opção ${selectedOption} armazenado:`,
-          selectedCreditor
-        );
+          console.log(
+            `Conteúdo da opção ${selectedOption} armazenado:`,
+            selectedCreditor
+          );
 
-        const idDevedor = selectedCreditor.iddevedor;
-        const dataBase = utils.getCurrentDate();
+          const idDevedor = selectedCreditor.iddevedor;
+          const dataBase = utils.getCurrentDate();
 
-        const credorDividas = await requests.getCredorDividas(
-          idDevedor,
-          dataBase
-        );
-        const credorOfertas = await requests.getCredorOfertas(idDevedor);
+          const credorDividas = await requests.getCredorDividas(
+            idDevedor,
+            dataBase
+          );
+          const credorOfertas = await requests.getCredorOfertas(idDevedor);
 
-        this._setDataCredorDividas(phoneNumber, credorDividas);
+          this._setDataCredorDividas(phoneNumber, credorDividas);
 
-        const formattedResponseDividas =
-          utils.formatCredorDividas(credorDividas);
-        const formattedResponseOfertas =
-          utils.formatCredorOfertas(credorOfertas);
-        const terceiraMensagem = `As seguintes dividas foram encontradas para a empresa selecionada:\n\n${formattedResponseDividas}\n\n*Escolha uma das opções abaixo para prosseguirmos no seu acordo:*\n\n${formattedResponseOfertas}`;
+          const formattedResponseDividas =
+            utils.formatCredorDividas(credorDividas);
+          const formattedResponseOfertas =
+            utils.formatCredorOfertas(credorOfertas);
+          const terceiraMensagem = `As seguintes dividas foram encontradas para a empresa selecionada:\n\n${formattedResponseDividas}\n\n*Escolha uma das opções abaixo para prosseguirmos no seu acordo:*\n\n${formattedResponseOfertas}`;
 
-        await this._postMessage(origin, terceiraMensagem);
+          await this._postMessage(origin, terceiraMensagem);
 
-        this._setCurrentState(phoneNumber, "OFERTA");
+          this._setCurrentState(phoneNumber, "OFERTA");
+        } else {
+          await this._postMessage(
+            origin,
+            "Resposta inválida. Por favor, escolha uma opção válida."
+          );
+        }
       } else {
         await this._postMessage(
           origin,
           "Resposta inválida. Por favor, escolha uma opção válida."
         );
       }
-    } else {
-      await this._postMessage(
-        origin,
-        "Resposta inválida. Por favor, escolha uma opção válida."
-      );
+    } catch (error) {
+      console.error("Erro ao lidar com o estado do credor:", error);
     }
   }
 
