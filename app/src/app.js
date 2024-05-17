@@ -81,8 +81,9 @@ client.on("authenticated", (session) => {
 });
 
 client.on("message", async (message) => {
-  console.log(message);
-  console.log(`Horário da mensagem RECEBIDA do cliente: ${new Date()}`);
+  console.log(
+    `Mensagem RECEBIDA do cliente ${message.from} no horário ${new Date()}`
+  );
 
   try {
     const { body, from, to } = message;
@@ -93,7 +94,6 @@ client.on("message", async (message) => {
     };
 
     const fromPhoneNumber = utils.formatPhoneNumber(message.from);
-    console.log("fromPhoneNumber -", fromPhoneNumber);
 
     if (!fromPhoneNumber || !response) {
       console.log("Mensagem inválida recebida", message);
@@ -599,11 +599,6 @@ class StateMachine {
           const selectedCreditor = credorInfo[selectedOption - 1];
           this._setDataCredorSelecionado(phoneNumber, selectedCreditor);
 
-          console.log(
-            `Conteúdo da opção ${selectedOption} armazenado:`,
-            selectedCreditor
-          );
-
           const idDevedor = selectedCreditor.iddevedor;
           const dataBase = utils.getCurrentDate();
 
@@ -662,7 +657,6 @@ class StateMachine {
         } = credorInfo[0];
 
         const credorOfertas = await requests.getCredorOfertas(iddevedor);
-        console.log("credorOfertas:", credorOfertas);
 
         if (
           selectedOptionParcelamento >= 1 &&
@@ -676,7 +670,6 @@ class StateMachine {
           const ofertaSelecionada =
             credorOfertas[selectedOptionParcelamento - 1];
           this._setDataOferta(phoneNumber, ofertaSelecionada);
-          console.log("ofertaSelecionada -", ofertaSelecionada);
 
           const { periodicidade, valor_parcela, plano, idcredor, total_geral } =
             ofertaSelecionada;
@@ -709,23 +702,14 @@ class StateMachine {
           };
 
           this._setDataPromessas(phoneNumber, obj);
-          console.log(
-            "userStates -",
-            JSON.stringify(this.userStates, undefined, 2)
-          );
 
           const responseDividasCredores = await requests.getCredorDividas(
             iddevedor,
             ultimaDataFormat
           );
-          console.log("responseDividasCredores:", responseDividasCredores);
 
           const responseDividasCredoresTotais =
             await requests.getCredorDividasTotais(iddevedor, ultimaDataFormat);
-          console.log(
-            "responseDividasCredoresTotais:",
-            responseDividasCredoresTotais
-          );
 
           const {
             juros_percentual,
@@ -749,18 +733,13 @@ class StateMachine {
             parcelasArray,
           });
 
-          console.log("parsedData:", parsedData);
-
           const idacordo = await requests.postDadosAcordo(parsedData);
-          console.log("idacordo -", idacordo);
 
           const parsedData2 = utils.parseDadosPromessa({
             idacordo,
             iddevedor: iddevedor,
             plano,
           });
-
-          console.log("parsedData2:", parsedData2);
 
           let contratos = "";
           const contratosIncluidos = new Set();
@@ -804,8 +783,6 @@ class StateMachine {
       Depósito na conta corrente, sem a devida autorização do cedente, não garante a quitação do débito.
       `;
 
-            // console.log(dataPromessa.mensagem);
-
             const promise = await requests.postDadosPromessa(dataPromessa);
             promises.push(promise);
           }
@@ -838,8 +815,6 @@ class StateMachine {
             idempresa,
           });
 
-          console.log("parsedData3:", parsedData3);
-
           const responseRecibo = await requests.postDadosRecibo(parsedData3);
 
           if (
@@ -850,8 +825,6 @@ class StateMachine {
             setErrorMessage("Erro ao receber responseRecibo.");
             return;
           }
-
-          console.log("responseRecibo:", responseRecibo);
 
           await requests.getAtualizarPromessas(idacordo);
           await requests.getAtualizarValores(idacordo);
@@ -871,20 +844,13 @@ class StateMachine {
             tarifa_boleto
           );
 
-          console.log("responseBoleto:", responseBoleto);
-
           this._setDataBoleto(phoneNumber, responseBoleto);
 
           const responseIdBoleto = await requests.getIdBoleto(idacordo);
-          console.log("responseIdBoleto -", responseIdBoleto);
 
           const { idboleto } = responseIdBoleto[0];
           const { banco } = responseIdBoleto[0];
           const { convenio } = responseIdBoleto[0];
-
-          console.log(
-            `IdBoleto de número ${idboleto} no banco ${banco} encontrado!`
-          );
 
           const updateValoresBoleto = await requests.postAtualizarValores({
             idboleto,
@@ -903,30 +869,21 @@ class StateMachine {
             return;
           }
 
-          console.log("updateValoresBoleto:", updateValoresBoleto);
-
           const parsedData4 = utils.parseDadosImagemBoleto({
             idacordo,
             idboleto,
             banco,
           });
 
-          console.log("parsedData4:", parsedData4);
-
           const responseBoletoContent = await requests.getImagemBoleto(
             parsedData4
           );
 
-          console.log("responseBoletoContent:", responseBoletoContent);
-
           const parsedData5 = utils.parseDadosImagemQrCode({ idboleto });
-
-          console.log("parsedData5:", parsedData5);
 
           const responseQrcodeContent = await requests.getImagemQrCode(
             parsedData5
           );
-          console.log("responseQrcodeContent:", responseQrcodeContent);
 
           await utils.saveQRCodeImageToLocal(
             responseQrcodeContent.url,
@@ -934,11 +891,6 @@ class StateMachine {
           );
 
           const media = MessageMedia.fromFilePath(
-            `src/qrcodes/${idboleto}.png`
-          );
-
-          console.log(
-            "Caminho do arquivo do QR Code:",
             `src/qrcodes/${idboleto}.png`
           );
 
@@ -1055,9 +1007,6 @@ class StateMachine {
           }
         }
 
-        console.log("acordosFirmados -", acordosFirmados);
-        console.log("responseBoletoPixArray -", responseBoletoPixArray);
-
         if (acordosFirmados.length > 0 && responseBoletoPixArray.length === 0) {
           await this._postMessage(origin, "Boleto vencido ou não disponível.");
           await this._handleInitialState(origin, phoneNumber, response);
@@ -1091,7 +1040,6 @@ class StateMachine {
       const { cpfcnpj: document } = await this._getCredorFromDB(phoneNumber);
 
       const acordosFirmados = await requests.getAcordosFirmados(document);
-      console.log("acordosFirmados -", acordosFirmados);
 
       if (!acordosFirmados || acordosFirmados.length === 0) {
         const message = `Você não possui acordos nem Códigos PIX a listar.`;
