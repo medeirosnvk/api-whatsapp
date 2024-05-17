@@ -28,6 +28,7 @@ const defaultDbConfig = {
   database: process.env.DB1_MY_SQL_DATABASE,
   connectionLimit: parseInt(process.env.MY_SQL_CONNECTION_LIMIT),
   charset: process.env.MY_SQL_CHARSET,
+  connectTimeout: 60000,
 };
 
 const executeQuery = async (sql, customDbConfig = defaultDbConfig) => {

@@ -17,6 +17,7 @@ const customDbConfig = {
   database: process.env.DB2_MY_SQL_DATABASE,
   connectionLimit: parseInt(process.env.MY_SQL_CONNECTION_LIMIT),
   charset: process.env.MY_SQL_CHARSET,
+  connectTimeout: 60000,
 };
 
 const SESSION_FILE_PATH = "./session.json";
