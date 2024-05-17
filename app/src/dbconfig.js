@@ -13,7 +13,10 @@ const createBrowserInstance = async () => {
 };
 
 const createConnection = async (dbConfig) => {
-  const connection = await mysql.createConnection(dbConfig);
+  const connection = await mysql.createConnection({
+    ...dbConfig,
+    connectTimeout: 60000,
+  });
   return connection;
 };
 
