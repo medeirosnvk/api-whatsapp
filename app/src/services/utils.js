@@ -247,8 +247,6 @@ function parseDadosAcordo(props) {
     responseDividasCredores,
   } = props;
 
-  console.log("ultimaDataVencimento -", ultimaDataVencimento);
-
   const currentDate = new Date().toISOString().slice(0, 10);
 
   const insertMessageAcordo = () => {

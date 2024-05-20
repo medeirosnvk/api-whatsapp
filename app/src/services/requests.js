@@ -101,7 +101,6 @@ async function getAtualizarPromessas(idacordo) {
     const { data } = await axiosApiInstance.get(
       `/atualizar-valores-promessas?idacordo=${idacordo}`
     );
-    console.log("getAtualizarPromessas -", idacordo, data);
     return data;
   } catch (error) {
     console.error("Erro ao buscar dados no servidor: ", error);
@@ -114,7 +113,6 @@ async function getAtualizarValores(idacordo) {
     const { data } = await axiosApiInstance.get(
       `/atualizar-valores?idacordo=${idacordo}`
     );
-    console.log("getAtualizarValores -", idacordo, data);
     return data;
   } catch (error) {
     console.error("Erro ao buscar dados no servidor: ", error);

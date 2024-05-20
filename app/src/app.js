@@ -910,7 +910,9 @@ class StateMachine {
             await this._postMessage(origin, mensagemRecibo);
             await requests.getFecharAtendimentoHumano(this.ticketId);
 
-            console.log(`ACORDO FECHADO para ${phoneNumber} em ${new Date()}`);
+            console.log(
+              `ACORDO FECHADO! IdAcordo ${idacordo} para ${phoneNumber} em ${new Date()}`
+            );
           } catch (error) {
             console.error(
               "Erro ao enviar as mensagens: mensagemAcordo, media e mensagemRecibo",
@@ -1120,32 +1122,32 @@ class StateMachine {
 
       console.log(`[${phoneNumber} - ${currentState}]`);
 
-      const MAX_RETRY_COUNT = 2;
-      let retryCount = 0;
+      // const MAX_RETRY_COUNT = 2;
+      // let retryCount = 0;
 
-      // Verifica se o redirecionamento já foi enviado
-      const redirectSent = redirectSentMap.get(phoneNumber);
+      // // Verifica se o redirecionamento já foi enviado
+      // const redirectSent = redirectSentMap.get(phoneNumber);
 
-      if (!redirectSent) {
-        // Se o redirecionamento ainda não foi enviado, configura o timeout
-        if (this.timer[phoneNumber]) {
-          clearTimeout(this.timer[phoneNumber]);
-        }
+      // if (!redirectSent) {
+      //   // Se o redirecionamento ainda não foi enviado, configura o timeout
+      //   if (this.timer[phoneNumber]) {
+      //     clearTimeout(this.timer[phoneNumber]);
+      //   }
 
-        this.timer[phoneNumber] = setTimeout(async () => {
-          retryCount++;
+      //   this.timer[phoneNumber] = setTimeout(async () => {
+      //     retryCount++;
 
-          if (retryCount <= MAX_RETRY_COUNT) {
-            console.log(
-              `Timeout para ${phoneNumber}. Reiniciando atendimento. Tentativa ${retryCount}/${MAX_RETRY_COUNT}`
-            );
-            await this._handleInitialState(response.from, phoneNumber);
-          } else {
-            console.log(`Limite de tentativas excedido para ${phoneNumber}.`);
-            // Você pode adicionar um tratamento aqui caso o limite de tentativas seja excedido
-          }
-        }, 300000); // 300 segundos = 5 min
-      }
+      //     if (retryCount <= MAX_RETRY_COUNT) {
+      //       console.log(
+      //         `Timeout para ${phoneNumber}. Reiniciando atendimento. Tentativa ${retryCount}/${MAX_RETRY_COUNT}`
+      //       );
+      //       await this._handleInitialState(response.from, phoneNumber);
+      //     } else {
+      //       console.log(`Limite de tentativas excedido para ${phoneNumber}.`);
+      //       // Você pode adicionar um tratamento aqui caso o limite de tentativas seja excedido
+      //     }
+      //   }, 300000); // 300 segundos = 5 min
+      // }
 
       switch (currentState) {
         case "INICIO":
