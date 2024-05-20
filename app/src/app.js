@@ -82,7 +82,7 @@ client.on("authenticated", (session) => {
 
 client.on("message", async (message) => {
   console.log(
-    `Mensagem RECEBIDA do cliente ${message.from} no horário ${new Date()}`
+    `Mensagem RECEBIDA do numero ${message.from} no horário ${new Date()}`
   );
 
   try {
@@ -910,9 +910,7 @@ class StateMachine {
             await this._postMessage(origin, mensagemRecibo);
             await requests.getFecharAtendimentoHumano(this.ticketId);
 
-            console.log(
-              "mensagemAcordo, media e mensagemRecibo enviadas com sucesso! Atendimento finalizado."
-            );
+            console.log(`ACORDO FECHADO para ${phoneNumber} em ${new Date()}`);
           } catch (error) {
             console.error(
               "Erro ao enviar as mensagens: mensagemAcordo, media e mensagemRecibo",
