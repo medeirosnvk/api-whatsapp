@@ -82,7 +82,9 @@ client.on("authenticated", (session) => {
 
 client.on("message", async (message) => {
   console.log(
-    `Mensagem RECEBIDA do numero ${message.from} no horário ${new Date()}`
+    `Mensagem ${message} RECEBIDA do numero ${
+      message.from
+    } no horário ${new Date()}`
   );
 
   try {
