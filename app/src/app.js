@@ -921,11 +921,12 @@ class StateMachine {
           await this._postMessage(origin, mensagemAcordo);
           await this._postMessage(origin, media);
           await this._postMessage(origin, mensagemRecibo);
-          await requests.getFecharAtendimentoHumano(this.ticketId);
 
           console.log(
             `ACORDO FECHADO! IdAcordo ${idacordo} para ${phoneNumber} em ${new Date()}`
           );
+
+          await requests.getFecharAtendimentoHumano(this.ticketId);
         } catch (error) {
           console.error(
             "Erro ao enviar as mensagens: mensagemAcordo, media e mensagemRecibo",
