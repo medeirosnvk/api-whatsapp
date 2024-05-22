@@ -2,6 +2,16 @@ const requests = require("./requests");
 
 const fs = require("fs");
 const fetch = require("node-fetch");
+const { format, utcToZonedTime } = require("date-fns-tz");
+const { ptBR } = require("date-fns/locale");
+
+function formatDateConsole(date) {
+  const timeZone = "America/Sao_Paulo";
+  const zonedDate = utcToZonedTime(date, timeZone);
+  return format(zonedDate, "eeee, dd 'de' MMMM 'de' yyyy 'às' HH:mm:ss", {
+    locale: ptBR,
+  });
+}
 
 function formatPhoneNumber(phoneNumber) {
   if (!phoneNumber) {
@@ -723,4 +733,5 @@ module.exports = {
   getCurrentDateTime,
   formatPhoneNumber,
   checkIfFileExists,
+  formatDateConsole,
 };
