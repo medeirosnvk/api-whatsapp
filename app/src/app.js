@@ -911,7 +911,9 @@ class StateMachine {
             await this._postMessage(origin, mensagemRecibo);
 
             const date = new Date();
-            const formattedDate = date.toLocaleDateString("pt-BR");
+            const formattedDateTime = date.toLocaleString("pt-BR", {
+              hour12: false,
+            });
 
             console.log(
               `ACORDO FECHADO! IdDevedor - ${iddevedor} IdAcordo - ${idacordo} para o nº ${phoneNumber} em ${formattedDate}`

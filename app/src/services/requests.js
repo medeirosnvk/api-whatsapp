@@ -220,7 +220,6 @@ async function postBoletoFinal(
     console.error("Está faltando alguma coisa: ", { responseBoleto });
     return;
   }
-  console.log(`Boleto inserido com sucesso -`, responseBoleto);
 
   const data = {
     idcredor,
