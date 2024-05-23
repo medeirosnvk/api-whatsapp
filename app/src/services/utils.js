@@ -2,15 +2,12 @@ const requests = require("./requests");
 
 const fs = require("fs");
 const fetch = require("node-fetch");
-const { format, utcToZonedTime } = require("date-fns-tz");
-const { ptBR } = require("date-fns/locale");
 
-function formatDateConsole(date) {
-  const timeZone = "America/Sao_Paulo";
-  const zonedDate = utcToZonedTime(date, timeZone);
-  return format(zonedDate, "eeee, dd 'de' MMMM 'de' yyyy 'às' HH:mm:ss", {
-    locale: ptBR,
-  });
+function getBrazilTimeFormatted(date) {
+  const offset = -3; // Horário padrão do Brasil (sem considerar horário de verão)
+  const utc = date.getTime() + date.getTimezoneOffset() * 60000; // Converte para UTC
+  const brazilDate = new Date(utc + 3600000 * offset); // Ajusta para o fuso horário de São Paulo
+  return brazilDate.toLocaleString("pt-BR", { hour12: false });
 }
 
 function formatPhoneNumber(phoneNumber) {
@@ -733,5 +730,5 @@ module.exports = {
   getCurrentDateTime,
   formatPhoneNumber,
   checkIfFileExists,
-  formatDateConsole,
+  getBrazilTimeFormatted,
 };
