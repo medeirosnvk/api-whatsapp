@@ -916,7 +916,7 @@ class StateMachine {
             });
 
             console.log(
-              `ACORDO FECHADO! IdDevedor - ${iddevedor} IdAcordo - ${idacordo} para o nº ${phoneNumber} em ${formattedDate}`
+              `ACORDO FECHADO! IdDevedor - ${iddevedor} IdAcordo - ${idacordo} para o nº ${phoneNumber} em ${formattedDateTime}`
             );
 
             await requests.getFecharAtendimentoHumano(this.ticketId);
