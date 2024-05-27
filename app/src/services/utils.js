@@ -179,7 +179,8 @@ function getCurrentDate() {
 
 function getCurrentTime() {
   const now = new Date();
-  return now.toTimeString().slice(0, 8);
+  const options = { timeZone: "America/Sao_Paulo", hour12: false };
+  return new Intl.DateTimeFormat("pt-BR", options).format(now).slice(11, 19);
 }
 
 function formatDateIsoToBr(data) {
