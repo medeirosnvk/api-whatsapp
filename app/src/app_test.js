@@ -1058,6 +1058,9 @@ const createSession = (sessionName) => {
         }
       });
     }
+
+    const stateMachine = new StateMachine(client, sessionName);
+    stateMachines[sessionName] = stateMachine;
   });
 
   client.on("message", async (message) => {
