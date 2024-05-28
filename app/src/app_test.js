@@ -1061,13 +1061,20 @@ const createSession = (sessionName) => {
   });
 
   client.on("message", async (message) => {
-    console.log(
-      `Sessão ${sessionName} recebeu a mensagem: ${message.body} de ${
-        message.from
-      } no horário ${new Date()}`
-    );
+    if (!stateMachines[sessionName]) {
+      console.error(`StateMachine não encontrada para a sessão ${sessionName}`);
+      return;
+    }
+
+    const stateMachine = stateMachines[sessionName];
 
     try {
+      console.log(
+        `Sessão ${sessionName} recebeu a mensagem: ${message.body} de ${
+          message.from
+        } no horário ${new Date()}`
+      );
+
       const { body, from, to } = message;
 
       const response = {
@@ -1111,7 +1118,6 @@ const createSession = (sessionName) => {
 
       if (bot_idstatus === 2) {
         console.log("Usuário em atendimento humano -", bot_idstatus);
-        // Verifica se já foi enviado o redirecionamento
         const redirectSent = redirectSentMap.get(fromPhoneNumber);
         if (!redirectSent) {
           await client.sendMessage(
@@ -1127,27 +1133,22 @@ const createSession = (sessionName) => {
         console.log("Usuário em atendimento automático -", bot_idstatus);
       }
 
-      // let ticketId = stateMachine.ticketNumber;
       let ticketId;
 
-      // Primeiro verifica se existe ticket para este numero
       const ticketStatus = await requests.getTicketStatusByPhoneNumber(
         fromPhoneNumber
       );
 
-      // Se tiver ticket, então assume o valor do banco
       if (ticketStatus && ticketStatus.length > 0) {
-        ticketId = ticketStatus[0].id; // Define ticketId com o valor do banco
+        ticketId = ticketStatus[0].id;
         await requests.getAbrirAtendimentoBot(ticketId);
 
         console.log(
           `Iniciando atendimento Bot para ${fromPhoneNumber} no Ticket - ${ticketId}`
         );
       } else {
-        // Se não tiver ticket, faz um insert do cliente no banco
         await requests.getInserirNumeroCliente(fromPhoneNumber);
 
-        // E captura o novo numero do ticket
         const insertNovoTicket = await requests.getInserirNovoTicket(
           fromPhoneNumber
         );
@@ -1188,7 +1189,7 @@ const createSession = (sessionName) => {
   client.initialize();
   sessions[sessionName] = client;
 
-  const stateMachine = new StateMachine(client, sessionName);
+  const stateMachine = new StateMachine(client, sessionName); // Inicializar a StateMachine após a inicialização do cliente
   stateMachines[sessionName] = stateMachine;
 
   return client;
