@@ -213,6 +213,8 @@ const createSession = (sessionName) => {
     }
   });
 
+  const stateMachine = new StateMachine(client);
+
   client.initialize();
   sessions[sessionName] = client;
 
@@ -243,7 +245,7 @@ const getSession = (sessionName) => {
 };
 
 class StateMachine {
-  constructor() {
+  constructor(client) {
     this.userStates = {};
     this.globalData = {};
     this.connectedUsers = {};
@@ -1164,33 +1166,6 @@ class StateMachine {
 
       console.log(`[${phoneNumber} - ${currentState}]`);
 
-      // const MAX_RETRY_COUNT = 2;
-      // let retryCount = 0;
-
-      // // Verifica se o redirecionamento já foi enviado
-      // const redirectSent = redirectSentMap.get(phoneNumber);
-
-      // if (!redirectSent) {
-      //   // Se o redirecionamento ainda não foi enviado, configura o timeout
-      //   if (this.timer[phoneNumber]) {
-      //     clearTimeout(this.timer[phoneNumber]);
-      //   }
-
-      //   this.timer[phoneNumber] = setTimeout(async () => {
-      //     retryCount++;
-
-      //     if (retryCount <= MAX_RETRY_COUNT) {
-      //       console.log(
-      //         `Timeout para ${phoneNumber}. Reiniciando atendimento. Tentativa ${retryCount}/${MAX_RETRY_COUNT}`
-      //       );
-      //       await this._handleInitialState(response.from, phoneNumber);
-      //     } else {
-      //       console.log(`Limite de tentativas excedido para ${phoneNumber}.`);
-      //       // Você pode adicionar um tratamento aqui caso o limite de tentativas seja excedido
-      //     }
-      //   }, 300000); // 300 segundos = 5 min
-      // }
-
       switch (currentState) {
         case "INICIO":
           await this._handleInitialState(origin, phoneNumber, response);
@@ -1235,8 +1210,6 @@ class StateMachine {
     }
   }
 }
-
-const stateMachine = new StateMachine();
 
 createSession("client1");
 createSession("client2");
