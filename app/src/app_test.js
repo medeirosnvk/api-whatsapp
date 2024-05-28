@@ -30,230 +30,19 @@ if (fs.existsSync(SESSION_FILE_PATH)) {
 }
 
 const sessions = {};
-
-const createSession = (sessionName) => {
-  if (sessions[sessionName]) {
-    console.log(`A sessão ${sessionName} já existe.`);
-    return sessions[sessionName];
-  }
-
-  const client = new Client({
-    authStrategy: new LocalAuth({ clientId: sessionName }),
-    puppeteer: {
-      headless: true,
-      args: [
-        "--no-default-browser-check",
-        "--disable-session-crashed-bubble",
-        "--disable-dev-shm-usage",
-        "--no-sandbox",
-        "--disable-setuid-sandbox",
-        "--disable-accelerated-2d-canvas",
-        "--no-first-run",
-      ],
-      takeoverOnConflict: true,
-    },
-    webVersionCache: {
-      type: "remote",
-      remotePath: `https://raw.githubusercontent.com/wppconnect-team/wa-version/main/html/${wwebVersion}.html`,
-    },
-  });
-
-  client.on("qr", (qr) => {
-    console.log(`QR Code para a sessão ${sessionName}:`);
-    qrcode.generate(qr, { small: true });
-  });
-
-  client.on("ready", () => {
-    console.log(`Sessão ${sessionName} está pronta!`);
-  });
-
-  client.on("auth_failure", () => {
-    console.error(
-      `Falha de autenticação na sessão ${sessionName}. Por favor, verifique suas credenciais.`
-    );
-  });
-
-  client.on("disconnected", () => {
-    console.log(`Sessão ${sessionName} foi desconectada.`);
-  });
-
-  client.on("authenticated", (session) => {
-    console.log(`Conexão bem-sucedida na sessão ${sessionName}!`);
-    sessionData = session;
-    if (sessionData) {
-      fs.writeFile(SESSION_FILE_PATH, JSON.stringify(session), (err) => {
-        if (err) {
-          console.error(`Erro ao salvar a sessão ${sessionName}:`, err);
-        }
-      });
-    }
-  });
-
-  client.on("message", async (message) => {
-    console.log(
-      `Sessão ${sessionName} recebeu a mensagem: ${message.body} de ${
-        message.from
-      } no horário ${new Date()}`
-    );
-
-    try {
-      const { body, from, to } = message;
-
-      const response = {
-        from: message.from,
-        body: message.body,
-      };
-
-      const fromPhoneNumber = utils.formatPhoneNumber(message.from);
-
-      if (!fromPhoneNumber || !response) {
-        console.log("Mensagem inválida recebida", message);
-        return;
-      }
-
-      const credorExistsFromDB = stateMachine._getCredorFromDB(fromPhoneNumber);
-
-      if (!credorExistsFromDB) {
-        console.log(
-          "Credor sem cadastro no banco de dados. Atendimento chatbot não iniciado para -",
-          fromPhoneNumber
-        );
-        return;
-      }
-
-      const statusAtendimento = await requests.getStatusAtendimento(
-        fromPhoneNumber
-      );
-
-      let bot_idstatus;
-
-      if (statusAtendimento[0] && statusAtendimento[0].bot_idstatus) {
-        bot_idstatus = statusAtendimento[0].bot_idstatus;
-      }
-
-      if (!bot_idstatus) {
-        console.log(
-          "Status de atendimento não encontrado para o usuário -",
-          fromPhoneNumber
-        );
-      }
-
-      if (bot_idstatus === 2) {
-        console.log("Usuário em atendimento humano -", bot_idstatus);
-        // Verifica se já foi enviado o redirecionamento
-        const redirectSent = redirectSentMap.get(fromPhoneNumber);
-        if (!redirectSent) {
-          await client.sendMessage(
-            from,
-            "Estamos redirecionando seu atendimento para um atendente humano, por favor aguarde..."
-          );
-          redirectSentMap.set(fromPhoneNumber, true);
-        }
-        return;
-      }
-
-      if (bot_idstatus === 1 || bot_idstatus === 3 || bot_idstatus === "") {
-        console.log("Usuário em atendimento automático -", bot_idstatus);
-      }
-
-      // let ticketId = stateMachine.ticketNumber;
-      let ticketId;
-
-      // Primeiro verifica se existe ticket para este numero
-      const ticketStatus = await requests.getTicketStatusByPhoneNumber(
-        fromPhoneNumber
-      );
-
-      // Se tiver ticket, então assume o valor do banco
-      if (ticketStatus && ticketStatus.length > 0) {
-        ticketId = ticketStatus[0].id; // Define ticketId com o valor do banco
-        await requests.getAbrirAtendimentoBot(ticketId);
-
-        console.log(
-          `Iniciando atendimento Bot para ${fromPhoneNumber} no Ticket - ${ticketId}`
-        );
-      } else {
-        // Se não tiver ticket, faz um insert do cliente no banco
-        await requests.getInserirNumeroCliente(fromPhoneNumber);
-
-        // E captura o novo numero to ticket
-        const insertNovoTicket = await requests.getInserirNovoTicket(
-          fromPhoneNumber
-        );
-
-        if (insertNovoTicket && insertNovoTicket.insertId) {
-          ticketId = insertNovoTicket.insertId;
-          await requests.getAbrirAtendimentoBot(ticketId);
-
-          console.log(
-            `Iniciando atendimento Bot para ${fromPhoneNumber} no Ticket - ${ticketId} (NOVO)`
-          );
-        } else {
-          console.log(`Erro ao criar novo número de Ticket no banco.`);
-          return;
-        }
-      }
-
-      const demim = 0;
-
-      stateMachine._setTicketId(ticketId);
-      stateMachine._setFromNumber(from);
-      stateMachine._setToNumber(to);
-
-      await stateMachine._getRegisterMessagesDB(
-        from,
-        to,
-        body,
-        ticketId,
-        demim
-      );
-      await stateMachine.handleMessage(fromPhoneNumber, response);
-    } catch (error) {
-      console.error("Erro ao lidar com a mensagem:", error);
-    }
-  });
-
-  const stateMachine = new StateMachine(client);
-
-  client.initialize();
-  sessions[sessionName] = client;
-
-  return client;
-};
-
-const deleteSession = async (sessionName) => {
-  const client = sessions[sessionName];
-  if (client) {
-    // Verifica se o navegador Puppeteer foi iniciado antes de tentar fechá-lo
-    if (client.pupBrowser) {
-      await client.pupBrowser.close();
-    }
-    await client.destroy();
-    delete sessions[sessionName];
-  }
-};
-
-const getSession = (sessionName) => {
-  if (!sessionName) {
-    console.log("Conexões estabelecidas:");
-    Object.keys(sessions).forEach((session) => {
-      console.log(`- ${session}`);
-    });
-  } else {
-    return sessions[sessionName];
-  }
-};
+const stateMachines = {}; // Armazenar instâncias da StateMachine
 
 class StateMachine {
-  constructor(client) {
+  constructor(client, sessionName) {
     this.userStates = {};
     this.globalData = {};
     this.connectedUsers = {};
     this.timer = {};
-    this.client = client;
+    this.client = client; // Atribuir o cliente específico
     this.ticketId = null;
     this.fromNumber = null;
     this.toNumber = null;
+    this.sessionName = sessionName; // Armazenar o nome da sessão
   }
 
   _setConnectedUsers(phoneNumber, ticketId) {
@@ -1164,7 +953,9 @@ class StateMachine {
         currentState = "INICIO";
       }
 
-      console.log(`[${phoneNumber} - ${currentState}]`);
+      console.log(
+        `[Sessão: ${this.sessionName} - Número: ${phoneNumber} - Estado: ${currentState}]`
+      );
 
       switch (currentState) {
         case "INICIO":
@@ -1210,6 +1001,221 @@ class StateMachine {
     }
   }
 }
+
+const createSession = (sessionName) => {
+  if (sessions[sessionName]) {
+    console.log(`A sessão ${sessionName} já existe.`);
+    return sessions[sessionName];
+  }
+
+  const client = new Client({
+    authStrategy: new LocalAuth({ clientId: sessionName }),
+    puppeteer: {
+      headless: true,
+      args: [
+        "--no-default-browser-check",
+        "--disable-session-crashed-bubble",
+        "--disable-dev-shm-usage",
+        "--no-sandbox",
+        "--disable-setuid-sandbox",
+        "--disable-accelerated-2d-canvas",
+        "--no-first-run",
+      ],
+      takeoverOnConflict: true,
+    },
+    webVersionCache: {
+      type: "remote",
+      remotePath: `https://raw.githubusercontent.com/wppconnect-team/wa-version/main/html/${wwebVersion}.html`,
+    },
+  });
+
+  client.on("qr", (qr) => {
+    console.log(`QR Code para a sessão ${sessionName}:`);
+    qrcode.generate(qr, { small: true });
+  });
+
+  client.on("ready", () => {
+    console.log(`Sessão ${sessionName} está pronta!`);
+  });
+
+  client.on("auth_failure", () => {
+    console.error(
+      `Falha de autenticação na sessão ${sessionName}. Por favor, verifique suas credenciais.`
+    );
+  });
+
+  client.on("disconnected", () => {
+    console.log(`Sessão ${sessionName} foi desconectada.`);
+  });
+
+  client.on("authenticated", (session) => {
+    console.log(`Conexão bem-sucedida na sessão ${sessionName}!`);
+    sessionData = session;
+    if (sessionData) {
+      fs.writeFile(SESSION_FILE_PATH, JSON.stringify(session), (err) => {
+        if (err) {
+          console.error(`Erro ao salvar a sessão ${sessionName}:`, err);
+        }
+      });
+    }
+  });
+
+  client.on("message", async (message) => {
+    console.log(
+      `Sessão ${sessionName} recebeu a mensagem: ${message.body} de ${
+        message.from
+      } no horário ${new Date()}`
+    );
+
+    try {
+      const { body, from, to } = message;
+
+      const response = {
+        from: message.from,
+        body: message.body,
+      };
+
+      const fromPhoneNumber = utils.formatPhoneNumber(message.from);
+
+      if (!fromPhoneNumber || !response) {
+        console.log("Mensagem inválida recebida", message);
+        return;
+      }
+
+      const credorExistsFromDB = stateMachine._getCredorFromDB(fromPhoneNumber);
+
+      if (!credorExistsFromDB) {
+        console.log(
+          "Credor sem cadastro no banco de dados. Atendimento chatbot não iniciado para -",
+          fromPhoneNumber
+        );
+        return;
+      }
+
+      const statusAtendimento = await requests.getStatusAtendimento(
+        fromPhoneNumber
+      );
+
+      let bot_idstatus;
+
+      if (statusAtendimento[0] && statusAtendimento[0].bot_idstatus) {
+        bot_idstatus = statusAtendimento[0].bot_idstatus;
+      }
+
+      if (!bot_idstatus) {
+        console.log(
+          "Status de atendimento não encontrado para o usuário -",
+          fromPhoneNumber
+        );
+      }
+
+      if (bot_idstatus === 2) {
+        console.log("Usuário em atendimento humano -", bot_idstatus);
+        // Verifica se já foi enviado o redirecionamento
+        const redirectSent = redirectSentMap.get(fromPhoneNumber);
+        if (!redirectSent) {
+          await client.sendMessage(
+            from,
+            "Estamos redirecionando seu atendimento para um atendente humano, por favor aguarde..."
+          );
+          redirectSentMap.set(fromPhoneNumber, true);
+        }
+        return;
+      }
+
+      if (bot_idstatus === 1 || bot_idstatus === 3 || bot_idstatus === "") {
+        console.log("Usuário em atendimento automático -", bot_idstatus);
+      }
+
+      // let ticketId = stateMachine.ticketNumber;
+      let ticketId;
+
+      // Primeiro verifica se existe ticket para este numero
+      const ticketStatus = await requests.getTicketStatusByPhoneNumber(
+        fromPhoneNumber
+      );
+
+      // Se tiver ticket, então assume o valor do banco
+      if (ticketStatus && ticketStatus.length > 0) {
+        ticketId = ticketStatus[0].id; // Define ticketId com o valor do banco
+        await requests.getAbrirAtendimentoBot(ticketId);
+
+        console.log(
+          `Iniciando atendimento Bot para ${fromPhoneNumber} no Ticket - ${ticketId}`
+        );
+      } else {
+        // Se não tiver ticket, faz um insert do cliente no banco
+        await requests.getInserirNumeroCliente(fromPhoneNumber);
+
+        // E captura o novo numero do ticket
+        const insertNovoTicket = await requests.getInserirNovoTicket(
+          fromPhoneNumber
+        );
+
+        if (insertNovoTicket && insertNovoTicket.insertId) {
+          ticketId = insertNovoTicket.insertId;
+          await requests.getAbrirAtendimentoBot(ticketId);
+
+          console.log(
+            `Iniciando atendimento Bot para ${fromPhoneNumber} no Ticket - ${ticketId} (NOVO)`
+          );
+        } else {
+          console.log(`Erro ao criar novo número de Ticket no banco.`);
+          return;
+        }
+      }
+
+      const demim = 0;
+
+      const stateMachine = stateMachines[sessionName]; // Obter a StateMachine específica para a sessão
+      stateMachine._setTicketId(ticketId);
+      stateMachine._setFromNumber(from);
+      stateMachine._setToNumber(to);
+
+      await stateMachine._getRegisterMessagesDB(
+        from,
+        to,
+        body,
+        ticketId,
+        demim
+      );
+      await stateMachine.handleMessage(fromPhoneNumber, response);
+    } catch (error) {
+      console.error("Erro ao lidar com a mensagem:", error);
+    }
+  });
+
+  client.initialize();
+  sessions[sessionName] = client;
+
+  const stateMachine = new StateMachine(client, sessionName);
+  stateMachines[sessionName] = stateMachine;
+
+  return client;
+};
+
+const deleteSession = async (sessionName) => {
+  const client = sessions[sessionName];
+  if (client) {
+    // Verifica se o navegador Puppeteer foi iniciado antes de tentar fechá-lo
+    if (client.pupBrowser) {
+      await client.pupBrowser.close();
+    }
+    await client.destroy();
+    delete sessions[sessionName];
+  }
+};
+
+const getSession = (sessionName) => {
+  if (!sessionName) {
+    console.log("Conexões estabelecidas:");
+    Object.keys(sessions).forEach((session) => {
+      console.log(`- ${session}`);
+    });
+  } else {
+    return sessions[sessionName];
+  }
+};
 
 createSession("client1");
 createSession("client2");
