@@ -148,7 +148,7 @@ class StateMachine {
     const demim = 1;
 
     if (typeof body === "string") {
-      await stateMachine._getRegisterMessagesDB(
+      await this._getRegisterMessagesDB(
         this.toNumber,
         this.fromNumber,
         body,
@@ -946,7 +946,7 @@ class StateMachine {
 
   async handleMessage(phoneNumber, response) {
     try {
-      let { credor, currentState } = this._getState(phoneNumber); // Alterado para "let"
+      let { credor, currentState } = this._getState(phoneNumber);
       const origin = response.from;
 
       if (!currentState) {
@@ -962,31 +962,25 @@ class StateMachine {
           await this._handleInitialState(origin, phoneNumber, response);
           this._setCurrentState(phoneNumber, "MENU");
           break;
-
         case "MENU":
           await this._handleMenuState(origin, phoneNumber, response);
           break;
-
         case "CREDOR":
           await this._handleCredorState(origin, phoneNumber, response);
           this._setCurrentState(phoneNumber, "OFERTA");
           break;
-
         case "OFERTA":
           await this._handleOfertaState(origin, phoneNumber, response);
           this._setCurrentState(phoneNumber, "INICIO");
           break;
-
         case "VER_ACORDOS":
           await this._handleAcordoState(origin, phoneNumber, response);
           this._setCurrentState(phoneNumber, "INICIO");
           break;
-
         case "VER_LINHA_DIGITAVEL":
           await this._handleBoletoState(origin, phoneNumber, response);
           this._setCurrentState(phoneNumber, "INICIO");
           break;
-
         case "VER_CODIGO_PIX":
           await this._handlePixState(origin, phoneNumber, response);
           this._setCurrentState(phoneNumber, "INICIO");
