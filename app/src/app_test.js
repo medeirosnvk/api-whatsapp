@@ -1051,6 +1051,7 @@ const createSession = (sessionName) => {
   client.on("authenticated", (session) => {
     console.log(`Conexão bem-sucedida na sessão ${sessionName}!`);
     sessionData = session;
+
     if (sessionData) {
       fs.writeFile(SESSION_FILE_PATH, JSON.stringify(session), (err) => {
         if (err) {
@@ -1064,14 +1065,16 @@ const createSession = (sessionName) => {
   });
 
   client.on("message", async (message) => {
-    if (!stateMachines[sessionName]) {
-      console.error(`StateMachine não encontrada para a sessão ${sessionName}`);
-      return;
-    }
-
-    const stateMachine = stateMachines[sessionName];
-
     try {
+      const stateMachine = stateMachines[sessionName]; // Obter a StateMachine específica para a sessão
+
+      if (!stateMachine) {
+        console.error(
+          `StateMachine não encontrada para a sessão ${sessionName}`
+        );
+        return;
+      }
+
       console.log(
         `Sessão ${sessionName} recebeu a mensagem: ${message.body} de ${
           message.from
@@ -1171,7 +1174,6 @@ const createSession = (sessionName) => {
 
       const demim = 0;
 
-      const stateMachine = stateMachines[sessionName]; // Obter a StateMachine específica para a sessão
       stateMachine._setTicketId(ticketId);
       stateMachine._setFromNumber(from);
       stateMachine._setToNumber(to);
