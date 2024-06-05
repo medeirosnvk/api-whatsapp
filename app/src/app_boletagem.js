@@ -254,7 +254,9 @@ app.post("/sendMessage", async (req, res) => {
     const messageMedia = new MessageMedia(mimeType, mediaData, fileName);
 
     // Enviar a mensagem
-    await client.sendMessage(number, messageMedia, { caption: caption });
+    await client.sendMessage(`${number}@c.us`, messageMedia, {
+      caption: caption,
+    });
     res.json({ status: "Message sent successfully" });
   } catch (error) {
     res.status(500).send(`Error sending message: ${error.message}`);
