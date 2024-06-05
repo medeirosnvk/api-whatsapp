@@ -3,7 +3,7 @@ const fs = require("fs");
 const path = require("path");
 const qrcode = require("qrcode-terminal");
 const qrImage = require("qr-image");
-const { Client, LocalAuth } = require("whatsapp-web.js");
+const { Client, LocalAuth, MessageMedia } = require("whatsapp-web.js");
 const express = require("express");
 
 const app = express();
@@ -206,7 +206,9 @@ app.get("/sessions", (req, res) => {
   res.json({ sessions: sessionNames });
 });
 
-app.get("/qrcode/:sessionName", (req, res) => {
+app.get("/qrcode", (req, res) => {
+  const { instanceName } = req.query;
+
   const qrCodeFilePath = path.join(
     __dirname,
     "qrcodes",
@@ -216,9 +218,45 @@ app.get("/qrcode/:sessionName", (req, res) => {
   if (fs.existsSync(qrCodeFilePath)) {
     const image = fs.readFileSync(qrCodeFilePath, { encoding: "base64" });
     const base64Image = `data:image/png;base64,${image}`;
-    res.json({ base64: base64Image });
+    res.json({
+      instance: instanceName,
+      base64: base64Image,
+    });
   } else {
     res.status(404).send("QR code not found");
+  }
+});
+
+app.post("/sendMessage", async (req, res) => {
+  const { instanceName, number, mediaMessage } = req.body;
+
+  if (!instanceName || !number || !mediaMessage) {
+    return res
+      .status(400)
+      .send("instanceName, number, and mediaMessage are required");
+  }
+
+  const client = sessions[instanceName];
+  if (!client) {
+    return res.status(400).send(`Session ${instanceName} does not exist`);
+  }
+
+  try {
+    const { mediatype, fileName, caption, media } = mediaMessage;
+
+    // Obter o arquivo de mídia
+    const response = await axios.get(media, { responseType: "arraybuffer" });
+    const mimeType = response.headers["content-type"];
+    const mediaData = Buffer.from(response.data, "binary").toString("base64");
+
+    // Criar uma mensagem de mídia
+    const messageMedia = new MessageMedia(mimeType, mediaData, fileName);
+
+    // Enviar a mensagem
+    await client.sendMessage(number, messageMedia, { caption: caption });
+    res.json({ status: "Message sent successfully" });
+  } catch (error) {
+    res.status(500).send(`Error sending message: ${error.message}`);
   }
 });
 
