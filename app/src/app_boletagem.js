@@ -5,6 +5,7 @@ const qrcode = require("qrcode-terminal");
 const qrImage = require("qr-image");
 const { Client, LocalAuth, MessageMedia } = require("whatsapp-web.js");
 const express = require("express");
+const axios = require("axios");
 
 const app = express();
 const port = 3060;
