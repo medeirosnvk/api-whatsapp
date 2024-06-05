@@ -149,33 +149,40 @@ const getSession = (sessionName) => {
 };
 
 app.post("/session", (req, res) => {
-  const { sessionName } = req.body;
+  const { instanceName } = req.body;
 
-  const qrCodeFilePath = path.join(QR_CODES_DIR, `qrcode_${sessionName}.png`);
+  const qrCodeFilePath = path.join(QR_CODES_DIR, `qrcode_${instanceName}.png`);
 
-  if (!sessionName) {
-    return res.status(400).send("sessionName is required");
+  if (!instanceName) {
+    return res.status(400).json({ error: "instanceName is required" });
   }
 
-  if (sessions[sessionName]) {
-    console.log(`Session ${sessionName} already exists`);
-    return res.status(400).send(`Session ${sessionName} already exists`);
+  if (sessions[instanceName]) {
+    console.log(`Session ${instanceName} already exists`);
+    return res
+      .status(400)
+      .json({ error: `Session ${instanceName} already exists` });
   }
 
   if (fs.existsSync(qrCodeFilePath)) {
-    console.log(`QR Code image for session ${sessionName} already exists`);
-    return res
-      .status(400)
-      .send(`QR Code image for session ${sessionName} already exists`);
+    console.log(`QR Code image for session ${instanceName} already exists`);
+    return res.status(400).json({
+      error: `QR Code image for session ${instanceName} already exists`,
+    });
   }
 
   console.log("Creating a new session...");
 
   try {
-    createSession(sessionName);
-    res.send(`Session ${sessionName} created successfully`);
+    createSession(instanceName);
+    res.status(201).json({
+      instance: {
+        instanceName,
+        status: "created",
+      },
+    });
   } catch (error) {
-    res.status(500).send(`Error creating session: ${error.message}`);
+    res.status(500).json({ error: `Error creating session: ${error.message}` });
   }
 });
 
@@ -207,7 +214,9 @@ app.get("/qrcode/:sessionName", (req, res) => {
   );
 
   if (fs.existsSync(qrCodeFilePath)) {
-    res.sendFile(qrCodeFilePath);
+    const image = fs.readFileSync(qrCodeFilePath, { encoding: "base64" });
+    const base64Image = `data:image/png;base64,${image}`;
+    res.json({ base64: base64Image });
   } else {
     res.status(404).send("QR code not found");
   }
