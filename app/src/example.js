@@ -7,7 +7,20 @@ const client = new Client({
   authStrategy: new LocalAuth(),
   puppeteer: {
     headless: true,
-    args: ["--no-sandbox"],
+    args: [
+      "--no-default-browser-check",
+      "--disable-session-crashed-bubble",
+      "--disable-dev-shm-usage",
+      "--no-sandbox",
+      "--disable-setuid-sandbox",
+      "--disable-accelerated-2d-canvas",
+      "--no-first-run",
+    ],
+    takeoverOnConflict: true,
+  },
+  webVersionCache: {
+    type: "remote",
+    remotePath: `https://raw.githubusercontent.com/wppconnect-team/wa-version/main/html/${wwebVersion}.html`,
   },
 });
 
@@ -21,6 +34,7 @@ client.on("ready", () => {
 
 client.on("message", (msg) => {
   console.log(`Mensagem ${msg.body} recebida de ${msg.from}`);
+  console.log(msg);
 
   if (msg.body == "!ping") {
     msg.reply("pong");
