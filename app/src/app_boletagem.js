@@ -213,7 +213,7 @@ app.get("/qrcode", (req, res) => {
   const qrCodeFilePath = path.join(
     __dirname,
     "qrcodes",
-    `qrcode_${req.params.sessionName}.png`
+    `qrcode_${instanceName}.png` // Use instanceName ao invés de req.params.sessionName
   );
 
   if (fs.existsSync(qrCodeFilePath)) {
@@ -245,6 +245,18 @@ app.post("/sendMessage", async (req, res) => {
   try {
     const { mediatype, fileName, caption, media } = mediaMessage;
 
+    // Processar o número de telefone
+    let processedNumber = number;
+
+    // Remover o nono dígito se o número for brasileiro e contiver 9 dígitos no número local
+    const brazilCountryCode = "55";
+    if (
+      processedNumber.startsWith(brazilCountryCode) &&
+      processedNumber.length === 13
+    ) {
+      processedNumber = processedNumber.slice(0, -1); // Remove o último dígito
+    }
+
     // Obter o arquivo de mídia
     const response = await axios.get(media, { responseType: "arraybuffer" });
     const mimeType = response.headers["content-type"];
@@ -254,7 +266,7 @@ app.post("/sendMessage", async (req, res) => {
     const messageMedia = new MessageMedia(mimeType, mediaData, fileName);
 
     // Enviar a mensagem
-    await client.sendMessage(`${number}@c.us`, messageMedia, {
+    await client.sendMessage(`${processedNumber}@c.us`, messageMedia, {
       caption: caption,
     });
     res.json({ status: "Message sent successfully" });
