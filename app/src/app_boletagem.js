@@ -216,7 +216,7 @@ app.get("/qrcode/base64/:sessionName", (req, res) => {
       base64: base64Image,
     });
   } else {
-    res.status(404).send("QR code not found");
+    res.status(404).json({ error: "QR code not found" });
   }
 });
 
@@ -236,7 +236,7 @@ app.get("/qrcode/image/:sessionName", (req, res) => {
     // Lê o arquivo de imagem e transmite como resposta
     fs.createReadStream(qrCodeFilePath).pipe(res);
   } else {
-    res.status(404).send("QR code not found");
+    res.status(404).json({ error: "QR code not found" });
   }
 });
 
