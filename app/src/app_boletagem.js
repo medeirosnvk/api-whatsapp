@@ -190,20 +190,18 @@ app.get("/sessions", (req, res) => {
   res.json({ sessions: sessionNames });
 });
 
-app.get("/qrcode", (req, res) => {
-  const { instanceName } = req.query;
-
+app.get("/qrcode/:sessionName", (req, res) => {
   const qrCodeFilePath = path.join(
     __dirname,
     "qrcodes",
-    `qrcode_${instanceName}.png`
+    `qrcode_${req.params.sessionName}.png`
   );
 
   if (fs.existsSync(qrCodeFilePath)) {
     const image = fs.readFileSync(qrCodeFilePath, { encoding: "base64" });
     const base64Image = `data:image/png;base64,${image}`;
     res.json({
-      instance: instanceName,
+      instance: req.params.sessionName,
       base64: base64Image,
     });
   } else {
