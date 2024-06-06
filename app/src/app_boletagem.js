@@ -1221,6 +1221,15 @@ const deleteSession = async (sessionName) => {
       fs.unlinkSync(qrCodeFilePath);
       console.log(`QR Code image deleted: ${qrCodeFilePath}`);
     }
+
+    const sessionDir = path.join(
+      __dirname,
+      "../.wwebjs_auth/session-" + sessionName
+    );
+    if (fs.existsSync(sessionDir)) {
+      fs.rmdirSync(sessionDir, { recursive: true });
+      console.log(`Session directory deleted: ${sessionDir}`);
+    }
   }
 };
 
