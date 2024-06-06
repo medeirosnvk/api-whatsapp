@@ -37,6 +37,24 @@ const saveQRCodeImage = (qr, sessionName) => {
   });
 };
 
+const deleteQRCodeImage = (sessionName) => {
+  const qrCodeFilePath = path.join(
+    __dirname,
+    "qrcodes",
+    `qrcode_${sessionName}.png`
+  );
+  if (fs.existsSync(qrCodeFilePath)) {
+    try {
+      fs.unlinkSync(qrCodeFilePath);
+      console.log(`QR Code image deleted: ${qrCodeFilePath}`);
+    } catch (error) {
+      console.error(`Error deleting QR Code image:`, error);
+    }
+  } else {
+    console.log(`QR Code image not found at: ${qrCodeFilePath}`);
+  }
+};
+
 const createSession = (sessionName) => {
   if (sessions[sessionName]) {
     console.log(`A sessão ${sessionName} já existe.`);
@@ -103,32 +121,17 @@ const createSession = (sessionName) => {
   return client;
 };
 
-const deleteSession = async (sessionName) => {
+const disconnectSession = async (sessionName) => {
   const client = sessions[sessionName];
 
   if (client) {
-    if (client.pupBrowser) {
-      await client.pupBrowser.close();
+    try {
+      await client.logout();
+      console.log(`Session ${sessionName} disconnected`);
+    } catch (error) {
+      console.error(`Error disconnecting session ${sessionName}:`, error);
+      throw error;
     }
-    await client.destroy();
-    delete sessions[sessionName];
-
-    const qrCodeFilePath = path.join(QR_CODES_DIR, `qrcode_${sessionName}.png`);
-    if (fs.existsSync(qrCodeFilePath)) {
-      fs.unlinkSync(qrCodeFilePath);
-      console.log(`QR Code image deleted: ${qrCodeFilePath}`);
-    }
-  }
-};
-
-const getSession = (sessionName) => {
-  if (!sessionName) {
-    console.log("Conexões estabelecidas:");
-    Object.keys(sessions).forEach((session) => {
-      console.log(`- ${session}`);
-    });
-  } else {
-    return sessions[sessionName];
   }
 };
 
@@ -170,18 +173,19 @@ app.post("/session", (req, res) => {
   }
 });
 
-app.delete("/session", async (req, res) => {
-  const { sessionName } = req.body;
+app.delete("/logout/:sessionName", async (req, res) => {
+  const { sessionName } = req.params;
 
   if (!sessionName) {
     return res.status(400).send("sessionName is required");
   }
 
   try {
-    await deleteSession(sessionName);
-    res.send(`Session ${sessionName} deleted successfully`);
+    await disconnectSession(sessionName);
+    deleteQRCodeImage(sessionName); // Chama a função para excluir a imagem
+    res.send(`Session ${sessionName} disconnected successfully`);
   } catch (error) {
-    res.status(500).send(`Error deleting session: ${error.message}`);
+    res.status(500).send(`Error disconnecting session: ${error.message}`);
   }
 });
 
@@ -190,20 +194,42 @@ app.get("/sessions", (req, res) => {
   res.json({ sessions: sessionNames });
 });
 
-app.get("/qrcode/:sessionName", (req, res) => {
+app.get("/qrcode/base64/:sessionName", (req, res) => {
+  const { sessionName } = req.params;
+
   const qrCodeFilePath = path.join(
     __dirname,
     "qrcodes",
-    `qrcode_${req.params.sessionName}.png`
+    `qrcode_${sessionName}.png`
   );
 
   if (fs.existsSync(qrCodeFilePath)) {
     const image = fs.readFileSync(qrCodeFilePath, { encoding: "base64" });
     const base64Image = `data:image/png;base64,${image}`;
     res.json({
-      instance: req.params.sessionName,
+      instance: sessionName,
       base64: base64Image,
     });
+  } else {
+    res.status(404).send("QR code not found");
+  }
+});
+
+app.get("/qrcode/image/:sessionName", (req, res) => {
+  const { sessionName } = req.params;
+
+  const qrCodeFilePath = path.join(
+    __dirname,
+    "qrcodes",
+    `qrcode_${sessionName}.png`
+  );
+
+  if (fs.existsSync(qrCodeFilePath)) {
+    // Define o tipo de conteúdo da resposta como imagem/png
+    res.type("png");
+
+    // Lê o arquivo de imagem e transmite como resposta
+    fs.createReadStream(qrCodeFilePath).pipe(res);
   } else {
     res.status(404).send("QR code not found");
   }
