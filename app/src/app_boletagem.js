@@ -15,29 +15,20 @@ app.use(express.urlencoded({ extended: true }));
 app.use(express.static("qrcodes"));
 
 const wwebVersion = "2.2412.54";
-const SESSION_FILE_PATH = "./sessionTest.json";
-const QR_CODES_DIR = path.join(__dirname, "qrcodes"); // Diretório para salvar os QR codes
-
-let sessionData;
+const QR_CODES_DIR = path.join(__dirname, "qrcodes");
 
 // Verificar se o diretório 'qrcodes' existe, se não, criar
 if (!fs.existsSync(QR_CODES_DIR)) {
   fs.mkdirSync(QR_CODES_DIR);
 }
 
-if (fs.existsSync(SESSION_FILE_PATH)) {
-  sessionData = require(SESSION_FILE_PATH);
-}
-
-const sessions = {};
+let sessions = {};
 
 const saveQRCodeImage = (qr, sessionName) => {
-  // Generate QR code image
   const qrCodeImage = qrImage.image(qr, { type: "png" });
-  const qrCodeFileName = `qrcode_${sessionName}.png`; // Nome do arquivo
-  const qrCodeFilePath = path.join(QR_CODES_DIR, qrCodeFileName); // Caminho completo para o arquivo
+  const qrCodeFileName = `qrcode_${sessionName}.png`;
+  const qrCodeFilePath = path.join(QR_CODES_DIR, qrCodeFileName);
 
-  // Save the QR code image
   const qrCodeWriteStream = fs.createWriteStream(qrCodeFilePath);
   qrCodeImage.pipe(qrCodeWriteStream);
 
@@ -93,17 +84,9 @@ const createSession = (sessionName) => {
     console.log(`Sessão ${sessionName} foi desconectada.`);
   });
 
-  client.on("authenticated", (session) => {
+  client.on("authenticated", () => {
     console.log(`Conexão bem-sucedida na sessão ${sessionName}!`);
-    sessionData = session;
-
-    if (sessionData) {
-      fs.writeFile(SESSION_FILE_PATH, JSON.stringify(session), (err) => {
-        if (err) {
-          console.error(`Erro ao salvar a sessão ${sessionName}:`, err);
-        }
-      });
-    }
+    sessions[sessionName] = client;
   });
 
   client.on("message", (msg) => {
@@ -213,7 +196,7 @@ app.get("/qrcode", (req, res) => {
   const qrCodeFilePath = path.join(
     __dirname,
     "qrcodes",
-    `qrcode_${instanceName}.png` // Use instanceName ao invés de req.params.sessionName
+    `qrcode_${instanceName}.png`
   );
 
   if (fs.existsSync(qrCodeFilePath)) {
@@ -254,7 +237,7 @@ app.post("/sendMessage", async (req, res) => {
       processedNumber.startsWith(brazilCountryCode) &&
       processedNumber.length === 13
     ) {
-      processedNumber = processedNumber.slice(0, -1); // Remove o último dígito
+      processedNumber = processedNumber.slice(0, -1);
     }
 
     // Obter o arquivo de mídia
@@ -262,10 +245,8 @@ app.post("/sendMessage", async (req, res) => {
     const mimeType = response.headers["content-type"];
     const mediaData = Buffer.from(response.data, "binary").toString("base64");
 
-    // Criar uma mensagem de mídia
     const messageMedia = new MessageMedia(mimeType, mediaData, fileName);
 
-    // Enviar a mensagem
     await client.sendMessage(`${processedNumber}@c.us`, messageMedia, {
       caption: caption,
     });
@@ -274,6 +255,24 @@ app.post("/sendMessage", async (req, res) => {
     res.status(500).send(`Error sending message: ${error.message}`);
   }
 });
+
+const restoreSessions = () => {
+  const authDir = path.join(__dirname, "../.wwebjs_auth"); // Ajuste no caminho para a pasta raiz
+  console.log("Diretório de autenticação:", authDir); // Adicionado para depuração
+  if (fs.existsSync(authDir)) {
+    const sessionFolders = fs.readdirSync(authDir);
+    console.log("Pastas de sessão encontradas:", sessionFolders); // Adicionado para depuração
+    sessionFolders.forEach((sessionFolder) => {
+      const sessionName = sessionFolder.replace("session-", "");
+      console.log(`Restaurando sessão de ${sessionName}...`);
+      createSession(sessionName);
+    });
+  } else {
+    console.log("O diretório de autenticação não existe."); // Adicionado para depuração
+  }
+};
+
+restoreSessions();
 
 app.listen(port, () => {
   console.log(`WhatsApp session server is running on port ${port}`);
