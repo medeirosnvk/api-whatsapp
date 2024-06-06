@@ -1219,11 +1219,7 @@ const deleteSession = async (sessionName) => {
     delete sessions[sessionName];
 
     // Excluir o arquivo de QR Code
-    const qrCodeFilePath = path.join(
-      __dirname,
-      "src/qrcodes",
-      `qrcode_${sessionName}.png`
-    );
+    const qrCodeFilePath = path.join(QR_CODES_DIR, `qrcode_${sessionName}.png`);
     if (fs.existsSync(qrCodeFilePath)) {
       fs.unlinkSync(qrCodeFilePath);
       console.log(`QR Code image deleted: ${qrCodeFilePath}`);
@@ -1236,7 +1232,7 @@ const deleteSession = async (sessionName) => {
       `session-${sessionName}`
     );
     if (fs.existsSync(sessionDir)) {
-      fs.rmdirSync(sessionDir, { recursive: true });
+      fs.rmSync(sessionDir, { recursive: true, force: true });
       console.log(`Session directory deleted: ${sessionDir}`);
     }
   }
