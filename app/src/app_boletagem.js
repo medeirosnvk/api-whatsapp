@@ -272,7 +272,7 @@ const restoreSessions = () => {
   }
 };
 
-restoreSessions();
+// restoreSessions();
 
 app.listen(port, () => {
   console.log(`WhatsApp session server is running on port ${port}`);
