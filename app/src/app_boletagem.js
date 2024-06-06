@@ -1242,6 +1242,37 @@ const deleteSession = async (sessionName) => {
   }
 };
 
+const restoreSessions = () => {
+  const authDir = path.join(__dirname, ".wwebjs_auth");
+  console.log("Diretório de autenticação:", authDir); // Adicionado para depuração
+  if (fs.existsSync(authDir)) {
+    const sessionFolders = fs.readdirSync(authDir);
+    console.log("Pastas de sessão encontradas:", sessionFolders); // Adicionado para depuração
+    sessionFolders.forEach((sessionFolder) => {
+      const sessionName = sessionFolder.replace("session-", "");
+      console.log(`Restaurando sessão: ${sessionName}`);
+      createSession(sessionName);
+    });
+  } else {
+    console.log("O diretório de autenticação não existe."); // Adicionado para depuração
+  }
+};
+
+const getAuthenticatedSessions = () => {
+  const authDir = path.join(__dirname, ".wwebjs_auth");
+  const authenticatedSessions = [];
+
+  if (fs.existsSync(authDir)) {
+    const sessionFolders = fs.readdirSync(authDir);
+    sessionFolders.forEach((sessionFolder) => {
+      const sessionName = sessionFolder.replace("session-", "");
+      authenticatedSessions.push(sessionName);
+    });
+  }
+
+  return authenticatedSessions;
+};
+
 app.post("/session", (req, res) => {
   const { instanceName } = req.body;
 
@@ -1296,8 +1327,8 @@ app.delete("/session", async (req, res) => {
 });
 
 app.get("/sessions", (req, res) => {
-  const sessionNames = Object.keys(sessions);
-  res.json({ sessions: sessionNames });
+  const authenticatedSessions = getAuthenticatedSessions();
+  res.json({ sessions: authenticatedSessions });
 });
 
 app.get("/qrcode/:sessionName", (req, res) => {
@@ -1363,22 +1394,6 @@ app.post("/sendMessage", async (req, res) => {
     res.status(500).send(`Error sending message: ${error.message}`);
   }
 });
-
-const restoreSessions = () => {
-  const authDir = path.join(__dirname, ".wwebjs_auth");
-  console.log("Diretório de autenticação:", authDir); // Adicionado para depuração
-  if (fs.existsSync(authDir)) {
-    const sessionFolders = fs.readdirSync(authDir);
-    console.log("Pastas de sessão encontradas:", sessionFolders); // Adicionado para depuração
-    sessionFolders.forEach((sessionFolder) => {
-      const sessionName = sessionFolder.replace("session-", "");
-      console.log(`Restaurando sessão: ${sessionName}`);
-      createSession(sessionName);
-    });
-  } else {
-    console.log("O diretório de autenticação não existe."); // Adicionado para depuração
-  }
-};
 
 // restoreSessions();
 
