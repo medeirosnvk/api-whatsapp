@@ -1006,10 +1006,12 @@ class StateMachine {
 }
 
 const saveQRCodeImage = (qr, sessionName) => {
+  // Generate QR code image
   const qrCodeImage = qrImage.image(qr, { type: "png" });
-  const qrCodeFileName = `qrcode_${sessionName}.png`;
-  const qrCodeFilePath = path.join(QR_CODES_DIR, qrCodeFileName);
+  const qrCodeFileName = `qrcode_${sessionName}.png`; // Nome do arquivo
+  const qrCodeFilePath = path.join(__dirname, "src/qrcodes", qrCodeFileName); // Caminho completo para o arquivo
 
+  // Save the QR code image
   const qrCodeWriteStream = fs.createWriteStream(qrCodeFilePath);
   qrCodeImage.pipe(qrCodeWriteStream);
 
@@ -1216,15 +1218,22 @@ const deleteSession = async (sessionName) => {
     await client.destroy();
     delete sessions[sessionName];
 
-    const qrCodeFilePath = path.join(QR_CODES_DIR, `qrcode_${sessionName}.png`);
+    // Excluir o arquivo de QR Code
+    const qrCodeFilePath = path.join(
+      __dirname,
+      "src/qrcodes",
+      `qrcode_${sessionName}.png`
+    );
     if (fs.existsSync(qrCodeFilePath)) {
       fs.unlinkSync(qrCodeFilePath);
       console.log(`QR Code image deleted: ${qrCodeFilePath}`);
     }
 
+    // Excluir a pasta de sessão em .wwebjs_auth
     const sessionDir = path.join(
       __dirname,
-      "../.wwebjs_auth/session-" + sessionName
+      ".wwebjs_auth",
+      `session-${sessionName}`
     );
     if (fs.existsSync(sessionDir)) {
       fs.rmdirSync(sessionDir, { recursive: true });
@@ -1356,14 +1365,14 @@ app.post("/sendMessage", async (req, res) => {
 });
 
 const restoreSessions = () => {
-  const authDir = path.join(__dirname, "../.wwebjs_auth"); // Ajuste no caminho para a pasta raiz
+  const authDir = path.join(__dirname, ".wwebjs_auth");
   console.log("Diretório de autenticação:", authDir); // Adicionado para depuração
   if (fs.existsSync(authDir)) {
     const sessionFolders = fs.readdirSync(authDir);
     console.log("Pastas de sessão encontradas:", sessionFolders); // Adicionado para depuração
     sessionFolders.forEach((sessionFolder) => {
       const sessionName = sessionFolder.replace("session-", "");
-      console.log(`Restaurando sessão de ${sessionName}...`);
+      console.log(`Restaurando sessão: ${sessionName}`);
       createSession(sessionName);
     });
   } else {
