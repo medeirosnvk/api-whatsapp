@@ -1192,6 +1192,4 @@ class StateMachine {
   }
 }
 
-const stateMachine = new StateMachine();
-
 client.initialize();
