@@ -135,6 +135,50 @@ const disconnectSession = async (sessionName) => {
   }
 };
 
+const disconnectAllSessions = async () => {
+  const sessionsPath = path.join(__dirname, "../.wwebjs_auth");
+
+  try {
+    const files = fs.readdirSync(sessionsPath);
+    const sessionFiles = files.filter((file) => file.endsWith(".json")); // Supondo que os arquivos de sessão terminem com .json
+
+    for (const file of sessionFiles) {
+      const sessionName = path.basename(file, ".json");
+      await disconnectSession(sessionName);
+    }
+  } catch (error) {
+    console.error("Error reading sessions directory:", error);
+    throw error;
+  }
+};
+
+const restoreSession = (sessionName) => {
+  const sessionFolder = `session-${sessionName}`;
+  const sessionPath = path.join(__dirname, "../.wwebjs_auth", sessionFolder);
+  if (fs.existsSync(sessionPath)) {
+    console.log(`Restaurando sessão de ${sessionName}...`);
+    createSession(sessionName);
+  } else {
+    console.log(`Sessão ${sessionName} não encontrada.`);
+  }
+};
+
+const restoreAllSessions = () => {
+  const authDir = path.join(__dirname, "../.wwebjs_auth"); // Ajuste no caminho para a pasta raiz
+  console.log("Diretório de autenticação:", authDir); // Adicionado para depuração
+  if (fs.existsSync(authDir)) {
+    const sessionFolders = fs.readdirSync(authDir);
+    console.log("Pastas de sessão encontradas:", sessionFolders); // Adicionado para depuração
+    sessionFolders.forEach((sessionFolder) => {
+      const sessionName = sessionFolder.replace("session-", "");
+      console.log(`Restaurando sessão de ${sessionName}...`);
+      createSession(sessionName);
+    });
+  } else {
+    console.log("O diretório de autenticação não existe."); // Adicionado para depuração
+  }
+};
+
 app.post("/session", (req, res) => {
   const { instanceName } = req.body;
 
@@ -173,6 +217,40 @@ app.post("/session", (req, res) => {
   }
 });
 
+app.post("/restore/:sessionName", (req, res) => {
+  const { sessionName } = req.params;
+
+  if (!sessionName) {
+    return res.status(400).send("sessionName is required");
+  }
+
+  try {
+    restoreSession(sessionName);
+    res.json({
+      success: true,
+      message: `Session ${sessionName} restored successfully`,
+    });
+  } catch (error) {
+    res
+      .status(500)
+      .json({ error: `Error restoring session: ${error.message}` });
+  }
+});
+
+app.post("/restore/all", (req, res) => {
+  try {
+    restoreAllSessions();
+    res.json({
+      success: true,
+      message: "All sessions restored successfully",
+    });
+  } catch (error) {
+    res
+      .status(500)
+      .json({ error: `Error restoring all sessions: ${error.message}` });
+  }
+});
+
 app.delete("/logout/:sessionName", async (req, res) => {
   const { sessionName } = req.params;
 
@@ -191,6 +269,20 @@ app.delete("/logout/:sessionName", async (req, res) => {
     res
       .status(500)
       .json({ error: `Error disconnecting session: ${error.message}` });
+  }
+});
+
+app.delete("/logout/all", async (req, res) => {
+  try {
+    await disconnectAllSessions();
+    res.json({
+      success: true,
+      message: "All sessions disconnected successfully",
+    });
+  } catch (error) {
+    res
+      .status(500)
+      .json({ error: `Error disconnecting all sessions: ${error.message}` });
   }
 });
 
@@ -287,22 +379,6 @@ app.post("/sendMessage", async (req, res) => {
     res.status(500).send(`Error sending message: ${error.message}`);
   }
 });
-
-const restoreSessions = () => {
-  const authDir = path.join(__dirname, "../.wwebjs_auth"); // Ajuste no caminho para a pasta raiz
-  console.log("Diretório de autenticação:", authDir); // Adicionado para depuração
-  if (fs.existsSync(authDir)) {
-    const sessionFolders = fs.readdirSync(authDir);
-    console.log("Pastas de sessão encontradas:", sessionFolders); // Adicionado para depuração
-    sessionFolders.forEach((sessionFolder) => {
-      const sessionName = sessionFolder.replace("session-", "");
-      console.log(`Restaurando sessão de ${sessionName}...`);
-      createSession(sessionName);
-    });
-  } else {
-    console.log("O diretório de autenticação não existe."); // Adicionado para depuração
-  }
-};
 
 // restoreSessions();
 
