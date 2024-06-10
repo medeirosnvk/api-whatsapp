@@ -323,6 +323,7 @@ app.delete("/qrcodes", (req, res) => {
 app.get("/sessions", (req, res) => {
   const authDir = path.join(__dirname, "../.wwebjs_auth"); // Ajuste no caminho para a pasta raiz
   console.log("Diretório de autenticação:", authDir); // Adicionado para depuração
+
   if (fs.existsSync(authDir)) {
     const sessionFolders = fs.readdirSync(authDir);
     const sessionNames = sessionFolders.map((sessionFolder) =>
@@ -422,8 +423,6 @@ app.post("/sendMessage", async (req, res) => {
     res.status(500).send(`Error sending message: ${error.message}`);
   }
 });
-
-// restoreSessions();
 
 app.listen(port, () => {
   console.log(`WhatsApp session server is running on port ${port}`);
