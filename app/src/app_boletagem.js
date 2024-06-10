@@ -24,57 +24,6 @@ if (!fs.existsSync(QR_CODES_DIR)) {
 
 let sessions = {};
 
-const saveQRCodeImage = (qr, sessionName) => {
-  const qrCodeImage = qrImage.image(qr, { type: "png" });
-  const qrCodeFileName = `qrcode_${sessionName}.png`;
-  const qrCodeFilePath = path.join(QR_CODES_DIR, qrCodeFileName);
-
-  const qrCodeWriteStream = fs.createWriteStream(qrCodeFilePath);
-  qrCodeImage.pipe(qrCodeWriteStream);
-
-  qrCodeWriteStream.on("finish", () => {
-    console.log(`QR Code image saved: ${qrCodeFilePath}`);
-  });
-};
-
-const deleteQRCodeImage = (sessionName) => {
-  const qrCodeFilePath = path.join(
-    __dirname,
-    "qrcodes",
-    `qrcode_${sessionName}.png`
-  );
-  if (fs.existsSync(qrCodeFilePath)) {
-    try {
-      fs.unlinkSync(qrCodeFilePath);
-      console.log(`QR Code image deleted: ${qrCodeFilePath}`);
-    } catch (error) {
-      console.error(`Error deleting QR Code image:`, error);
-    }
-  } else {
-    console.log(`QR Code image not found at: ${qrCodeFilePath}`);
-  }
-};
-
-const deleteAllQRCodeImages = () => {
-  const qrCodesDir = path.join(__dirname, "../src/qrcodes");
-
-  if (fs.existsSync(qrCodesDir)) {
-    const files = fs.readdirSync(qrCodesDir);
-    files.forEach((file) => {
-      const filePath = path.join(qrCodesDir, file);
-      fs.unlink(filePath, (err) => {
-        if (err) {
-          console.error(`Error deleting file ${filePath}:`, err);
-        } else {
-          console.log(`File ${filePath} deleted successfully`);
-        }
-      });
-    });
-  } else {
-    console.log("QR codes directory does not exist.");
-  }
-};
-
 const createSession = (sessionName) => {
   if (sessions[sessionName]) {
     console.log(`A sessão ${sessionName} já existe.`);
@@ -139,6 +88,57 @@ const createSession = (sessionName) => {
   sessions[sessionName] = client;
 
   return client;
+};
+
+const saveQRCodeImage = (qr, sessionName) => {
+  const qrCodeImage = qrImage.image(qr, { type: "png" });
+  const qrCodeFileName = `qrcode_${sessionName}.png`;
+  const qrCodeFilePath = path.join(QR_CODES_DIR, qrCodeFileName);
+
+  const qrCodeWriteStream = fs.createWriteStream(qrCodeFilePath);
+  qrCodeImage.pipe(qrCodeWriteStream);
+
+  qrCodeWriteStream.on("finish", () => {
+    console.log(`QR Code image saved: ${qrCodeFilePath}`);
+  });
+};
+
+const deleteQRCodeImage = (sessionName) => {
+  const qrCodeFilePath = path.join(
+    __dirname,
+    "qrcodes",
+    `qrcode_${sessionName}.png`
+  );
+  if (fs.existsSync(qrCodeFilePath)) {
+    try {
+      fs.unlinkSync(qrCodeFilePath);
+      console.log(`QR Code image deleted: ${qrCodeFilePath}`);
+    } catch (error) {
+      console.error(`Error deleting QR Code image:`, error);
+    }
+  } else {
+    console.log(`QR Code image not found at: ${qrCodeFilePath}`);
+  }
+};
+
+const deleteAllQRCodeImages = () => {
+  const qrCodesDir = path.join(__dirname, "../src/qrcodes");
+
+  if (fs.existsSync(qrCodesDir)) {
+    const files = fs.readdirSync(qrCodesDir);
+    files.forEach((file) => {
+      const filePath = path.join(qrCodesDir, file);
+      fs.unlink(filePath, (err) => {
+        if (err) {
+          console.error(`Error deleting file ${filePath}:`, err);
+        } else {
+          console.log(`File ${filePath} deleted successfully`);
+        }
+      });
+    });
+  } else {
+    console.log("QR codes directory does not exist.");
+  }
 };
 
 const disconnectSession = async (sessionName) => {
