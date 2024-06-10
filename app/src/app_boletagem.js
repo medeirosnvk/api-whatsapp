@@ -287,8 +287,17 @@ app.delete("/logout/all", async (req, res) => {
 });
 
 app.get("/sessions", (req, res) => {
-  const sessionNames = Object.keys(sessions);
-  res.json({ sessions: sessionNames });
+  const authDir = path.join(__dirname, "../.wwebjs_auth"); // Ajuste no caminho para a pasta raiz
+  console.log("Diretório de autenticação:", authDir); // Adicionado para depuração
+  if (fs.existsSync(authDir)) {
+    const sessionFolders = fs.readdirSync(authDir);
+    const sessionNames = sessionFolders.map((sessionFolder) =>
+      sessionFolder.replace("session-", "")
+    );
+    res.json({ sessions: sessionNames });
+  } else {
+    res.json({ sessions: [] });
+  }
 });
 
 app.get("/qrcode/base64/:sessionName", (req, res) => {
