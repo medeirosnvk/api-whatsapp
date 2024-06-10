@@ -1057,12 +1057,12 @@ const createSession = (sessionName) => {
 
   client.on("authenticated", () => {
     console.log(`Conexão bem-sucedida na sessão ${sessionName}!`);
-    sessions[sessionName] = client;
+    sessions[sessionName] = { client, stateMachine };
   });
 
   client.on("message", async (message) => {
     console.log(
-      `Mensagem ${message.body} RECEBIDA do numero ${
+      `Mensagem ${message.body} RECEBIDA do número ${
         message.from
       } no horário ${new Date()}`
     );
@@ -1111,7 +1111,6 @@ const createSession = (sessionName) => {
 
       if (bot_idstatus === 2) {
         console.log("Usuário em atendimento humano -", bot_idstatus);
-        // Verifica se já foi enviado o redirecionamento
         const redirectSent = redirectSentMap.get(fromPhoneNumber);
         if (!redirectSent) {
           await client.sendMessage(
@@ -1127,45 +1126,37 @@ const createSession = (sessionName) => {
         console.log("Usuário em atendimento automático -", bot_idstatus);
       }
 
-      // let ticketId = stateMachine.ticketNumber;
       let ticketId;
 
-      // Primeiro verifica se existe ticket para este numero
       const ticketStatus = await requests.getTicketStatusByPhoneNumber(
         fromPhoneNumber
       );
 
-      // Se tiver ticket, então assume o valor do banco
       if (ticketStatus && ticketStatus.length > 0) {
-        ticketId = ticketStatus[0].id; // Define ticketId com o valor do banco
+        ticketId = ticketStatus[0].id;
         await requests.getAbrirAtendimentoBot(ticketId);
 
         console.log(
           `Iniciando atendimento Bot para ${fromPhoneNumber} no Ticket - ${ticketId}`
         );
       } else {
-        // Se não tiver ticket, faz um insert do cliente no banco
         await requests.getInserirNumeroCliente(fromPhoneNumber);
 
-        // E captura o novo numero to ticket
         const insertNovoTicket = await requests.getInserirNovoTicket(
           fromPhoneNumber
         );
 
-        if (insertNovoTicket && insertNovoTicket.insertId) {
-          ticketId = insertNovoTicket.insertId;
+        if (insertNovoTicket && insertNovoTicket.length > 0) {
+          ticketId = insertNovoTicket[0].id;
           await requests.getAbrirAtendimentoBot(ticketId);
 
           console.log(
-            `Iniciando atendimento Bot para ${fromPhoneNumber} no Ticket - ${ticketId} (NOVO)`
+            `Novo atendimento Bot para ${fromPhoneNumber} no Ticket - ${ticketId}`
           );
         } else {
-          console.log(`Erro ao criar novo número de Ticket no banco.`);
-          return;
+          throw new Error("Nao existe atendimento registrado para o cliente");
         }
       }
-
-      const demim = 0;
 
       stateMachine._setTicketId(ticketId);
       stateMachine._setFromNumber(from);
