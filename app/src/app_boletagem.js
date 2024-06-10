@@ -55,6 +55,26 @@ const deleteQRCodeImage = (sessionName) => {
   }
 };
 
+const deleteAllQRCodeImages = () => {
+  const qrCodesDir = path.join(__dirname, "../src/qrcodes");
+
+  if (fs.existsSync(qrCodesDir)) {
+    const files = fs.readdirSync(qrCodesDir);
+    files.forEach((file) => {
+      const filePath = path.join(qrCodesDir, file);
+      fs.unlink(filePath, (err) => {
+        if (err) {
+          console.error(`Error deleting file ${filePath}:`, err);
+        } else {
+          console.log(`File ${filePath} deleted successfully`);
+        }
+      });
+    });
+  } else {
+    console.log("QR codes directory does not exist.");
+  }
+};
+
 const createSession = (sessionName) => {
   if (sessions[sessionName]) {
     console.log(`A sessão ${sessionName} já existe.`);
@@ -283,6 +303,20 @@ app.delete("/logout/all", async (req, res) => {
     res
       .status(500)
       .json({ error: `Error disconnecting all sessions: ${error.message}` });
+  }
+});
+
+app.delete("/qrcodes", (req, res) => {
+  try {
+    deleteAllQRCodeImages();
+    res.json({
+      success: true,
+      message: "All QR code images deleted successfully",
+    });
+  } catch (error) {
+    res
+      .status(500)
+      .json({ error: `Error deleting QR code images: ${error.message}` });
   }
 });
 
