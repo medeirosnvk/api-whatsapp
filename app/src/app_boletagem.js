@@ -262,6 +262,7 @@ app.post("/sendMessage", async (req, res) => {
 
     // Remover o nono dígito se o número for brasileiro e contiver 9 dígitos no número local
     const brazilCountryCode = "55";
+
     if (
       processedNumber.startsWith(brazilCountryCode) &&
       processedNumber.length === 13
@@ -279,6 +280,8 @@ app.post("/sendMessage", async (req, res) => {
     await client.sendMessage(`${processedNumber}@c.us`, messageMedia, {
       caption: caption,
     });
+
+    console.log("Mensagem enviada com sucesso!");
     res.json({ status: "Message sent successfully" });
   } catch (error) {
     res.status(500).send(`Error sending message: ${error.message}`);
@@ -301,7 +304,7 @@ const restoreSessions = () => {
   }
 };
 
-// restoreSessions();
+restoreSessions();
 
 app.listen(port, () => {
   console.log(`WhatsApp session server is running on port ${port}`);
