@@ -1255,8 +1255,10 @@ const disconnectAllSessions = async () => {
 
   try {
     const files = fs.readdirSync(sessionsPath);
-    const sessionDirs = files.filter((file) =>
-      fs.lstatSync(path.join(sessionsPath, file)).isDirectory()
+    const sessionDirs = files.filter(
+      (file) =>
+        fs.lstatSync(path.join(sessionsPath, file)).isDirectory() &&
+        file.startsWith("session-")
     );
 
     for (const dir of sessionDirs) {
@@ -1273,9 +1275,21 @@ const disconnectAllSessions = async () => {
         console.error(`Error deleting session directory ${dir}:`, error);
       }
     }
+
+    // Clear the sessions object after disconnecting
+    for (const sessionName in sessions) {
+      deleteQRCodeImage(sessionName);
+      delete sessions[sessionName];
+    }
+
+    res.json({
+      success: true,
+      message: "All sessions disconnected and directories deleted successfully",
+    });
   } catch (error) {
-    console.error("Error reading sessions directory:", error);
-    throw error;
+    res
+      .status(500)
+      .json({ error: `Error disconnecting all sessions: ${error.message}` });
   }
 };
 
@@ -1380,28 +1394,26 @@ app.post("/restore/all", (req, res) => {
 
 app.delete("/logout/:sessionName", async (req, res) => {
   const { sessionName } = req.params;
+  const sessionPath = path.join(
+    __dirname,
+    "../.wwebjs_auth",
+    `session-${sessionName}`
+  );
 
   if (!sessionName) {
     return res.status(400).send("sessionName is required");
   }
 
+  if (!fs.existsSync(sessionPath)) {
+    return res.status(400).json({
+      error: `Session ${sessionName} does not exist in .wwebjs_auth directory`,
+    });
+  }
+
   try {
     await disconnectSession(sessionName);
     deleteQRCodeImage(sessionName);
-
-    // Remove the session from the sessions object
-    delete sessions[sessionName];
-
-    // Remove the session directory
-    const sessionDirPath = path.join(
-      __dirname,
-      "../.wwebjs_auth",
-      `session-${sessionName}`
-    );
-    if (fs.existsSync(sessionDirPath)) {
-      fs.removeSync(sessionDirPath);
-    }
-
+    fs.removeSync(sessionPath); // Remove the session directory
     res.json({
       success: true,
       message: `Session ${sessionName} disconnected and directory deleted successfully`,
@@ -1414,41 +1426,10 @@ app.delete("/logout/:sessionName", async (req, res) => {
 });
 
 app.delete("/logout/all", async (req, res) => {
-  const sessionsPath = path.join(__dirname, "../.wwebjs_auth");
-
   try {
-    const files = fs.readdirSync(sessionsPath);
-    const sessionDirs = files.filter((file) =>
-      fs.lstatSync(path.join(sessionsPath, file)).isDirectory()
-    );
-
-    for (const dir of sessionDirs) {
-      const sessionName = dir.replace("session-", "");
-      await disconnectSession(sessionName);
-    }
-
-    // Remove a pasta de sessão após todas as desconexões
-    for (const dir of sessionDirs) {
-      try {
-        fs.removeSync(path.join(sessionsPath, dir));
-        console.log(`Session directory deleted: ${dir}`);
-      } catch (error) {
-        console.error(`Error deleting session directory ${dir}:`, error);
-      }
-    }
-
-    // Clear the sessions object after disconnecting
-    for (const sessionName in sessions) {
-      deleteQRCodeImage(sessionName);
-      delete sessions[sessionName];
-    }
-
-    res.json({
-      success: true,
-      message: "All sessions disconnected and directories deleted successfully",
-    });
+    await disconnectAllSessions();
   } catch (error) {
-    res
+    return res
       .status(500)
       .json({ error: `Error disconnecting all sessions: ${error.message}` });
   }
