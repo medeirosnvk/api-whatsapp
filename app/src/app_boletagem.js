@@ -1226,7 +1226,18 @@ const deleteAllQRCodeImages = () => {
 };
 
 const disconnectSession = async (sessionName) => {
+  const sessionFilePath = path.join(
+    __dirname,
+    "../.wwebjs_auth",
+    `session-${sessionName}.json`
+  );
   const client = sessions[sessionName];
+
+  if (!fs.existsSync(sessionFilePath)) {
+    throw new Error(
+      `Session ${sessionName} does not exist in .wwebjs_auth directory`
+    );
+  }
 
   if (client) {
     try {
@@ -1244,10 +1255,10 @@ const disconnectAllSessions = async () => {
 
   try {
     const files = fs.readdirSync(sessionsPath);
-    const sessionFiles = files.filter((file) => file.endsWith(".json")); // Supondo que os arquivos de sessão terminem com .json
+    const sessionFiles = files.filter((file) => file.startsWith("session-"));
 
     for (const file of sessionFiles) {
-      const sessionName = path.basename(file, ".json");
+      const sessionName = file.replace("session-", "");
       await disconnectSession(sessionName);
     }
   } catch (error) {
@@ -1364,7 +1375,11 @@ app.delete("/logout/:sessionName", async (req, res) => {
 
   try {
     await disconnectSession(sessionName);
-    // deleteQRCodeImage(sessionName); // Chama a função para excluir a imagem
+    deleteQRCodeImage(sessionName);
+
+    // Remove the session from the sessions object
+    delete sessions[sessionName];
+
     res.json({
       success: true,
       message: `Session ${sessionName} disconnected successfully`,
