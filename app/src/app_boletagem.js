@@ -1269,27 +1269,22 @@ const disconnectAllSessions = async () => {
     // Remove a pasta de sessão após todas as desconexões
     for (const dir of sessionDirs) {
       try {
-        fs.removeSync(path.join(sessionsPath, dir));
+        fs.rmSync(path.join(sessionsPath, dir), {
+          recursive: true,
+          force: true,
+        });
         console.log(`Session directory deleted: ${dir}`);
       } catch (error) {
         console.error(`Error deleting session directory ${dir}:`, error);
       }
     }
 
-    // Clear the sessions object after disconnecting
-    for (const sessionName in sessions) {
-      deleteQRCodeImage(sessionName);
-      delete sessions[sessionName];
-    }
-
-    res.json({
-      success: true,
-      message: "All sessions disconnected and directories deleted successfully",
-    });
+    console.log(
+      "All sessions disconnected and directories deleted successfully"
+    );
   } catch (error) {
-    res
-      .status(500)
-      .json({ error: `Error disconnecting all sessions: ${error.message}` });
+    console.error(`Error disconnecting all sessions: ${error.message}`);
+    throw error;
   }
 };
 
@@ -1428,8 +1423,12 @@ app.delete("/logout/:sessionName", async (req, res) => {
 app.delete("/logout/all", async (req, res) => {
   try {
     await disconnectAllSessions();
+    res.json({
+      success: true,
+      message: "All sessions disconnected and directories deleted successfully",
+    });
   } catch (error) {
-    return res
+    res
       .status(500)
       .json({ error: `Error disconnecting all sessions: ${error.message}` });
   }
