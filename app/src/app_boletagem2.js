@@ -1435,6 +1435,7 @@ app.get("/sessions", (req, res) => {
     const sessionNames = sessionFolders.map((sessionFolder) =>
       sessionFolder.replace("session-", "")
     );
+    console.log({ sessions: sessionNames });
     res.json({ sessions: sessionNames });
   } else {
     res.json({ sessions: [] });
