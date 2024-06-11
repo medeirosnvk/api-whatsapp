@@ -1266,22 +1266,7 @@ const disconnectAllSessions = async () => {
       await disconnectSession(sessionName);
     }
 
-    // Remove a pasta de sessão após todas as desconexões
-    for (const dir of sessionDirs) {
-      try {
-        fs.rmSync(path.join(sessionsPath, dir), {
-          recursive: true,
-          force: true,
-        });
-        console.log(`Session directory deleted: ${dir}`);
-      } catch (error) {
-        console.error(`Error deleting session directory ${dir}:`, error);
-      }
-    }
-
-    console.log(
-      "All sessions disconnected and directories deleted successfully"
-    );
+    console.log("All sessions disconnected successfully");
   } catch (error) {
     console.error(`Error disconnecting all sessions: ${error.message}`);
     throw error;
