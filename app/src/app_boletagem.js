@@ -1414,8 +1414,28 @@ app.delete("/logout/:sessionName", async (req, res) => {
 });
 
 app.delete("/logout/all", async (req, res) => {
+  const sessionsPath = path.join(__dirname, "../.wwebjs_auth");
+
   try {
-    await disconnectAllSessions();
+    const files = fs.readdirSync(sessionsPath);
+    const sessionDirs = files.filter((file) =>
+      fs.lstatSync(path.join(sessionsPath, file)).isDirectory()
+    );
+
+    for (const dir of sessionDirs) {
+      const sessionName = dir.replace("session-", "");
+      await disconnectSession(sessionName);
+    }
+
+    // Remove a pasta de sessão após todas as desconexões
+    for (const dir of sessionDirs) {
+      try {
+        fs.removeSync(path.join(sessionsPath, dir));
+        console.log(`Session directory deleted: ${dir}`);
+      } catch (error) {
+        console.error(`Error deleting session directory ${dir}:`, error);
+      }
+    }
 
     // Clear the sessions object after disconnecting
     for (const sessionName in sessions) {
