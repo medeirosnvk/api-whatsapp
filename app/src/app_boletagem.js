@@ -1229,7 +1229,7 @@ const disconnectSession = async (sessionName) => {
   const sessionFilePath = path.join(
     __dirname,
     "../.wwebjs_auth",
-    `session-${sessionName}.json`
+    `session-${sessionName}`
   );
   const client = sessions[sessionName];
 
@@ -1255,11 +1255,23 @@ const disconnectAllSessions = async () => {
 
   try {
     const files = fs.readdirSync(sessionsPath);
-    const sessionFiles = files.filter((file) => file.startsWith("session-"));
+    const sessionDirs = files.filter((file) =>
+      fs.lstatSync(path.join(sessionsPath, file)).isDirectory()
+    );
 
-    for (const file of sessionFiles) {
-      const sessionName = file.replace("session-", "");
+    for (const dir of sessionDirs) {
+      const sessionName = dir.replace("session-", "");
       await disconnectSession(sessionName);
+    }
+
+    // Remove a pasta de sessão após todas as desconexões
+    for (const dir of sessionDirs) {
+      try {
+        fs.removeSync(path.join(sessionsPath, dir));
+        console.log(`Session directory deleted: ${dir}`);
+      } catch (error) {
+        console.error(`Error deleting session directory ${dir}:`, error);
+      }
     }
   } catch (error) {
     console.error("Error reading sessions directory:", error);
@@ -1380,9 +1392,19 @@ app.delete("/logout/:sessionName", async (req, res) => {
     // Remove the session from the sessions object
     delete sessions[sessionName];
 
+    // Remove the session directory
+    const sessionDirPath = path.join(
+      __dirname,
+      "../.wwebjs_auth",
+      `session-${sessionName}`
+    );
+    if (fs.existsSync(sessionDirPath)) {
+      fs.removeSync(sessionDirPath);
+    }
+
     res.json({
       success: true,
-      message: `Session ${sessionName} disconnected successfully`,
+      message: `Session ${sessionName} disconnected and directory deleted successfully`,
     });
   } catch (error) {
     res
@@ -1394,9 +1416,16 @@ app.delete("/logout/:sessionName", async (req, res) => {
 app.delete("/logout/all", async (req, res) => {
   try {
     await disconnectAllSessions();
+
+    // Clear the sessions object after disconnecting
+    for (const sessionName in sessions) {
+      deleteQRCodeImage(sessionName);
+      delete sessions[sessionName];
+    }
+
     res.json({
       success: true,
-      message: "All sessions disconnected successfully",
+      message: "All sessions disconnected and directories deleted successfully",
     });
   } catch (error) {
     res
