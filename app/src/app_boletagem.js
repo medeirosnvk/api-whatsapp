@@ -1364,7 +1364,7 @@ app.delete("/logout/:sessionName", async (req, res) => {
 
   try {
     await disconnectSession(sessionName);
-    deleteQRCodeImage(sessionName); // Chama a função para excluir a imagem
+    // deleteQRCodeImage(sessionName); // Chama a função para excluir a imagem
     res.json({
       success: true,
       message: `Session ${sessionName} disconnected successfully`,
