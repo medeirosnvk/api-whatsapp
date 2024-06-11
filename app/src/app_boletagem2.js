@@ -37,6 +37,7 @@ if (!fs.existsSync(QR_CODES_DIR)) {
   fs.mkdirSync(QR_CODES_DIR);
 }
 
+let redirectSentMap = new Map();
 const sessions = {};
 const stateMachines = {};
 

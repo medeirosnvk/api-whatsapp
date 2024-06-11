@@ -24,6 +24,7 @@ const wwebVersion = "2.2412.54";
 const SESSION_FILE_PATH = "./sessionTest.json";
 
 let sessionData;
+let redirectSentMap = new Map();
 
 if (fs.existsSync(SESSION_FILE_PATH)) {
   sessionData = require(SESSION_FILE_PATH);

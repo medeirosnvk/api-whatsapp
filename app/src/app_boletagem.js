@@ -22,7 +22,9 @@ if (!fs.existsSync(QR_CODES_DIR)) {
   fs.mkdirSync(QR_CODES_DIR);
 }
 
-let sessions = {};
+let redirectSentMap = new Map();
+const sessions = {};
+const stateMachines = {};
 
 const createSession = (sessionName) => {
   if (sessions[sessionName]) {
