@@ -7,6 +7,7 @@
   "keywords": [],
   "scripts": {
     "start": "nodemon src/app.js",
+    "multi": "nodemon src/app_multi.js",
     "test": "nodemon src/example.js",
     "dev": "nodemon src/app_boletagem.js"
   },
