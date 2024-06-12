@@ -2,13 +2,17 @@ module.exports = {
   apps: [
     {
       name: "app-whatsapp",
-      script: "npm", // Substitua pelo nome do seu arquivo de entrada do servidor Node.js
-      args: "start", // Substitua pelo nome do seu arquivo de entrada do servidor Node.js
-      watch: true, // Isso reiniciará o servidor quando houver alterações nos arquivos
+      script: "npm",
+      args: "start",
+      watch: true,
       cwd: "app",
       env: {
-        PORT: 3002, // Porta para o servidor Node.js
+        PORT: 3002,
       },
     },
   ],
+  cron_restart: {
+    cron_time: "0 6 * * *",
+    timezone: "America/Sao_Paulo",
+  },
 };
