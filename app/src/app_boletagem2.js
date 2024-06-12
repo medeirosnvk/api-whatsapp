@@ -1264,7 +1264,11 @@ const disconnectSession = async (sessionName) => {
       console.log(`Session ${sessionName} disconnected`);
 
       // Caminho para a pasta da sessão
-      const sessionPath = path.join(__dirname, "../.wwebjs_auth", sessionName);
+      const sessionPath = path.join(
+        __dirname,
+        "../.wwebjs_auth",
+        `session-${sessionName}`
+      );
 
       // Função para excluir a pasta da sessão
       const deleteFolderRecursive = (folderPath) => {
