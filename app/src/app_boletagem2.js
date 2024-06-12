@@ -1062,6 +1062,14 @@ const createSession = (sessionName) => {
 
   client.on("message", async (message) => {
     try {
+      const webhookUrl =
+        "https://www.cobrance.com.br/codechat/webhook_cobrance.php";
+
+      await axios.post(webhookUrl, {
+        sessionName,
+        message,
+      });
+
       const stateMachine = stateMachines[sessionName]; // Obter a StateMachine específica para a sessão
 
       if (!stateMachine) {
@@ -1531,7 +1539,7 @@ app.post("/sendMessage", async (req, res) => {
     });
 
     console.log("Mensagem enviada com sucesso!");
-    res.json({ status: "Message sent successfully" });
+    res.status(200).json({ status: "PENDING" });
   } catch (error) {
     res.status(500).send(`Error sending message: ${error.message}`);
   }
