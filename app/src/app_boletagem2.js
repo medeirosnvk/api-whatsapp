@@ -1285,7 +1285,9 @@ const disconnectSession = async (sessionName) => {
 
       // Excluir a pasta da sessão
       deleteFolderRecursive(sessionPath);
-      console.log(`Pasta da sessão ${sessionName} excluída com sucesso!`);
+      console.log(
+        `Diretório de autenticação da sessão ${sessionName} excluído com sucesso!`
+      );
     } catch (error) {
       console.error(`Error disconnecting session ${sessionName}:`, error);
       throw error;
@@ -1419,6 +1421,7 @@ app.delete("/logout/:sessionName", async (req, res) => {
   try {
     await disconnectSession(sessionName);
 
+    // Tentar apagar a imagem do QR Code
     deleteQRCodeImage(sessionName);
 
     console.log(`Sessao ${sessionName} desconectada com sucesso!`);
