@@ -1262,6 +1262,30 @@ const disconnectSession = async (sessionName) => {
     try {
       await client.logout();
       console.log(`Session ${sessionName} disconnected`);
+
+      // Caminho para a pasta da sessão
+      const sessionPath = path.join(__dirname, "../.wwebjs_auth", sessionName);
+
+      // Função para excluir a pasta da sessão
+      const deleteFolderRecursive = (folderPath) => {
+        if (fs.existsSync(folderPath)) {
+          fs.readdirSync(folderPath).forEach((file, index) => {
+            const curPath = path.join(folderPath, file);
+            if (fs.lstatSync(curPath).isDirectory()) {
+              // Recursivamente exclui pastas
+              deleteFolderRecursive(curPath);
+            } else {
+              // Exclui arquivos
+              fs.unlinkSync(curPath);
+            }
+          });
+          fs.rmdirSync(folderPath);
+        }
+      };
+
+      // Excluir a pasta da sessão
+      deleteFolderRecursive(sessionPath);
+      console.log(`Pasta da sessão ${sessionName} excluída com sucesso!`);
     } catch (error) {
       console.error(`Error disconnecting session ${sessionName}:`, error);
       throw error;
