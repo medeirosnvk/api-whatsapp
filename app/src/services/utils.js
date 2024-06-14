@@ -82,7 +82,7 @@ function formatCredorInfo(creditorInfo) {
       (info, index) =>
         `*${index + 1}*)\n` +
         `Empresa: ${info.empresa}\n` +
-        `Seu Código Cobrance: ${info.iddevedor}\n` +
+        `Seu Código na Cobrance: ${info.iddevedor}\n` +
         `Saldo Principal: ${formatValue(info.saldo)}`
     )
     .join("\n\n");
@@ -94,7 +94,7 @@ function formatCredorAcordos(creditorAcordos) {
       (info, index) =>
         `*${index + 1}*)\n` +
         `Empresa: ${info.credor}\n` +
-        `Seu Código Cobrance: ${info.iddevedor}\n` +
+        `Seu Código na Cobrance: ${info.iddevedor}\n` +
         `IdAcordo: ${info.idacordo}\n` +
         `Data Acordo: ${formatDateIsoToBr(info.dataacordo)}\n` +
         `Parcelamento: ${info.plano}x`
@@ -133,7 +133,7 @@ function formatCodigoBoleto(creditorBoleto) {
     .map(
       (info, index) =>
         `CPF/CNPJ: ${info.cpfcnpj}\n` +
-        `Seu Código Cobrance: ${info.iddevedor}\n` +
+        `Seu Código na Cobrance: ${info.iddevedor}\n` +
         `ID Acordo: ${info.idacordo}\n` +
         `Valor: ${formatValue(info.VALDOC)}\n` +
         `Parcela: ${info.parcela}\n` +
@@ -160,7 +160,7 @@ function formatCodigoPix(creditorBoleto) {
     .map(
       (info, index) =>
         `CPF/CNPJ: ${info.cpfcnpj}\n` +
-        `Seu Código Cobrance: ${info.iddevedor}\n` +
+        `Seu Código na Cobrance: ${info.iddevedor}\n` +
         `ID Acordo: ${info.idacordo}\n` +
         `Valor: ${formatValue(info.VALDOC)}\n` +
         `Parcela: ${info.parcela}\n` +
