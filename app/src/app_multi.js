@@ -1219,6 +1219,6 @@ const getSession = (sessionName) => {
 };
 
 createSession("client1");
-createSession("client2");
+// createSession("client2");
 
 getSession();
