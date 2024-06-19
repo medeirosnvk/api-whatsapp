@@ -1399,9 +1399,6 @@ app.delete("/logout/:sessionName", async (req, res) => {
   try {
     await disconnectSession(sessionName);
 
-    // Tentar apagar a imagem do QR Code
-    deleteQRCodeImage(sessionName);
-
     console.log(`Sessao ${sessionName} desconectada com sucesso!`);
     res.json({
       success: true,
