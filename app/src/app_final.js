@@ -1204,6 +1204,21 @@ const createSession = (sessionName) => {
   return client;
 };
 
+const getConnectionStatus = (sessionName) => {
+  const client = sessions[sessionName];
+  if (!client) {
+    return "not_found";
+  }
+
+  if (client.isConnecting) {
+    return "connecting";
+  } else if (client.isConnected) {
+    return "open";
+  } else {
+    return "disconnected";
+  }
+};
+
 const saveQRCodeImage = (qr, sessionName) => {
   const qrCodeImage = qrImage.image(qr, { type: "png" });
   const qrCodeFileName = `qrcode_${sessionName}.png`;
@@ -1482,6 +1497,12 @@ app.get("/sessions", (req, res) => {
   } else {
     res.json({ sessions: [] });
   }
+});
+
+app.get("/instance/connectionState/:instanceName", (req, res) => {
+  const { instanceName } = req.params;
+  const status = getConnectionStatus(instanceName);
+  res.json({ instanceName, status });
 });
 
 app.get("/qrcode/base64/:sessionName", (req, res) => {
