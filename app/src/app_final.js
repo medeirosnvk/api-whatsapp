@@ -1346,7 +1346,7 @@ const restoreAllSessions = () => {
   }
 };
 
-app.post("/session", (req, res) => {
+app.post("/instance/create", (req, res) => {
   const { instanceName } = req.body;
 
   const qrCodeFilePath = path.join(QR_CODES_DIR, `qrcode_${instanceName}.png`);
