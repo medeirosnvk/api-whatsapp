@@ -1311,11 +1311,11 @@ const disconnectAllSessions = async () => {
     );
 
     for (const dir of sessionDirs) {
-      const sessionName = dir.replace("session-", "");
+      const sessionName = dir.substring("session-".length); // Remove o prefixo "session-"
       await disconnectSession(sessionName);
     }
   } catch (error) {
-    console.error("Error reading sessions directory:", error);
+    console.error("Erro ao ler o diretório de sessões:", error);
     throw error;
   }
 };
