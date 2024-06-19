@@ -1304,10 +1304,14 @@ const disconnectAllSessions = async () => {
 
   try {
     const files = fs.readdirSync(sessionsPath);
-    const sessionFiles = files.filter((file) => file.endsWith(".json")); // Supondo que os arquivos de sessão terminem com .json
+    const sessionDirs = files.filter(
+      (file) =>
+        fs.lstatSync(path.join(sessionsPath, file)).isDirectory() &&
+        file.startsWith("session-")
+    );
 
-    for (const file of sessionFiles) {
-      const sessionName = path.basename(file, ".json");
+    for (const dir of sessionDirs) {
+      const sessionName = dir.replace("session-", "");
       await disconnectSession(sessionName);
     }
   } catch (error) {
