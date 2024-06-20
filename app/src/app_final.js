@@ -1046,12 +1046,12 @@ const createSession = (sessionName) => {
     console.log(`Sessão ${sessionName} foi desconectada.`);
   });
 
-  client.on("authenticated", (sessionName) => {
-    sessions[sessionName] = client;
-    console.log(`Conexão bem-sucedida na sessão ${sessionName}!`);
+  client.on("authenticated", () => {
+    sessions[client.sessionName] = client;
+    console.log(`Conexão bem-sucedida na sessão ${client.sessionName}!`);
 
-    const stateMachine = new StateMachine(client, sessionName);
-    stateMachines[sessionName] = stateMachine;
+    const stateMachine = new StateMachine(client, client.sessionName);
+    stateMachines[client.sessionName] = stateMachine;
   });
 
   client.on("auth_failure", () => {
