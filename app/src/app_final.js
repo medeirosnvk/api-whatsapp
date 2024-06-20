@@ -1210,13 +1210,13 @@ const createSession = (sessionName) => {
   return client;
 };
 
-const getConnectionStatus = (sessionName) => {
-  const client = sessions[sessionName];
-  if (!client) {
-    return "not_found";
-  }
+const getConnectionStatus = (instanceName) => {
+  const client = sessions[instanceName];
 
-  return client.connectionState; // Retornar o estado de conexão personalizado
+  if (!client) {
+    return "disconnected"; // ou "none" para indicar que a sessão não existe
+  }
+  return client.connectionState || "unknown";
 };
 
 const saveQRCodeImage = (qr, sessionName) => {
@@ -1306,10 +1306,18 @@ const disconnectSession = async (sessionName) => {
 
       // Excluir a pasta da sessão
       deleteFolderRecursive(sessionPath);
+
+      // Destruir o cliente e remover a sessão da memória
+      client.destroy();
+      delete sessions[sessionName];
+      delete stateMachines[sessionName];
+      console.log(`Sessão ${sessionName} removida da memória com sucesso.`);
     } catch (error) {
       console.error(`Erro ao desconectar a sessão ${sessionName}:`, error);
       throw error;
     }
+  } else {
+    console.log(`Sessão ${sessionName} não encontrada.`);
   }
 };
 
