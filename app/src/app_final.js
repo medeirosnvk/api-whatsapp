@@ -1361,6 +1361,24 @@ const restoreAllSessions = () => {
   }
 };
 
+const validateAndFormatNumber = (number) => {
+  // Remove any non-digit characters
+  const cleanedNumber = number.replace(/\D/g, "");
+
+  // Validate the length of the number (Brazilian numbers have 13 digits with country code)
+  if (cleanedNumber.length !== 13) {
+    throw new Error("Invalid phone number length");
+  }
+
+  // Ensure the number starts with the country code
+  if (!cleanedNumber.startsWith("55")) {
+    throw new Error("Invalid country code");
+  }
+
+  // Return the formatted number
+  return cleanedNumber;
+};
+
 app.post("/instance/create", (req, res) => {
   const { instanceName } = req.body;
 
@@ -1456,11 +1474,19 @@ app.post("/chat/whatsappNumbers/:sessionName", async (req, res) => {
   try {
     const results = await Promise.all(
       numbers.map(async (number) => {
-        // Ensure the number is correctly formatted as an international phone number
-        const formattedNumber = number.startsWith("+") ? number : `+${number}`;
-        console.log(`Verificando número formatado: ${formattedNumber}`);
-        const isRegistered = await client.isRegisteredUser(formattedNumber);
-        return { number: formattedNumber, isRegistered };
+        try {
+          // Validate and format the number
+          const formattedNumber = validateAndFormatNumber(number);
+          console.log(`Verificando número formatado: ${formattedNumber}`);
+          const isRegistered = await client.isRegisteredUser(formattedNumber);
+          return { number: formattedNumber, isRegistered };
+        } catch (error) {
+          console.error(
+            `Erro ao formatar/verificar o número ${number}:`,
+            error.message
+          );
+          return { number, isRegistered: false, error: error.message };
+        }
       })
     );
 
