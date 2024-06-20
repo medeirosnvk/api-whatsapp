@@ -1463,12 +1463,10 @@ app.post("/chat/whatsappNumbers/:sessionName", async (req, res) => {
   }
 
   if (!Array.isArray(numbers) || numbers.length === 0) {
-    return res
-      .status(400)
-      .json({
-        success: false,
-        message: 'Invalid input format. "numbers" should be a non-empty array.',
-      });
+    return res.status(400).json({
+      success: false,
+      message: 'Invalid input format. "numbers" should be a non-empty array.',
+    });
   }
 
   try {
@@ -1479,18 +1477,20 @@ app.post("/chat/whatsappNumbers/:sessionName", async (req, res) => {
           const formattedNumber = validateAndFormatNumber(number);
           console.log(`Verificando número formatado: ${formattedNumber}`);
           const isRegistered = await client.isRegisteredUser(formattedNumber);
-          return { number: formattedNumber, isRegistered };
+          return res
+            .status(200)
+            .json({ success: true, number: formattedNumber, isRegistered });
         } catch (error) {
           console.error(
             `Erro ao formatar/verificar o número ${number}:`,
             error.message
           );
-          return { number, isRegistered: false, error: error.message };
+          return res.status(400).json({ success: false, error: error.message });
         }
       })
     );
 
-    res.json({ success: true, results });
+    return { results };
   } catch (error) {
     console.error("Erro ao verificar os números:", error.message);
     res
