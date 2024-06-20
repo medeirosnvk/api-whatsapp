@@ -1525,7 +1525,7 @@ app.delete("/logout/:sessionName", async (req, res) => {
   }
 });
 
-app.delete("/logout/all", async (req, res) => {
+app.delete("/logoutAll", async (req, res) => {
   try {
     await disconnectAllSessions();
     res.json({
