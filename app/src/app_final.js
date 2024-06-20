@@ -1041,18 +1041,6 @@ const createSession = (sessionName) => {
     saveQRCodeImage(qr, sessionName);
   });
 
-  client.on("ready", () => {
-    client.connectionState = "open";
-    console.log(`Sessão ${sessionName} está pronta!`);
-  });
-
-  client.on("auth_failure", () => {
-    client.connectionState = "disconnected";
-    console.error(
-      `Falha de autenticação na sessão ${sessionName}. Por favor, verifique suas credenciais.`
-    );
-  });
-
   client.on("disconnected", () => {
     client.connectionState = "disconnected";
     console.log(`Sessão ${sessionName} foi desconectada.`);
@@ -1064,6 +1052,18 @@ const createSession = (sessionName) => {
 
     const stateMachine = new StateMachine(client, sessionName);
     stateMachines[sessionName] = stateMachine;
+  });
+
+  client.on("auth_failure", () => {
+    client.connectionState = "disconnected";
+    console.error(
+      `Falha de autenticação na sessão ${sessionName}. Por favor, verifique suas credenciais.`
+    );
+  });
+
+  client.on("ready", () => {
+    client.connectionState = "open";
+    console.log(`Sessão ${sessionName} está pronta!`);
   });
 
   client.on("message", async (message) => {
@@ -1505,7 +1505,7 @@ app.get("/instance/connectionState/:instanceName", (req, res) => {
   res.json({ instanceName, status });
 });
 
-app.get("/qrcode/base64/:sessionName", (req, res) => {
+app.get("/instance/connect/:sessionName", (req, res) => {
   const { sessionName } = req.params;
 
   const qrCodeFilePath = path.join(
@@ -1526,7 +1526,7 @@ app.get("/qrcode/base64/:sessionName", (req, res) => {
   }
 });
 
-app.get("/qrcode/image/:sessionName", (req, res) => {
+app.get("/instance/connect/image/:sessionName", (req, res) => {
   const { sessionName } = req.params;
 
   const qrCodeFilePath = path.join(
