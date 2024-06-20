@@ -1456,8 +1456,8 @@ app.post("/chat/whatsappNumbers/:sessionName", async (req, res) => {
   try {
     const results = await Promise.all(
       numbers.map(async (number) => {
-        // Adding the country code prefix to each number
-        const formattedNumber = `+${number}`;
+        // Ensure the number is correctly formatted as an international phone number
+        const formattedNumber = number.startsWith("+") ? number : `+${number}`;
         const isRegistered = await client.isRegisteredUser(formattedNumber);
         return { number: formattedNumber, isRegistered };
       })
