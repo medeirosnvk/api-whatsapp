@@ -1458,6 +1458,7 @@ app.post("/chat/whatsappNumbers/:sessionName", async (req, res) => {
       numbers.map(async (number) => {
         // Ensure the number is correctly formatted as an international phone number
         const formattedNumber = number.startsWith("+") ? number : `+${number}`;
+        console.log(`Verificando número formatado: ${formattedNumber}`);
         const isRegistered = await client.isRegisteredUser(formattedNumber);
         return { number: formattedNumber, isRegistered };
       })
@@ -1465,7 +1466,7 @@ app.post("/chat/whatsappNumbers/:sessionName", async (req, res) => {
 
     res.json({ success: true, results });
   } catch (error) {
-    console.error("Erro ao verificar os números:", error);
+    console.error("Erro ao verificar os números:", error.message);
     res
       .status(500)
       .json({ success: false, message: "Erro ao verificar os números" });
