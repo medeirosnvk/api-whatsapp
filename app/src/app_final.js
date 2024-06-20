@@ -1440,7 +1440,7 @@ app.post("/restore/:sessionName", (req, res) => {
   }
 });
 
-app.post("/restore/all", (req, res) => {
+app.post("/restoreAll", (req, res) => {
   try {
     restoreAllSessions();
 
