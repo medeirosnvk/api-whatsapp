@@ -37,10 +37,6 @@ if (!fs.existsSync(QR_CODES_DIR)) {
   fs.mkdirSync(QR_CODES_DIR);
 }
 
-let redirectSentMap = new Map();
-const sessions = {};
-const stateMachines = {};
-
 class StateMachine {
   constructor(client, sessionName) {
     this.userStates = {};
@@ -1005,6 +1001,10 @@ class StateMachine {
   }
 }
 
+let redirectSentMap = new Map();
+const sessions = {};
+const stateMachines = {};
+
 const createSession = (sessionName) => {
   if (sessions[sessionName]) {
     console.log(`A sessão ${sessionName} já existe.`);
@@ -1032,6 +1032,9 @@ const createSession = (sessionName) => {
     },
   });
 
+  client.connectionState = "connecting"; // Propriedade de estado inicial
+  client.sessionName = sessionName; // Armazenar o sessionName na instância do cliente
+
   client.on("qr", (qr) => {
     console.log(`QR Code para a sessão ${sessionName}:`);
     qrcode.generate(qr, { small: true });
@@ -1039,22 +1042,25 @@ const createSession = (sessionName) => {
   });
 
   client.on("ready", () => {
+    client.connectionState = "open";
     console.log(`Sessão ${sessionName} está pronta!`);
   });
 
   client.on("auth_failure", () => {
+    client.connectionState = "disconnected";
     console.error(
       `Falha de autenticação na sessão ${sessionName}. Por favor, verifique suas credenciais.`
     );
   });
 
   client.on("disconnected", () => {
+    client.connectionState = "disconnected";
     console.log(`Sessão ${sessionName} foi desconectada.`);
   });
 
   client.on("authenticated", (sessionName) => {
-    console.log(`Conexão bem-sucedida na sessão ${sessionName}!`);
     sessions[sessionName] = client;
+    console.log(`Conexão bem-sucedida na sessão ${sessionName}!`);
 
     const stateMachine = new StateMachine(client, sessionName);
     stateMachines[sessionName] = stateMachine;
@@ -1210,13 +1216,7 @@ const getConnectionStatus = (sessionName) => {
     return "not_found";
   }
 
-  if (client.isConnecting) {
-    return "connecting";
-  } else if (client.isConnected) {
-    return "open";
-  } else {
-    return "disconnected";
-  }
+  return client.connectionState; // Retornar o estado de conexão personalizado
 };
 
 const saveQRCodeImage = (qr, sessionName) => {
