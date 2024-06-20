@@ -1433,6 +1433,45 @@ app.post("/restore/all", (req, res) => {
   }
 });
 
+app.post("/chat/whatsappNumbers/:sessionName", async (req, res) => {
+  const { sessionName } = req.params;
+  const { numbers } = req.body;
+  const client = sessions[sessionName];
+
+  if (!client) {
+    return res
+      .status(500)
+      .json({ success: false, message: "Client is not initialized" });
+  }
+
+  if (!Array.isArray(numbers) || numbers.length === 0) {
+    return res
+      .status(400)
+      .json({
+        success: false,
+        message: 'Invalid input format. "numbers" should be a non-empty array.',
+      });
+  }
+
+  try {
+    const results = await Promise.all(
+      numbers.map(async (number) => {
+        // Adding the country code prefix to each number
+        const formattedNumber = `+${number}`;
+        const isRegistered = await client.isRegisteredUser(formattedNumber);
+        return { number: formattedNumber, isRegistered };
+      })
+    );
+
+    res.json({ success: true, results });
+  } catch (error) {
+    console.error("Erro ao verificar os números:", error);
+    res
+      .status(500)
+      .json({ success: false, message: "Erro ao verificar os números" });
+  }
+});
+
 app.delete("/logout/:sessionName", async (req, res) => {
   const { sessionName } = req.params;
 
