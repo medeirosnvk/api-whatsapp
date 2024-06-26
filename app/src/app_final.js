@@ -1580,7 +1580,7 @@ app.get("/sessions", (req, res) => {
 app.get("/instance/connectionState/:instanceName", (req, res) => {
   const { instanceName } = req.params;
   const status = getConnectionStatus(instanceName);
-  res.json({ instanceName, status });
+  res.json({ instanceName, state });
 });
 
 app.get("/instance/connect/:sessionName", (req, res) => {
