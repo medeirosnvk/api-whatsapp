@@ -1577,10 +1577,21 @@ app.get("/sessions", (req, res) => {
   }
 });
 
-app.get("/instance/fetchInstances?instanceName", (req, res) => {
+app.get("/instance/fetchInstances", (req, res) => {
   const { instanceName } = req.query;
-  const state = getConnectionStatus(instanceName);
-  res.json({ instanceName, state });
+
+  if (!instanceName) {
+    return res
+      .status(400)
+      .json({ error: "instanceName query parameter is required" });
+  }
+
+  try {
+    const state = getConnectionStatus(instanceName);
+    res.json({ instanceName, state });
+  } catch (error) {
+    res.status(500).json({ error: "Internal server error" });
+  }
 });
 
 app.get("/instance/connect/:sessionName", (req, res) => {
