@@ -1561,7 +1561,7 @@ app.delete("/qrcodes", (req, res) => {
   }
 });
 
-app.get("/sessions", (req, res) => {
+app.get("/instance/fetchIntances", (req, res) => {
   const authDir = path.join(__dirname, "../.wwebjs_auth"); // Ajuste no caminho para a pasta raiz
   console.log("Diretório de autenticação:", authDir); // Adicionado para depuração
 
@@ -1577,7 +1577,7 @@ app.get("/sessions", (req, res) => {
   }
 });
 
-app.get("/instance/fetchInstances", (req, res) => {
+app.get("/instance/connectionState", (req, res) => {
   const { instanceName } = req.query;
   const state = getConnectionStatus(instanceName);
   res.json({ instanceName, state });
