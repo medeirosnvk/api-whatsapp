@@ -1511,7 +1511,7 @@ app.post("/chat/whatsappNumbers/:sessionName", async (req, res) => {
   }
 });
 
-app.delete("/instance/logout/:sessionName", async (req, res) => {
+app.delete("/logout/:sessionName", async (req, res) => {
   const { sessionName } = req.params;
 
   if (!sessionName) {
@@ -1533,7 +1533,7 @@ app.delete("/instance/logout/:sessionName", async (req, res) => {
   }
 });
 
-app.delete("/instance/logoutAll", async (req, res) => {
+app.delete("/logoutAll", async (req, res) => {
   try {
     await disconnectAllSessions();
     res.json({
@@ -1578,20 +1578,9 @@ app.get("/sessions", (req, res) => {
 });
 
 app.get("/instance/fetchInstances", (req, res) => {
-  const { instanceName } = req.query;
-
-  if (!instanceName) {
-    return res
-      .status(400)
-      .json({ error: "instanceName query parameter is required" });
-  }
-
-  try {
-    const state = getConnectionStatus(instanceName);
-    res.json({ instanceName, state });
-  } catch (error) {
-    res.status(500).json({ error: "Internal server error" });
-  }
+  const { instanceName } = req.params;
+  const state = getConnectionStatus(instanceName);
+  res.json({ instanceName, state });
 });
 
 app.get("/instance/connect/:sessionName", (req, res) => {
