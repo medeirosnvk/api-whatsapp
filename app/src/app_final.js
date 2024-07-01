@@ -1511,7 +1511,7 @@ app.post("/chat/whatsappNumbers/:sessionName", async (req, res) => {
   }
 });
 
-app.delete("instance/logout/:sessionName", async (req, res) => {
+app.delete("/instance/logout/:sessionName", async (req, res) => {
   const { sessionName } = req.params;
 
   if (!sessionName) {
@@ -1533,7 +1533,7 @@ app.delete("instance/logout/:sessionName", async (req, res) => {
   }
 });
 
-app.delete("instance/logoutAll", async (req, res) => {
+app.delete("/instance/logoutAll", async (req, res) => {
   try {
     await disconnectAllSessions();
     res.json({
