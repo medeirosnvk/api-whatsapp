@@ -1577,8 +1577,8 @@ app.get("/sessions", (req, res) => {
   }
 });
 
-app.get("/instance/fetchInstances/:instanceName", (req, res) => {
-  const { instanceName } = req.params;
+app.get("/instance/fetchInstances?instanceName", (req, res) => {
+  const { instanceName } = req.query;
   const state = getConnectionStatus(instanceName);
   res.json({ instanceName, state });
 });
