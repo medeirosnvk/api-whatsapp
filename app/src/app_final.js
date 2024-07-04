@@ -1098,7 +1098,7 @@ const createSession = (sessionName) => {
         const filePath = path.join(mediaPath, fileName);
 
         fs.writeFileSync(filePath, media.data, "base64");
-        console.log(`Media file saved: ${filePath}`);
+        console.log(`Arquivo recebido e salvo em: ${filePath}`);
 
         mediaUrl = `/media/${fromPhoneNumber}/${fileName}`;
         mediaBase64 = media.data; // Salvar o conteúdo base64 do arquivo
@@ -1517,9 +1517,7 @@ app.post("/chat/whatsappNumbers/:sessionName", async (req, res) => {
           const formattedNumber = validateAndFormatNumber(number);
           console.log(`Verificando número formatado: ${formattedNumber}`);
           const isRegistered = await client.isRegisteredUser(formattedNumber);
-          return res
-            .status(200)
-            .json({ success: true, number: formattedNumber, isRegistered });
+          return res.status(200).json({ exists: true });
         } catch (error) {
           console.error(
             `Erro ao formatar/verificar o número ${number}:`,
