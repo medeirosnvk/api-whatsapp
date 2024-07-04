@@ -1070,6 +1070,15 @@ const createSession = (sessionName) => {
     try {
       const stateMachine = stateMachines[sessionName]; // Obter a StateMachine específica para a sessão
 
+      const { body, from, to } = message;
+
+      const response = {
+        from: message.from,
+        body: message.body,
+      };
+
+      const fromPhoneNumber = utils.formatPhoneNumber(message.from);
+
       let mediaUrl = "";
       const webhookUrl =
         "https://www.cobrance.com.br/codechat/webhook_cobrance.php";
@@ -1114,15 +1123,6 @@ const createSession = (sessionName) => {
           message.from
         } no horário ${new Date()}`
       );
-
-      const { body, from, to } = message;
-
-      const response = {
-        from: message.from,
-        body: message.body,
-      };
-
-      const fromPhoneNumber = utils.formatPhoneNumber(message.from);
 
       if (!fromPhoneNumber || !response) {
         console.log("Mensagem inválida recebida", message);
