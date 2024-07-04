@@ -1080,6 +1080,7 @@ const createSession = (sessionName) => {
       const fromPhoneNumber = utils.formatPhoneNumber(message.from);
 
       let mediaUrl = "";
+      let mediaBase64 = "";
       const webhookUrl =
         "https://www.cobrance.com.br/codechat/webhook_cobrance.php";
 
