@@ -1100,14 +1100,16 @@ const createSession = (sessionName) => {
         console.log(`Media file saved: ${filePath}`);
 
         mediaUrl = `/media/${fromPhoneNumber}/${fileName}`;
+        mediaBase64 = media.data; // Salvar o conteúdo base64 do arquivo
       }
 
-      // Send message info to webhook, including media URL if available
+      // Send message info to webhook, including media URL and base64 content if available
       await axios.post(webhookUrl, {
         sessionName,
         message: {
           ...message,
           mediaUrl,
+          mediaBase64,
         },
       });
 
