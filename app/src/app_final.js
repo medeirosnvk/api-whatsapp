@@ -1517,7 +1517,7 @@ app.post("/chat/whatsappNumbers/:sessionName", async (req, res) => {
           const formattedNumber = validateAndFormatNumber(number);
           console.log(`Verificando número formatado: ${formattedNumber}`);
           const isRegistered = await client.isRegisteredUser(formattedNumber);
-          return res.status(200).json({ exists: true });
+          return res.status(200).json([{ exists: true }]);
         } catch (error) {
           console.error(
             `Erro ao formatar/verificar o número ${number}:`,
