@@ -1,10 +1,10 @@
 require("dotenv").config();
 const fs = require("fs");
+const path = require("path");
 const axios = require("axios");
 const qrcode = require("qrcode-terminal");
 const qrImage = require("qr-image");
 const express = require("express");
-const path = require("path");
 const { Client, LocalAuth, MessageMedia } = require("whatsapp-web.js");
 
 const { executeQuery } = require("./dbconfig");
@@ -1068,15 +1068,39 @@ const createSession = (sessionName) => {
 
   client.on("message", async (message) => {
     try {
+      const stateMachine = stateMachines[sessionName]; // Obter a StateMachine específica para a sessão
+
+      let mediaUrl = "";
       const webhookUrl =
         "https://www.cobrance.com.br/codechat/webhook_cobrance.php";
 
+      if (message.hasMedia) {
+        const media = await message.downloadMedia();
+        const mediaPath = path.join(__dirname, "media", fromPhoneNumber);
+
+        if (!fs.existsSync(mediaPath)) {
+          fs.mkdirSync(mediaPath, { recursive: true });
+        }
+
+        const fileName = `${new Date().getTime()}.${
+          media.mimetype.split("/")[1]
+        }`;
+        const filePath = path.join(mediaPath, fileName);
+
+        fs.writeFileSync(filePath, media.data, "base64");
+        console.log(`Media file saved: ${filePath}`);
+
+        mediaUrl = `/media/${fromPhoneNumber}/${fileName}`;
+      }
+
+      // Send message info to webhook, including media URL if available
       await axios.post(webhookUrl, {
         sessionName,
-        message,
+        message: {
+          ...message,
+          mediaUrl,
+        },
       });
-
-      const stateMachine = stateMachines[sessionName]; // Obter a StateMachine específica para a sessão
 
       if (!stateMachine) {
         console.error(
@@ -1195,6 +1219,7 @@ const createSession = (sessionName) => {
         ticketId,
         demim
       );
+
       await stateMachine.handleMessage(fromPhoneNumber, response);
     } catch (error) {
       console.error("Erro ao lidar com a mensagem:", error);
@@ -1714,7 +1739,7 @@ app.post("/message/sendText/:instanceName", async (req, res) => {
       caption: caption,
     });
 
-    console.log("Mensagem enviada com sucesso!");
+    console.log(`Mensagem enviada com sucesso ao numero ${number}!`);
     res.status(200).json({ status: "PENDING" });
   } catch (error) {
     res.status(500).send(`Error sending message: ${error.message}`);
