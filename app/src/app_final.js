@@ -1577,8 +1577,8 @@ app.get("/instance/fetchIntances", (req, res) => {
   }
 });
 
-app.get("/instance/connectionState", (req, res) => {
-  const { instanceName } = req.query;
+app.get("/instance/connectionState/:instanceName", (req, res) => {
+  const { instanceName } = req.params;
   const state = getConnectionStatus(instanceName);
   res.json({ instanceName, state });
 });
