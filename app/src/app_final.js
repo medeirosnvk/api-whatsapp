@@ -1728,8 +1728,6 @@ app.post("/message/sendText/:instanceName", async (req, res) => {
       }
     }
 
-    console.log("processedNumber -", processedNumber);
-
     await client.sendMessage(`${processedNumber}@c.us`, textMessage.text);
 
     console.log(`Mensagem de texto enviada com sucesso ao numero ${number}!`);
@@ -1755,19 +1753,18 @@ app.post("/message/sendMedia/:instanceName", async (req, res) => {
   }
 
   try {
-    const { mediatype, fileName, caption, media } = mediaMessage;
-
-    // Processar o número de telefone
     let processedNumber = number;
-
-    // Remover o nono dígito se o número for brasileiro e contiver 9 dígitos no número local
     const brazilCountryCode = "55";
 
-    if (
-      processedNumber.startsWith(brazilCountryCode) &&
-      processedNumber.length === 13
-    ) {
-      processedNumber = processedNumber.slice(0, -1);
+    if (processedNumber.startsWith(brazilCountryCode)) {
+      const localNumber = processedNumber.slice(4);
+
+      if (localNumber.length === 9 && localNumber.startsWith("9")) {
+        processedNumber =
+          brazilCountryCode +
+          processedNumber.slice(2, 4) +
+          localNumber.slice(1);
+      }
     }
 
     // Obter o arquivo de mídia
