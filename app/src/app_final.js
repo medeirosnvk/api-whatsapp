@@ -1066,7 +1066,7 @@ const createSession = (sessionName) => {
     console.log(`Sessão ${sessionName} está pronta!`);
 
     const sessionInfo = client.info;
-    const sessionName = "COBRANCE1015";
+    const sessionName = client.sessionName;
     const phoneNumber = sessionInfo.wid.user;
 
     saveSessionData(sessionName, phoneNumber);
