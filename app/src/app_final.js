@@ -1587,7 +1587,7 @@ app.delete("/qrcodes", (req, res) => {
   }
 });
 
-app.get("/instance/fetchIntances", (req, res) => {
+app.get("/instance/list", (req, res) => {
   const authDir = path.join(__dirname, "../.wwebjs_auth"); // Ajuste no caminho para a pasta raiz
   console.log("Diretório de autenticação:", authDir); // Adicionado para depuração
 
@@ -1600,6 +1600,41 @@ app.get("/instance/fetchIntances", (req, res) => {
     res.json({ sessions: sessionNames });
   } else {
     res.json({ sessions: [] });
+  }
+});
+
+app.get("/instance/fetchInstances", (req, res) => {
+  const authDir = path.join(__dirname, "../.wwebjs_auth"); // Ajuste no caminho para a pasta raiz
+  console.log("Diretório de autenticação:", authDir); // Adicionado para depuração
+
+  if (fs.existsSync(authDir)) {
+    const sessionFolders = fs.readdirSync(authDir);
+    const sessions = sessionFolders
+      .map((sessionFolder) => {
+        const sessionFilePath = path.join(
+          authDir,
+          sessionFolder,
+          "session.json"
+        );
+        if (fs.existsSync(sessionFilePath)) {
+          const sessionData = JSON.parse(
+            fs.readFileSync(sessionFilePath, "utf8")
+          );
+          return {
+            instance: {
+              instanceName: sessionFolder.replace("session-", ""),
+              owner: sessionData.owner, // Supondo que a informação do proprietário esteja armazenada aqui
+            },
+          };
+        }
+        return null;
+      })
+      .filter((session) => session !== null);
+
+    console.log({ sessions });
+    res.json(sessions);
+  } else {
+    res.json([]);
   }
 });
 
