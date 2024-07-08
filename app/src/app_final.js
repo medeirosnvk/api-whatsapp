@@ -1052,6 +1052,10 @@ const createSession = (sessionName) => {
 
     const stateMachine = new StateMachine(client, client.sessionName);
     stateMachines[client.sessionName] = stateMachine;
+
+    // Extrair o número de telefone do cliente, se disponível
+    const phoneNumber = client.info.wid.user;
+    saveSessionData(sessionName, phoneNumber);
   });
 
   client.on("auth_failure", () => {
@@ -1236,6 +1240,34 @@ const createSession = (sessionName) => {
   stateMachines[sessionName] = stateMachine;
 
   return client;
+};
+
+const saveSessionData = (sessionName, phoneNumber) => {
+  const sessionData = {
+    instanceName: sessionName,
+    phoneNumber: phoneNumber || "", // Use phoneNumber se disponível, senão vazio
+    createdAt: moment().format("YYYY-MM-DD HH:mm:ss"),
+  };
+
+  const sessionsFilePath = path.join(__dirname, "sessoes.json");
+  let sessionsData = [];
+
+  try {
+    if (fs.existsSync(sessionsFilePath)) {
+      sessionsData = JSON.parse(fs.readFileSync(sessionsFilePath, "utf8"));
+    }
+
+    sessionsData.push(sessionData);
+
+    fs.writeFileSync(sessionsFilePath, JSON.stringify(sessionsData, null, 2));
+
+    console.log(`Dados da sessão ${sessionName} salvos em sessoes.json.`);
+  } catch (error) {
+    console.error(
+      `Erro ao salvar dados da sessão ${sessionName} em sessoes.json:`,
+      error
+    );
+  }
 };
 
 const getConnectionStatus = (instanceName) => {
@@ -1616,6 +1648,7 @@ app.get("/instance/fetchInstances", (req, res) => {
           sessionFolder,
           "session.json"
         );
+
         if (fs.existsSync(sessionFilePath)) {
           const sessionData = JSON.parse(
             fs.readFileSync(sessionFilePath, "utf8")
