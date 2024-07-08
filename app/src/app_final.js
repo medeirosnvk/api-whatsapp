@@ -1246,7 +1246,7 @@ const saveSessionData = (sessionName, phoneNumber) => {
   const sessionData = {
     instanceName: sessionName,
     phoneNumber: phoneNumber || "", // Use phoneNumber se disponível, senão vazio
-    createdAt: moment().format("YYYY-MM-DD HH:mm:ss"),
+    createdAt: newDate(),
   };
 
   const sessionsFilePath = path.join(__dirname, "sessoes.json");
