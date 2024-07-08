@@ -1066,7 +1066,7 @@ const createSession = (sessionName) => {
     console.log(`Sessão ${sessionName} está pronta!`);
 
     const sessionInfo = client.info;
-    const sessionName = client.sessionName;
+    const sessionName = client.sessionName || "Unknown";
     const phoneNumber = sessionInfo.wid.user;
 
     saveSessionData(sessionName, phoneNumber);
@@ -1246,6 +1246,8 @@ const createSession = (sessionName) => {
 
 const saveSessionData = (sessionName, phoneNumber) => {
   const currentDate = new Date();
+  const pad = (num) => (num < 10 ? `0${num}` : num);
+
   const formattedDate = `${currentDate.getFullYear()}-${pad(
     currentDate.getMonth() + 1
   )}-${pad(currentDate.getDate())} ${pad(currentDate.getHours())}:${pad(
@@ -1263,7 +1265,10 @@ const saveSessionData = (sessionName, phoneNumber) => {
 
   try {
     if (fs.existsSync(sessionsFilePath)) {
-      sessionsData = JSON.parse(fs.readFileSync(sessionsFilePath, "utf8"));
+      const fileContent = fs.readFileSync(sessionsFilePath, "utf8");
+      if (fileContent) {
+        sessionsData = JSON.parse(fileContent);
+      }
     }
 
     sessionsData.push(sessionData);
