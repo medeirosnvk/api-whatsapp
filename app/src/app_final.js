@@ -1724,6 +1724,16 @@ app.post("/message/sendText/:instanceName", async (req, res) => {
       processedNumber = processedNumber.slice(0, -1);
     }
 
+    // Adicionar condição para remover o nono dígito após o código de área
+    if (
+      processedNumber.startsWith(brazilCountryCode) &&
+      processedNumber.length === 12 &&
+      processedNumber[4] === "9" &&
+      processedNumber.slice(5).length === 8
+    ) {
+      processedNumber = processedNumber.slice(0, 4) + processedNumber.slice(5);
+    }
+
     console.log("processedNumber -", processedNumber);
 
     await client.sendMessage(`${processedNumber}@c.us`, textMessage.text);
