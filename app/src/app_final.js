@@ -1724,20 +1724,6 @@ app.post("/message/sendText/:instanceName", async (req, res) => {
       processedNumber = processedNumber.slice(0, -1);
     }
 
-    // Adicionando o comportamento de delay e presence, se necessário
-    if (options) {
-      if (options.delay) {
-        await new Promise((resolve) => setTimeout(resolve, options.delay));
-      }
-
-      if (options.presence) {
-        await client.sendPresenceUpdate(
-          options.presence,
-          `${processedNumber}@c.us`
-        );
-      }
-    }
-
     await client.sendMessage(`${processedNumber}@c.us`, textMessage.text);
 
     console.log(`Mensagem enviada com sucesso ao numero ${number}!`);
