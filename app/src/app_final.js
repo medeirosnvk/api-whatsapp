@@ -1717,21 +1717,15 @@ app.post("/message/sendText/:instanceName", async (req, res) => {
     let processedNumber = number;
     const brazilCountryCode = "55";
 
-    if (
-      processedNumber.startsWith(brazilCountryCode) &&
-      processedNumber.length === 13
-    ) {
-      processedNumber = processedNumber.slice(0, -1);
-    }
+    if (processedNumber.startsWith(brazilCountryCode)) {
+      const localNumber = processedNumber.slice(4);
 
-    // Adicionar condição para remover o nono dígito após o código de área
-    if (
-      processedNumber.startsWith(brazilCountryCode) &&
-      processedNumber.length === 12 &&
-      processedNumber[4] === "9" &&
-      processedNumber.slice(5).length === 8
-    ) {
-      processedNumber = processedNumber.slice(0, 4) + processedNumber.slice(5);
+      if (localNumber.length === 9 && localNumber.startsWith("9")) {
+        processedNumber =
+          brazilCountryCode +
+          processedNumber.slice(2, 4) +
+          localNumber.slice(1);
+      }
     }
 
     console.log("processedNumber -", processedNumber);
