@@ -1035,8 +1035,6 @@ const createSession = (sessionName) => {
   client.connectionState = "connecting"; // Propriedade de estado inicial
   client.sessionName = sessionName; // Armazenar o sessionName na instância do cliente
 
-  console.log("client -", client);
-
   client.on("qr", (qr) => {
     console.log(`QR Code para a sessão ${sessionName}:`);
     qrcode.generate(qr, { small: true });
@@ -1066,6 +1064,10 @@ const createSession = (sessionName) => {
   client.on("ready", () => {
     client.connectionState = "open";
     console.log(`Sessão ${sessionName} está pronta!`);
+
+    console.log("client -", client);
+
+    saveSessionData(sessionName, phoneNumber);
   });
 
   client.on("message", async (message) => {
@@ -1236,8 +1238,6 @@ const createSession = (sessionName) => {
 
   const stateMachine = new StateMachine(client, sessionName); // Inicializar a StateMachine após a inicialização do cliente
   stateMachines[sessionName] = stateMachine;
-
-  saveSessionData(sessionName, phoneNumber);
 
   return client;
 };
