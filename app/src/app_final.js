@@ -1724,9 +1724,11 @@ app.post("/message/sendText/:instanceName", async (req, res) => {
       processedNumber = processedNumber.slice(0, -1);
     }
 
+    console.log("processedNumber -", processedNumber);
+
     await client.sendMessage(`${processedNumber}@c.us`, textMessage.text);
 
-    console.log(`Mensagem enviada com sucesso ao numero ${number}!`);
+    console.log(`Mensagem de texto enviada com sucesso ao numero ${number}!`);
     res.status(200).json({ status: "PENDING" });
   } catch (error) {
     res.status(500).send(`Error sending message: ${error.message}`);
