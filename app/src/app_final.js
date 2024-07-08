@@ -1035,6 +1035,8 @@ const createSession = (sessionName) => {
   client.connectionState = "connecting"; // Propriedade de estado inicial
   client.sessionName = sessionName; // Armazenar o sessionName na instância do cliente
 
+  console.log("client -", client);
+
   client.on("qr", (qr) => {
     console.log(`QR Code para a sessão ${sessionName}:`);
     qrcode.generate(qr, { small: true });
@@ -1052,10 +1054,6 @@ const createSession = (sessionName) => {
 
     const stateMachine = new StateMachine(client, client.sessionName);
     stateMachines[client.sessionName] = stateMachine;
-
-    // Extrair o número de telefone do cliente, se disponível
-    const phoneNumber = client.info.wid.user;
-    saveSessionData(sessionName, phoneNumber);
   });
 
   client.on("auth_failure", () => {
@@ -1239,14 +1237,23 @@ const createSession = (sessionName) => {
   const stateMachine = new StateMachine(client, sessionName); // Inicializar a StateMachine após a inicialização do cliente
   stateMachines[sessionName] = stateMachine;
 
+  saveSessionData(sessionName, phoneNumber);
+
   return client;
 };
 
 const saveSessionData = (sessionName, phoneNumber) => {
+  const currentDate = new Date();
+  const formattedDate = `${currentDate.getFullYear()}-${pad(
+    currentDate.getMonth() + 1
+  )}-${pad(currentDate.getDate())} ${pad(currentDate.getHours())}:${pad(
+    currentDate.getMinutes()
+  )}:${pad(currentDate.getSeconds())}`;
+
   const sessionData = {
     instanceName: sessionName,
     phoneNumber: phoneNumber || "", // Use phoneNumber se disponível, senão vazio
-    createdAt: newDate(),
+    createdAt: formattedDate,
   };
 
   const sessionsFilePath = path.join(__dirname, "sessoes.json");
