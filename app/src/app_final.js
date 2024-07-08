@@ -1747,6 +1747,55 @@ app.post("/message/sendText/:instanceName", async (req, res) => {
   }
 });
 
+app.post("/message/sendMedia/:instanceName", async (req, res) => {
+  const { number, mediaMessage } = req.body;
+  const { instanceName } = req.params;
+
+  if (!instanceName || !number || !mediaMessage) {
+    return res
+      .status(400)
+      .send("instanceName, number, and mediaMessage are required");
+  }
+
+  const client = sessions[instanceName];
+  if (!client) {
+    return res.status(400).send(`Session ${instanceName} does not exist`);
+  }
+
+  try {
+    const { mediatype, fileName, caption, media } = mediaMessage;
+
+    // Processar o número de telefone
+    let processedNumber = number;
+
+    // Remover o nono dígito se o número for brasileiro e contiver 9 dígitos no número local
+    const brazilCountryCode = "55";
+
+    if (
+      processedNumber.startsWith(brazilCountryCode) &&
+      processedNumber.length === 13
+    ) {
+      processedNumber = processedNumber.slice(0, -1);
+    }
+
+    // Obter o arquivo de mídia
+    const response = await axios.get(media, { responseType: "arraybuffer" });
+    const mimeType = response.headers["content-type"];
+    const mediaData = Buffer.from(response.data, "binary").toString("base64");
+
+    const messageMedia = new MessageMedia(mimeType, mediaData, fileName);
+
+    await client.sendMessage(`${processedNumber}@c.us`, messageMedia, {
+      caption: caption,
+    });
+
+    console.log(`Mensagem enviada com sucesso ao numero ${number}!`);
+    res.status(200).json({ status: "PENDING" });
+  } catch (error) {
+    res.status(500).send(`Error sending message: ${error.message}`);
+  }
+});
+
 app.listen(port, () => {
   console.log(`WhatsApp session server is running on port ${port}`);
 });
