@@ -1065,7 +1065,9 @@ const createSession = (sessionName) => {
     client.connectionState = "open";
     console.log(`Sessão ${sessionName} está pronta!`);
 
-    console.log("client -", client);
+    const sessionInfo = client.info;
+    const sessionName = "COBRANCE1015";
+    const phoneNumber = sessionInfo.wid.user;
 
     saveSessionData(sessionName, phoneNumber);
   });
@@ -1256,7 +1258,7 @@ const saveSessionData = (sessionName, phoneNumber) => {
     createdAt: formattedDate,
   };
 
-  const sessionsFilePath = path.join(__dirname, "sessoes.json");
+  const sessionsFilePath = path.join(__dirname, "sessions.json");
   let sessionsData = [];
 
   try {
@@ -1268,10 +1270,10 @@ const saveSessionData = (sessionName, phoneNumber) => {
 
     fs.writeFileSync(sessionsFilePath, JSON.stringify(sessionsData, null, 2));
 
-    console.log(`Dados da sessão ${sessionName} salvos em sessoes.json.`);
+    console.log(`Dados da sessão ${sessionName} salvos em sessions.json.`);
   } catch (error) {
     console.error(
-      `Erro ao salvar dados da sessão ${sessionName} em sessoes.json:`,
+      `Erro ao salvar dados da sessão ${sessionName} em sessions.json:`,
       error
     );
   }
