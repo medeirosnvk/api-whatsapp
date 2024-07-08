@@ -1699,13 +1699,13 @@ app.post("/sendMessage", async (req, res) => {
 });
 
 app.post("/message/sendText/:instanceName", async (req, res) => {
-  const { number, mediaMessage } = req.body;
+  const { number, options, textMessage } = req.body;
   const { instanceName } = req.params;
 
-  if (!instanceName || !number || !mediaMessage) {
+  if (!instanceName || !number || !textMessage || !textMessage.text) {
     return res
       .status(400)
-      .send("instanceName, number, and mediaMessage are required");
+      .send("instanceName, number, and textMessage.text are required");
   }
 
   const client = sessions[instanceName];
@@ -1714,12 +1714,7 @@ app.post("/message/sendText/:instanceName", async (req, res) => {
   }
 
   try {
-    const { mediatype, fileName, caption, media } = mediaMessage;
-
-    // Processar o número de telefone
     let processedNumber = number;
-
-    // Remover o nono dígito se o número for brasileiro e contiver 9 dígitos no número local
     const brazilCountryCode = "55";
 
     if (
@@ -1729,16 +1724,21 @@ app.post("/message/sendText/:instanceName", async (req, res) => {
       processedNumber = processedNumber.slice(0, -1);
     }
 
-    // Obter o arquivo de mídia
-    const response = await axios.get(media, { responseType: "arraybuffer" });
-    const mimeType = response.headers["content-type"];
-    const mediaData = Buffer.from(response.data, "binary").toString("base64");
+    // Adicionando o comportamento de delay e presence, se necessário
+    if (options) {
+      if (options.delay) {
+        await new Promise((resolve) => setTimeout(resolve, options.delay));
+      }
 
-    const messageMedia = new MessageMedia(mimeType, mediaData, fileName);
+      if (options.presence) {
+        await client.sendPresenceUpdate(
+          options.presence,
+          `${processedNumber}@c.us`
+        );
+      }
+    }
 
-    await client.sendMessage(`${processedNumber}@c.us`, messageMedia, {
-      caption: caption,
-    });
+    await client.sendMessage(`${processedNumber}@c.us`, textMessage.text);
 
     console.log(`Mensagem enviada com sucesso ao numero ${number}!`);
     res.status(200).json({ status: "PENDING" });
