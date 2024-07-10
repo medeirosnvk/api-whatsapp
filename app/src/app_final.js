@@ -1069,6 +1069,10 @@ const createSession = (sessionName) => {
     const sessionName = client.sessionName || "Unknown";
     const phoneNumber = sessionInfo.wid.user;
 
+    console.log("sessionInfo -", sessionInfo);
+    console.log("sessionName -", sessionName);
+    console.log("phoneNumber -", phoneNumber);
+
     saveSessionData(sessionName, phoneNumber);
   });
 
