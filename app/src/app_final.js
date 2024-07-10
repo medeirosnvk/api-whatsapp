@@ -1408,6 +1408,11 @@ const disconnectSession = async (sessionName) => {
       delete sessions[sessionName];
       delete stateMachines[sessionName];
       console.log(`Sessão ${sessionName} removida da memória com sucesso.`);
+
+      // Remover a sessão do arquivo clientData.json
+      const clientData = JSON.parse(fs.readFileSync(clientDataPath, "utf8"));
+      delete clientData[sessionName];
+      fs.writeFileSync(clientDataPath, JSON.stringify(clientData, null, 2));
     } catch (error) {
       console.error(`Erro ao desconectar a sessão ${sessionName}:`, error);
       throw error;
