@@ -1063,11 +1063,15 @@ const createSession = (sessionName) => {
 
   client.on("ready", () => {
     client.connectionState = "open";
+
     console.log(`Sessão ${sessionName} está pronta!`);
 
-    console.log("client ready -", client);
-
-    saveClientData(client);
+    try {
+      saveClientData(client);
+      console.log("client ready -", client);
+    } catch (error) {
+      console.error("Erro ao criar arquivo clientData.json:", error);
+    }
   });
 
   client.on("message", async (message) => {
