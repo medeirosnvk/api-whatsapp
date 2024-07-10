@@ -30,11 +30,12 @@ app.use(express.urlencoded({ extended: true }));
 app.use(express.static("qrcodes"));
 
 const wwebVersion = "2.2412.54";
-const QR_CODES_DIR = path.join(__dirname, "qrcodes");
+const qrCodeDataPath = path.join(__dirname, "qrcodes");
+const clientDataPath = path.join(__dirname, "clientData.json");
 
 // Verificar se o diretório 'qrcodes' existe, se não, criar
-if (!fs.existsSync(QR_CODES_DIR)) {
-  fs.mkdirSync(QR_CODES_DIR);
+if (!fs.existsSync(qrCodeDataPath)) {
+  fs.mkdirSync(qrCodeDataPath);
 }
 
 class StateMachine {
@@ -1297,7 +1298,7 @@ const getConnectionStatus = (instanceName) => {
 const saveQRCodeImage = (qr, sessionName) => {
   const qrCodeImage = qrImage.image(qr, { type: "png" });
   const qrCodeFileName = `qrcode_${sessionName}.png`;
-  const qrCodeFilePath = path.join(QR_CODES_DIR, qrCodeFileName);
+  const qrCodeFilePath = path.join(qrCodeDataPath, qrCodeFileName);
 
   const qrCodeWriteStream = fs.createWriteStream(qrCodeFilePath);
   qrCodeImage.pipe(qrCodeWriteStream);
@@ -1468,7 +1469,10 @@ const validateAndFormatNumber = (number) => {
 app.post("/instance/create", (req, res) => {
   const { instanceName } = req.body;
 
-  const qrCodeFilePath = path.join(QR_CODES_DIR, `qrcode_${instanceName}.png`);
+  const qrCodeFilePath = path.join(
+    qrCodeDataPath,
+    `qrcode_${instanceName}.png`
+  );
 
   if (!instanceName) {
     return res.status(400).json({ error: "instanceName is required" });
@@ -1640,13 +1644,13 @@ app.get("/instance/list", (req, res) => {
 
   if (fs.existsSync(authDir)) {
     const sessionFolders = fs.readdirSync(authDir);
-    const sessionNames = sessionFolders.map((sessionFolder) =>
+    const instanceNames = sessionFolders.map((sessionFolder) =>
       sessionFolder.replace("session-", "")
     );
-    console.log({ sessions: sessionNames });
-    res.json({ sessions: sessionNames });
+    console.log({ instances: instanceNames });
+    res.json({ instances: instanceNames });
   } else {
-    res.json({ sessions: [] });
+    res.json({ instances: [] });
   }
 });
 
@@ -1666,6 +1670,7 @@ app.get("/instance/fetchInstances", (req, res) => {
           instance: {
             instanceName: clientData[key].sessionName,
             owner: clientData[key].wid.user,
+            status: clientData[key].connectionState,
           },
         }));
 
