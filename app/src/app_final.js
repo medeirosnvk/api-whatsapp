@@ -1651,38 +1651,36 @@ app.get("/instance/list", (req, res) => {
 });
 
 app.get("/instance/fetchInstances", (req, res) => {
-  const authDir = path.join(__dirname, "../.wwebjs_auth"); // Ajuste no caminho para a pasta raiz
-  console.log("Diretório de autenticação:", authDir); // Adicionado para depuração
+  const clientDataPath = path.join(__dirname, "clientData.json"); // Caminho para o arquivo clientData.json
 
-  if (fs.existsSync(authDir)) {
-    const sessionFolders = fs.readdirSync(authDir);
-    const sessions = sessionFolders
-      .map((sessionFolder) => {
-        const sessionFilePath = path.join(
-          authDir,
-          sessionFolder,
-          "session.json"
-        );
+  // Verificar se o arquivo clientData.json existe
+  if (fs.existsSync(clientDataPath)) {
+    try {
+      // Leitura do arquivo clientData.json
+      const clientData = JSON.parse(fs.readFileSync(clientDataPath, "utf8"));
 
-        if (fs.existsSync(sessionFilePath)) {
-          const sessionData = JSON.parse(
-            fs.readFileSync(sessionFilePath, "utf8")
-          );
-          return {
-            instance: {
-              instanceName: sessionFolder.replace("session-", ""),
-              owner: sessionData.owner, // Supondo que a informação do proprietário esteja armazenada aqui
-            },
-          };
-        }
-        return null;
-      })
-      .filter((session) => session !== null);
+      // Extrair informações para cada instância com connectionState: 'open'
+      const instances = Object.keys(clientData)
+        .filter((key) => clientData[key].connectionState === "open")
+        .map((key) => ({
+          instance: {
+            instanceName: clientData[key].sessionName,
+            owner: clientData[key].wid.user,
+          },
+        }));
 
-    console.log({ sessions });
-    res.json(sessions);
+      console.log({ instances });
+      res.json(instances); // Enviar resposta JSON com as instâncias encontradas
+    } catch (error) {
+      console.error(
+        "Erro ao ler ou analisar o arquivo clientData.json:",
+        error
+      );
+      res.status(500).json({ error: "Erro interno do servidor" });
+    }
   } else {
-    res.json([]);
+    console.log("Arquivo clientData.json não encontrado.");
+    res.json([]); // Se o arquivo não existe, retornar um array vazio
   }
 });
 
