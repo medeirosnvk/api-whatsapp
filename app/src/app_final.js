@@ -1262,11 +1262,13 @@ const saveClientData = (client) => {
 
   // Atualize os dados com a nova conexão
   clientData[client.sessionName] = {
+    lastLoggedOut: client.lastLoggedOut,
     connectionState: client.connectionState,
     sessionName: client.sessionName,
-    clientId: client.authStrategy.clientId,
-    lastConnectionTime: new Date(),
-    // Adicione aqui outras propriedades do cliente que você deseja salvar
+    wid: {
+      user: client.wid.user,
+    },
+    connectionDateTime: new Date().toISOString(),
   };
 
   // Escreva os dados atualizados de volta ao arquivo
