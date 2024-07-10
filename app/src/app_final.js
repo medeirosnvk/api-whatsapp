@@ -1260,6 +1260,11 @@ const saveClientData = (client) => {
     console.error("Erro ao ler o arquivo de dados do cliente:", error);
   }
 
+  const serverTimezone = "America/Sao_Paulo"; // Substitua pelo fuso horário do seu servidor
+  const serverDateTime = new Date().toLocaleString("en-US", {
+    timeZone: serverTimezone,
+  });
+
   // Atualize os dados com a nova conexão
   clientData[client.sessionName] = {
     lastLoggedOut: client.lastLoggedOut,
@@ -1268,7 +1273,7 @@ const saveClientData = (client) => {
     wid: {
       user: client.info.wid.user, // Acessando user dentro de info
     },
-    connectionDateTime: new Date().toISOString(),
+    connectionDateTime: serverDateTime,
   };
 
   // Escreva os dados atualizados de volta ao arquivo
