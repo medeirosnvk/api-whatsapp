@@ -1069,6 +1069,8 @@ const createSession = (sessionName) => {
     client.connectionState = "open";
     console.log(`Sessão ${sessionName} está pronta!`);
 
+    console.log("client ready -", client);
+
     saveClientData(client);
   });
 
