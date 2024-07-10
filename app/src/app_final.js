@@ -1054,8 +1054,6 @@ const createSession = (sessionName) => {
     stateMachines[client.sessionName] = stateMachine;
 
     console.log("client auth -", client);
-
-    saveClientData(client);
   });
 
   client.on("auth_failure", () => {
