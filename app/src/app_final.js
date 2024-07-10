@@ -1266,7 +1266,7 @@ const saveClientData = (client) => {
     connectionState: client.connectionState,
     sessionName: client.sessionName,
     wid: {
-      user: client.wid.user,
+      user: client.info.wid.user, // Acessando user dentro de info
     },
     connectionDateTime: new Date().toISOString(),
   };
