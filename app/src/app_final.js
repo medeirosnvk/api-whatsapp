@@ -33,9 +33,12 @@ const wwebVersion = "2.2412.54";
 const qrCodeDataPath = path.join(__dirname, "qrcodes");
 const clientDataPath = path.join(__dirname, "clientData.json");
 
-// Verificar se o diretório 'qrcodes' existe, se não, criar
 if (!fs.existsSync(qrCodeDataPath)) {
   fs.mkdirSync(qrCodeDataPath);
+}
+
+if (fs.existsSync(clientDataPath)) {
+  sessions = JSON.parse(fs.readFileSync(clientDataPath, "utf8"));
 }
 
 class StateMachine {
@@ -1006,6 +1009,17 @@ let redirectSentMap = new Map();
 const sessions = {};
 const stateMachines = {};
 
+// Função para inicializar e atualizar estados de conexão
+const initializeConnectionStatus = () => {
+  Object.keys(sessions).forEach((sessionName) => {
+    const state = getConnectionStatus(sessionName);
+    sessions[sessionName].connectionState = state;
+  });
+
+  // Salvar as atualizações de volta para clientData.json
+  fs.writeFileSync(clientDataPath, JSON.stringify(sessions, null, 2), "utf8");
+};
+
 const createSession = (sessionName) => {
   if (sessions[sessionName]) {
     console.log(`A sessão ${sessionName} já existe.`);
@@ -1873,4 +1887,6 @@ app.post("/message/sendMedia/:instanceName", async (req, res) => {
 
 app.listen(port, () => {
   console.log(`WhatsApp session server is running on port ${port}`);
+
+  initializeConnectionStatus();
 });
