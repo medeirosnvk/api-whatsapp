@@ -23,8 +23,8 @@ const customDbConfig = {
 };
 
 let redirectSentMap = new Map();
-const sessions = {};
-const stateMachines = {};
+let sessions = {};
+let stateMachines = {};
 
 const app = express();
 const port = 3060;
