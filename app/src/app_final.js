@@ -43,6 +43,12 @@ if (!fs.existsSync(qrCodeDataPath)) {
 
 if (fs.existsSync(clientDataPath)) {
   sessions = JSON.parse(fs.readFileSync(clientDataPath, "utf8"));
+  // Atualiza o estado de todas as sessões para "disconnected"
+  Object.keys(sessions).forEach((instanceName) => {
+    sessions[instanceName].connectionState = "disconnected";
+  });
+  // Salva as alterações
+  fs.writeFileSync(clientDataPath, JSON.stringify(sessions, null, 2));
 }
 
 class StateMachine {
@@ -1684,7 +1690,7 @@ app.get("/instance/fetchInstances", (req, res) => {
           instance: {
             instanceName: clientData[key].sessionName,
             owner: clientData[key].wid.user,
-            status: clientData[key].connectionState,
+            state: clientData[key].connectionState,
           },
         }));
 
