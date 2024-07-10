@@ -1651,7 +1651,7 @@ app.get("/instance/list", (req, res) => {
 });
 
 app.get("/instance/fetchInstances", (req, res) => {
-  const clientDataPath = path.join(__dirname, "src", "clientData.json"); // Caminho para o arquivo clientData.json dentro de src
+  const clientDataPath = path.join(__dirname, "clientData.json"); // Caminho para o arquivo clientData.json
 
   // Verificar se o arquivo clientData.json existe
   if (fs.existsSync(clientDataPath)) {
@@ -1679,8 +1679,8 @@ app.get("/instance/fetchInstances", (req, res) => {
       res.status(500).json({ error: "Erro interno do servidor" });
     }
   } else {
-    console.log("Arquivo clientData.json não encontrado.");
-    res.json([]); // Se o arquivo não existe, retornar um array vazio
+    console.log("Arquivo clientData.json não encontrado em:", clientDataPath);
+    res.status(404).json([]); // Se o arquivo não existe, retornar um array vazio
   }
 });
 
