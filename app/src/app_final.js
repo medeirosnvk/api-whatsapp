@@ -1053,6 +1053,8 @@ const createSession = (sessionName) => {
     const stateMachine = new StateMachine(client, client.sessionName);
     stateMachines[client.sessionName] = stateMachine;
 
+    console.log("client auth -", client);
+
     saveClientData(client);
   });
 
