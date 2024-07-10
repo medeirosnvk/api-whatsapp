@@ -33,14 +33,6 @@ const wwebVersion = "2.2412.54";
 const qrCodeDataPath = path.join(__dirname, "qrcodes");
 const clientDataPath = path.join(__dirname, "clientData.json");
 
-if (!fs.existsSync(qrCodeDataPath)) {
-  fs.mkdirSync(qrCodeDataPath);
-}
-
-if (fs.existsSync(clientDataPath)) {
-  sessions = JSON.parse(fs.readFileSync(clientDataPath, "utf8"));
-}
-
 class StateMachine {
   constructor(client, sessionName) {
     this.userStates = {};
