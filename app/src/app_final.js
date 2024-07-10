@@ -1050,15 +1050,15 @@ const createSession = (sessionName) => {
     sessions[client.sessionName] = client;
     console.log(`Conexão bem-sucedida na sessão ${client.sessionName}!`);
 
-    const sessionInfo = client.info;
-    const sessionName = client.sessionName || "Unknown";
-    const phoneNumber = sessionInfo.wid.user;
+    // const sessionInfo = client.info;
+    // const sessionName = client.sessionName || "Unknown";
+    // const phoneNumber = sessionInfo.wid.user;
 
-    console.log("sessionInfo -", sessionInfo);
-    console.log("sessionName -", sessionName);
-    console.log("phoneNumber -", phoneNumber);
+    // console.log("sessionInfo -", sessionInfo);
+    // console.log("sessionName -", sessionName);
+    // console.log("phoneNumber -", phoneNumber);
 
-    saveSessionData(sessionName, phoneNumber);
+    // saveSessionData(sessionName, phoneNumber);
 
     const stateMachine = new StateMachine(client, client.sessionName);
     stateMachines[client.sessionName] = stateMachine;
