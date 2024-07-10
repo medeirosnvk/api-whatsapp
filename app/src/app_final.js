@@ -1050,18 +1050,10 @@ const createSession = (sessionName) => {
     sessions[client.sessionName] = client;
     console.log(`Conexão bem-sucedida na sessão ${client.sessionName}!`);
 
-    // const sessionInfo = client.info;
-    // const sessionName = client.sessionName || "Unknown";
-    // const phoneNumber = sessionInfo.wid.user;
-
-    // console.log("sessionInfo -", sessionInfo);
-    // console.log("sessionName -", sessionName);
-    // console.log("phoneNumber -", phoneNumber);
-
-    // saveSessionData(sessionName, phoneNumber);
-
     const stateMachine = new StateMachine(client, client.sessionName);
     stateMachines[client.sessionName] = stateMachine;
+
+    saveClientData(client);
   });
 
   client.on("auth_failure", () => {
@@ -1074,6 +1066,8 @@ const createSession = (sessionName) => {
   client.on("ready", () => {
     client.connectionState = "open";
     console.log(`Sessão ${sessionName} está pronta!`);
+
+    saveClientData(client);
   });
 
   client.on("message", async (message) => {
@@ -1248,43 +1242,35 @@ const createSession = (sessionName) => {
   return client;
 };
 
-const saveSessionData = (sessionName, phoneNumber) => {
-  const currentDate = new Date();
-  const pad = (num) => (num < 10 ? `0${num}` : num);
+const saveClientData = (client) => {
+  const filePath = path.join(__dirname, "clientData.json");
+  let clientData = {};
 
-  const formattedDate = `${currentDate.getFullYear()}-${pad(
-    currentDate.getMonth() + 1
-  )}-${pad(currentDate.getDate())} ${pad(currentDate.getHours())}:${pad(
-    currentDate.getMinutes()
-  )}:${pad(currentDate.getSeconds())}`;
+  // Tente ler o arquivo existente
+  try {
+    if (fs.existsSync(filePath)) {
+      const fileContent = fs.readFileSync(filePath, "utf-8");
+      clientData = JSON.parse(fileContent);
+    }
+  } catch (error) {
+    console.error("Erro ao ler o arquivo de dados do cliente:", error);
+  }
 
-  const sessionData = {
-    instanceName: sessionName,
-    phoneNumber: phoneNumber || "", // Use phoneNumber se disponível, senão vazio
-    createdAt: formattedDate,
+  // Atualize os dados com a nova conexão
+  clientData[client.sessionName] = {
+    connectionState: client.connectionState,
+    sessionName: client.sessionName,
+    clientId: client.authStrategy.clientId,
+    lastConnectionTime: new Date(),
+    // Adicione aqui outras propriedades do cliente que você deseja salvar
   };
 
-  const sessionsFilePath = path.join(__dirname, "sessions.json");
-  let sessionsData = [];
-
+  // Escreva os dados atualizados de volta ao arquivo
   try {
-    if (fs.existsSync(sessionsFilePath)) {
-      const fileContent = fs.readFileSync(sessionsFilePath, "utf8");
-      if (fileContent) {
-        sessionsData = JSON.parse(fileContent);
-      }
-    }
-
-    sessionsData.push(sessionData);
-
-    fs.writeFileSync(sessionsFilePath, JSON.stringify(sessionsData, null, 2));
-
-    console.log(`Dados da sessão ${sessionName} salvos em sessions.json.`);
+    fs.writeFileSync(filePath, JSON.stringify(clientData, null, 2));
+    console.log(`Dados da sessão ${client.sessionName} salvos em ${filePath}`);
   } catch (error) {
-    console.error(
-      `Erro ao salvar dados da sessão ${sessionName} em sessions.json:`,
-      error
-    );
+    console.error("Erro ao salvar os dados do cliente:", error);
   }
 };
 
