@@ -22,6 +22,10 @@ const customDbConfig = {
   connectTimeout: 60000,
 };
 
+let redirectSentMap = new Map();
+const sessions = {};
+const stateMachines = {};
+
 const app = express();
 const port = 3060;
 
@@ -32,6 +36,14 @@ app.use(express.static("qrcodes"));
 const wwebVersion = "2.2412.54";
 const qrCodeDataPath = path.join(__dirname, "qrcodes");
 const clientDataPath = path.join(__dirname, "clientData.json");
+
+if (!fs.existsSync(qrCodeDataPath)) {
+  fs.mkdirSync(qrCodeDataPath);
+}
+
+if (fs.existsSync(clientDataPath)) {
+  sessions = JSON.parse(fs.readFileSync(clientDataPath, "utf8"));
+}
 
 class StateMachine {
   constructor(client, sessionName) {
@@ -996,10 +1008,6 @@ class StateMachine {
     }
   }
 }
-
-let redirectSentMap = new Map();
-const sessions = {};
-const stateMachines = {};
 
 // Função para inicializar e atualizar estados de conexão
 const initializeConnectionStatus = () => {
