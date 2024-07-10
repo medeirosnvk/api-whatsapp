@@ -1651,7 +1651,7 @@ app.get("/instance/list", (req, res) => {
 });
 
 app.get("/instance/fetchInstances", (req, res) => {
-  const clientDataPath = path.join(__dirname, "src", "clientData.json"); // Caminho para o arquivo clientData.json
+  const clientDataPath = path.join(__dirname, "src", "clientData.json"); // Caminho para o arquivo clientData.json dentro de src
 
   // Verificar se o arquivo clientData.json existe
   if (fs.existsSync(clientDataPath)) {
