@@ -1031,8 +1031,10 @@ const createSession = (sessionName) => {
     sessions[sessionName] &&
     sessions[sessionName].connectionState === "open"
   ) {
-    console.log(`A sessão ${sessionName} já está conectada.`);
-    throw new Error(`A sessão ${sessionName} já está conectada.`);
+    console.log(`A instancia ${sessionName} já está conectada.`);
+    return res
+      .status(400)
+      .json(`A instancia ${sessionName} já está conectada.`);
   }
 
   const client = new Client({
