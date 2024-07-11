@@ -1134,8 +1134,6 @@ const createSession = (sessionName) => {
 
         mediaUrl = `http://191.101.70.186:3060/media/${fromPhoneNumber}/${fileName}`;
         mediaBase64 = media.data; // Salvar o conteúdo base64 do arquivo
-
-        console.log(mediaUrl);
       }
 
       // Send message info to webhook, including media URL and base64 content if available
