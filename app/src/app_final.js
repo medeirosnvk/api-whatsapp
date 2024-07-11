@@ -1029,7 +1029,7 @@ const initializeConnectionStatus = () => {
 const createSession = (sessionName) => {
   if (sessions[sessionName]) {
     console.log(`A sessão ${sessionName} já existe.`);
-    return sessions[sessionName];
+    // return sessions[sessionName];
   }
 
   const client = new Client({
