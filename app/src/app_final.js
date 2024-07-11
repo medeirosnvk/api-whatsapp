@@ -1676,7 +1676,7 @@ app.delete("/qrcodes", (req, res) => {
   }
 });
 
-app.get("/instance/list", (req, res) => {
+app.get("/instance/listFolders", (req, res) => {
   const authDir = path.join(__dirname, "../.wwebjs_auth"); // Ajuste no caminho para a pasta raiz
   console.log("Diretório de autenticação:", authDir); // Adicionado para depuração
 
@@ -1711,6 +1711,43 @@ app.get("/instance/fetchInstances", (req, res) => {
             // state: clientData[key].connectionState,
           },
         }));
+
+      console.log({ instances });
+      res.json(instances); // Enviar resposta JSON com as instâncias encontradas
+    } catch (error) {
+      console.error(
+        "Erro ao ler ou analisar o arquivo clientData.json:",
+        error
+      );
+      res.status(500).json({ error: "Erro interno do servidor" });
+    }
+  } else {
+    console.log("Arquivo clientData.json não encontrado em:", clientDataPath);
+    res.status(404).json([]); // Se o arquivo não existe, retornar um array vazio
+  }
+});
+
+app.get("/instance/fetchAllInstances", (req, res) => {
+  const clientDataPath = path.join(__dirname, "clientData.json"); // Caminho para o arquivo clientData.json
+
+  // Verificar se o arquivo clientData.json existe
+  if (fs.existsSync(clientDataPath)) {
+    try {
+      // Leitura do arquivo clientData.json
+      const clientData = JSON.parse(fs.readFileSync(clientDataPath, "utf8"));
+
+      // Extrair informações para cada instância com connectionState: 'open'
+      const instances = Object.keys(clientData).map((key) => ({
+        instance: {
+          lastLoggedOut: clientData[key].lastLoggedOut,
+          connectionState: clientData[key].connectionState,
+          sessionName: clientData[key].sessionName,
+          wid: {
+            user: clientData[key].user,
+          },
+          connectionDateTime: clientData[key].connectionDateTime,
+        },
+      }));
 
       console.log({ instances });
       res.json(instances); // Enviar resposta JSON com as instâncias encontradas
