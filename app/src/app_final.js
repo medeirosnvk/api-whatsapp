@@ -1505,6 +1505,22 @@ const validateAndFormatNumber = (number) => {
   return cleanedNumber;
 };
 
+const getAllFiles = (dirPath, arrayOfFiles) => {
+  files = fs.readdirSync(dirPath);
+
+  arrayOfFiles = arrayOfFiles || [];
+
+  files.forEach((file) => {
+    if (fs.statSync(path.join(dirPath, file)).isDirectory()) {
+      arrayOfFiles = getAllFiles(path.join(dirPath, file), arrayOfFiles);
+    } else {
+      arrayOfFiles.push(path.join(dirPath, file));
+    }
+  });
+
+  return arrayOfFiles;
+};
+
 app.post("/instance/create", (req, res) => {
   const { instanceName } = req.body;
 
@@ -1957,7 +1973,24 @@ app.post("/message/sendMedia/:instanceName", async (req, res) => {
   }
 });
 
-app.use("/media", express.static(mediaDataPath));
+app.get("/list-all-files", (req, res) => {
+  try {
+    const files = getAllFiles(mediaDataPath);
+
+    const fileUrls = files.map((file) => ({
+      fileName: path.basename(file),
+      url: `http://191.101.70.186:3060/media/${file
+        .replace(mediaDataPath, "")
+        .replace(/\\/g, "/")}`,
+    }));
+
+    res.json(fileUrls);
+  } catch (error) {
+    res.status(500).json({ error: "Erro ao ler o diretório" });
+  }
+});
+
+app.use("/media", express.static(mediaPath));
 
 app.listen(port, () => {
   console.log(`WhatsApp session server is running on port ${port}`);
