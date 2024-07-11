@@ -1028,7 +1028,7 @@ const initializeConnectionStatus = () => {
 
 const createSession = (sessionName) => {
   if (sessions[sessionName].connectionState === "open") {
-    console.log(`A sessão ${sessionName} já esta conectada.`);
+    console.log(`A sessão ${sessionName} já está conectada.`);
     return sessions[sessionName];
   }
 
@@ -1447,10 +1447,14 @@ const restoreSession = (sessionName) => {
   const sessionPath = path.join(__dirname, "../.wwebjs_auth", sessionFolder);
 
   if (fs.existsSync(sessionPath)) {
-    console.log(`Restaurando sessão de ${sessionName}...`);
-    createSession(sessionName);
+    try {
+      console.log(`Restaurando sessão de ${sessionName}...`);
+      createSession(sessionName);
+    } catch (error) {
+      console.error(`Erro ao tentar reconectar a instancia ${sessionName}`);
+    }
   } else {
-    console.log(`Sessão ${sessionName} não encontrada.`);
+    console.log(`O diretório ${sessionName} não existe.`);
   }
 };
 
@@ -1464,11 +1468,16 @@ const restoreAllSessions = () => {
 
     sessionFolders.forEach((sessionFolder) => {
       const sessionName = sessionFolder.replace("session-", "");
-      console.log(`Restaurando sessão de ${sessionName}...`);
-      createSession(sessionName);
+
+      try {
+        console.log(`Restaurando sessão de ${sessionName}...`);
+        createSession(sessionName);
+      } catch (error) {
+        console.error(`Erro ao tentar reconectar a instancia ${sessionName}`);
+      }
     });
   } else {
-    console.log("O diretório de autenticação não existe.");
+    console.log(`O diretório ${sessionName} não existe.`);
   }
 };
 
@@ -1694,7 +1703,7 @@ app.get("/instance/fetchInstances", (req, res) => {
           instance: {
             instanceName: clientData[key].sessionName,
             owner: clientData[key].wid.user,
-            state: clientData[key].connectionState,
+            // state: clientData[key].connectionState,
           },
         }));
 
