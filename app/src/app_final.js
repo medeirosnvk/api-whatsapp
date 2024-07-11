@@ -1907,10 +1907,10 @@ app.post("/message/sendMedia/:instanceName", async (req, res) => {
   const { instanceName } = req.params;
   const client = sessions[instanceName];
 
-  if (!instanceName || !number || !mediaMessage) {
+  if (!instanceName || !number || !mediaMessage || !mediaMessage.media) {
     return res
       .status(400)
-      .send("instanceName, number, and mediaMessage are required");
+      .send("instanceName, number, and mediaMessage.media are required");
   }
 
   if (!client) {
@@ -1935,6 +1935,8 @@ app.post("/message/sendMedia/:instanceName", async (req, res) => {
           localNumber.slice(1);
       }
     }
+
+    const { media, fileName, caption } = mediaMessage;
 
     // Obter o arquivo de mídia
     const response = await axios.get(media, { responseType: "arraybuffer" });
