@@ -36,6 +36,7 @@ app.use(express.static("qrcodes"));
 const wwebVersion = "2.2412.54";
 const qrCodeDataPath = path.join(__dirname, "qrcodes");
 const clientDataPath = path.join(__dirname, "clientData.json");
+const mediaDataPath = path.join(__dirname, "src/media");
 
 if (!fs.existsSync(qrCodeDataPath)) {
   fs.mkdirSync(qrCodeDataPath);
@@ -1131,7 +1132,7 @@ const createSession = (sessionName) => {
         fs.writeFileSync(filePath, media.data, "base64");
         console.log(`Arquivo recebido e salvo em: ${filePath}`);
 
-        mediaUrl = `/media/${fromPhoneNumber}/${fileName}`;
+        mediaUrl = `/home/deploy/api-whatsapp/app/src/media/${fromPhoneNumber}/${fileName}`;
         mediaBase64 = media.data; // Salvar o conteúdo base64 do arquivo
       }
 
@@ -1955,6 +1956,8 @@ app.post("/message/sendMedia/:instanceName", async (req, res) => {
     res.status(500).send(`Error sending message: ${error.message}`);
   }
 });
+
+app.use("/media", express.static(mediaDataPath));
 
 app.listen(port, () => {
   console.log(`WhatsApp session server is running on port ${port}`);
