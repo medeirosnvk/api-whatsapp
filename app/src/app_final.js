@@ -1862,6 +1862,7 @@ app.post("/sendMessage", async (req, res) => {
 app.post("/message/sendText/:instanceName", async (req, res) => {
   const { number, options, textMessage } = req.body;
   const { instanceName } = req.params;
+  const client = sessions[instanceName];
 
   if (!instanceName || !number || !textMessage || !textMessage.text) {
     return res
@@ -1869,9 +1870,12 @@ app.post("/message/sendText/:instanceName", async (req, res) => {
       .send("instanceName, number, and textMessage.text are required");
   }
 
-  const client = sessions[instanceName];
   if (!client) {
     return res.status(400).send(`Session ${instanceName} does not exist`);
+  }
+
+  if (client.connectionState === "disconnected") {
+    return res.status(400).send(`Session ${instanceName} is disconnected`);
   }
 
   try {
@@ -1901,6 +1905,7 @@ app.post("/message/sendText/:instanceName", async (req, res) => {
 app.post("/message/sendMedia/:instanceName", async (req, res) => {
   const { number, mediaMessage } = req.body;
   const { instanceName } = req.params;
+  const client = sessions[instanceName];
 
   if (!instanceName || !number || !mediaMessage) {
     return res
@@ -1908,9 +1913,12 @@ app.post("/message/sendMedia/:instanceName", async (req, res) => {
       .send("instanceName, number, and mediaMessage are required");
   }
 
-  const client = sessions[instanceName];
   if (!client) {
     return res.status(400).send(`Session ${instanceName} does not exist`);
+  }
+
+  if (client.connectionState === "disconnected") {
+    return res.status(400).send(`Session ${instanceName} is disconnected`);
   }
 
   try {
