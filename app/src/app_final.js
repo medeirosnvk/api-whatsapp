@@ -1737,17 +1737,19 @@ app.get("/instance/fetchAllInstances", (req, res) => {
       const clientData = JSON.parse(fs.readFileSync(clientDataPath, "utf8"));
 
       // Extrair informações para cada instância com connectionState: 'open'
-      const instances = Object.keys(clientData).map((key) => ({
-        instance: {
-          lastLoggedOut: clientData[key].lastLoggedOut,
-          connectionState: clientData[key].connectionState,
-          sessionName: clientData[key].sessionName,
-          wid: {
-            user: clientData[key].user,
+      const instances = Object.keys(clientData)
+        .filter((key) => clientData[key].sessionName === sessionName)
+        .map((key) => ({
+          instance: {
+            lastLoggedOut: clientData[key].lastLoggedOut,
+            connectionState: clientData[key].connectionState,
+            sessionName: clientData[key].sessionName,
+            wid: {
+              user: clientData[key].user,
+            },
+            connectionDateTime: clientData[key].connectionDateTime,
           },
-          connectionDateTime: clientData[key].connectionDateTime,
-        },
-      }));
+        }));
 
       console.log({ instances });
       res.json(instances); // Enviar resposta JSON com as instâncias encontradas
