@@ -1455,9 +1455,7 @@ const restoreSession = (sessionName) => {
       createSession(sessionName);
     } catch (error) {
       console.error(`Erro ao tentar reconectar a instancia ${sessionName}`);
-      throw new Error(
-        `Erro ao tentar reconectar a instancia ${sessionName}: ${error.message}`
-      );
+      throw new Error(`${error.message}`);
     }
   } else {
     console.log(`O diretório ${sessionName} não existe.`);
@@ -1480,9 +1478,7 @@ const restoreAllSessions = () => {
         createSession(sessionName);
       } catch (error) {
         console.error(`Erro ao tentar reconectar a instancia ${sessionName}`);
-        throw new Error(
-          `Erro ao tentar reconectar a instancia ${sessionName}: ${error.message}`
-        );
+        throw new Error(`${error.message}`);
       }
     });
   } else {
