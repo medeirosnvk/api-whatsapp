@@ -36,7 +36,7 @@ app.use(express.static("qrcodes"));
 const wwebVersion = "2.2412.54";
 const qrCodeDataPath = path.join(__dirname, "qrcodes");
 const clientDataPath = path.join(__dirname, "clientData.json");
-const mediaDataPath = path.join(__dirname, "src/media");
+const mediaDataPath = path.join(__dirname, "media");
 
 if (!fs.existsSync(qrCodeDataPath)) {
   fs.mkdirSync(qrCodeDataPath);
