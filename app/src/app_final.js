@@ -1743,7 +1743,7 @@ app.get("/instance/fetchAllInstances", (req, res) => {
           lastLoggedOut: clientData[key].lastLoggedOut,
           connectionState: clientData[key].connectionState,
           wid: {
-            user: clientData[key].user,
+            user: clientData[key].wid.user,
           },
           connectionDateTime: clientData[key].connectionDateTime,
         },
