@@ -1132,7 +1132,7 @@ const createSession = (sessionName) => {
         fs.writeFileSync(filePath, media.data, "base64");
         console.log(`Arquivo recebido e salvo em: ${filePath}`);
 
-        mediaUrl = `/home/deploy/api-whatsapp/app/src/media/${fromPhoneNumber}/${fileName}`;
+        mediaUrl = `http://191.101.70.186:3060/media/${fromPhoneNumber}/${fileName}`;
         mediaBase64 = media.data; // Salvar o conteúdo base64 do arquivo
       }
 
@@ -1985,7 +1985,6 @@ app.get("/list-all-files", (req, res) => {
     console.log(`Lendo arquivos do diretório: ${mediaDataPath}`);
     const files = getAllFiles(mediaDataPath);
 
-    console.log(`Arquivos encontrados: ${files}`);
     const fileUrls = files.map((file) => ({
       fileName: path.basename(file),
       url: `http://191.101.70.186:3060/media/${file
