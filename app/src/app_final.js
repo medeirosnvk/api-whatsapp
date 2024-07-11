@@ -1134,6 +1134,8 @@ const createSession = (sessionName) => {
 
         mediaUrl = `http://191.101.70.186:3060/media/${fromPhoneNumber}/${fileName}`;
         mediaBase64 = media.data; // Salvar o conteúdo base64 do arquivo
+
+        console.log(mediaUrl);
       }
 
       // Send message info to webhook, including media URL and base64 content if available
@@ -1973,7 +1975,7 @@ app.post("/message/sendMedia/:instanceName", async (req, res) => {
   }
 });
 
-app.get("/list-all-files", (req, res) => {
+app.get("/listAllFiles", (req, res) => {
   try {
     if (!fs.existsSync(mediaDataPath)) {
       console.error(`Diretório ${mediaDataPath} não existe`);
@@ -1988,7 +1990,6 @@ app.get("/list-all-files", (req, res) => {
     // Ordenar arquivos por data de modificação (mais recentes primeiro)
     files.sort((a, b) => fs.statSync(b).mtime - fs.statSync(a).mtime);
 
-    console.log(`Arquivos encontrados: ${files}`);
     const fileUrls = files.map((file) => ({
       fileName: path.basename(file),
       url: `http://191.101.70.186:3060/media/${file
