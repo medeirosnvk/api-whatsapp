@@ -1985,6 +1985,10 @@ app.get("/list-all-files", (req, res) => {
     console.log(`Lendo arquivos do diretório: ${mediaDataPath}`);
     const files = getAllFiles(mediaDataPath);
 
+    // Ordenar arquivos por data de modificação (mais recentes primeiro)
+    files.sort((a, b) => fs.statSync(b).mtime - fs.statSync(a).mtime);
+
+    console.log(`Arquivos encontrados: ${files}`);
     const fileUrls = files.map((file) => ({
       fileName: path.basename(file),
       url: `http://191.101.70.186:3060/media/${file
