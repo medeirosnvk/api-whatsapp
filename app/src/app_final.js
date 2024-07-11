@@ -1506,7 +1506,7 @@ const validateAndFormatNumber = (number) => {
 };
 
 const getAllFiles = (dirPath, arrayOfFiles) => {
-  files = fs.readdirSync(dirPath);
+  const files = fs.readdirSync(dirPath);
 
   arrayOfFiles = arrayOfFiles || [];
 
@@ -1975,8 +1975,17 @@ app.post("/message/sendMedia/:instanceName", async (req, res) => {
 
 app.get("/list-all-files", (req, res) => {
   try {
+    if (!fs.existsSync(mediaDataPath)) {
+      console.error(`Diretório ${mediaDataPath} não existe`);
+      return res
+        .status(400)
+        .json({ error: `Diretório ${mediaDataPath} não existe` });
+    }
+
+    console.log(`Lendo arquivos do diretório: ${mediaDataPath}`);
     const files = getAllFiles(mediaDataPath);
 
+    console.log(`Arquivos encontrados: ${files}`);
     const fileUrls = files.map((file) => ({
       fileName: path.basename(file),
       url: `http://191.101.70.186:3060/media/${file
@@ -1986,6 +1995,7 @@ app.get("/list-all-files", (req, res) => {
 
     res.json(fileUrls);
   } catch (error) {
+    console.error("Erro ao ler o diretório", error);
     res.status(500).json({ error: "Erro ao ler o diretório" });
   }
 });
