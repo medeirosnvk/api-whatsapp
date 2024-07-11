@@ -1089,7 +1089,6 @@ const createSession = (sessionName) => {
 
     try {
       saveClientData(client);
-      console.log("client ready -", client);
     } catch (error) {
       console.error("Erro ao criar arquivo clientData.json:", error);
     }
