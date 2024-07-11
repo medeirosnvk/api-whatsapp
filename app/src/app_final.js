@@ -1032,9 +1032,7 @@ const createSession = (sessionName) => {
     sessions[sessionName].connectionState === "open"
   ) {
     console.log(`A instancia ${sessionName} já está conectada.`);
-    return res
-      .status(400)
-      .json(`A instancia ${sessionName} já está conectada.`);
+    throw new Error(`A instancia ${sessionName} já está conectada.`);
   }
 
   const client = new Client({
@@ -1457,6 +1455,9 @@ const restoreSession = (sessionName) => {
       createSession(sessionName);
     } catch (error) {
       console.error(`Erro ao tentar reconectar a instancia ${sessionName}`);
+      throw new Error(
+        `Erro ao tentar reconectar a instancia ${sessionName}: ${error.message}`
+      );
     }
   } else {
     console.log(`O diretório ${sessionName} não existe.`);
@@ -1479,6 +1480,9 @@ const restoreAllSessions = () => {
         createSession(sessionName);
       } catch (error) {
         console.error(`Erro ao tentar reconectar a instancia ${sessionName}`);
+        throw new Error(
+          `Erro ao tentar reconectar a instancia ${sessionName}: ${error.message}`
+        );
       }
     });
   } else {
