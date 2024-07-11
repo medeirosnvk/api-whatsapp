@@ -1990,7 +1990,7 @@ app.get("/list-all-files", (req, res) => {
   }
 });
 
-app.use("/media", express.static(mediaPath));
+app.use("/media", express.static(mediaDataPath));
 
 app.listen(port, () => {
   console.log(`WhatsApp session server is running on port ${port}`);
