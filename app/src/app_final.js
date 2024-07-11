@@ -1560,7 +1560,7 @@ app.post("/restore/:sessionName", (req, res) => {
     });
   } catch (error) {
     res
-      .status(500)
+      .status(403)
       .json({ error: `Error restoring session: ${error.message}` });
   }
 });
@@ -1575,7 +1575,7 @@ app.post("/restoreAll", (req, res) => {
     });
   } catch (error) {
     res
-      .status(500)
+      .status(403)
       .json({ error: `Erro ao restaurar todas as sessões: ${error.message}` });
   }
 });
