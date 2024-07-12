@@ -5,7 +5,7 @@ const axios = require("axios");
 const qrcode = require("qrcode-terminal");
 const qrImage = require("qr-image");
 const express = require("express");
-import https from "https";
+const https = require("https");
 const { Client, LocalAuth, MessageMedia } = require("whatsapp-web.js");
 
 const { executeQuery } = require("./dbconfig");
