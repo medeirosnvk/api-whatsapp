@@ -6,6 +6,7 @@ const qrcode = require("qrcode-terminal");
 const qrImage = require("qr-image");
 const express = require("express");
 const https = require("https");
+const cors = require("cors");
 const { Client, LocalAuth, MessageMedia } = require("whatsapp-web.js");
 
 const { executeQuery } = require("./dbconfig");
