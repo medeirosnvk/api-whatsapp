@@ -1512,7 +1512,8 @@ const getAllFiles = (dirPath, arrayOfFiles) => {
 
   files.forEach((file) => {
     const filePath = path.join(dirPath, file);
-    if (fs.statSync(filePath).isDirectory()) {
+    const fileStat = fs.statSync(filePath);
+    if (fileStat.isDirectory()) {
       arrayOfFiles = getAllFiles(filePath, arrayOfFiles);
     } else {
       arrayOfFiles.push(filePath);
