@@ -1505,16 +1505,15 @@ const validateAndFormatNumber = (number) => {
   return cleanedNumber;
 };
 
-const getAllFiles = (dirPath, arrayOfFiles) => {
-  const files = fs.readdirSync(dirPath);
-
-  arrayOfFiles = arrayOfFiles || [];
+const getAllFiles = (dirPath, arrayOfFiles = []) => {
+  const files = readdirSync(dirPath);
 
   files.forEach((file) => {
-    if (fs.statSync(path.join(dirPath, file)).isDirectory()) {
-      arrayOfFiles = getAllFiles(path.join(dirPath, file), arrayOfFiles);
+    const filePath = join(dirPath, file);
+    if (statSync(filePath).isDirectory()) {
+      getAllFiles(filePath, arrayOfFiles);
     } else {
-      arrayOfFiles.push(path.join(dirPath, file));
+      arrayOfFiles.push(filePath);
     }
   });
 
@@ -1986,11 +1985,13 @@ app.get("/listAllFiles", (req, res) => {
     const files = getAllFiles(mediaDataPath);
 
     // Ordenar arquivos por data de modificação (mais recentes primeiro)
-    files.sort((a, b) => fs.statSync(b).mtime - fs.statSync(a).mtime);
+    files.sort(
+      (a, b) => statSync(b).mtime.getTime() - statSync(a).mtime.getTime()
+    );
 
     const fileUrls = files.map((file) => ({
-      fileName: path.basename(file),
-      url: `https://whatsapp.cobrance.online/media/${file
+      fileName: basename(file),
+      url: `https://whatsapp.cobrance.online/media${file
         .replace(mediaDataPath, "")
         .replace(/\\/g, "/")}`,
     }));
