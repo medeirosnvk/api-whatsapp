@@ -1505,13 +1505,15 @@ const validateAndFormatNumber = (number) => {
   return cleanedNumber;
 };
 
-const getAllFiles = (dirPath, arrayOfFiles = []) => {
-  const files = readdirSync(dirPath);
+const getAllFiles = (dirPath, arrayOfFiles) => {
+  const files = fs.readdirSync(dirPath);
+
+  arrayOfFiles = arrayOfFiles || [];
 
   files.forEach((file) => {
-    const filePath = join(dirPath, file);
-    if (statSync(filePath).isDirectory()) {
-      getAllFiles(filePath, arrayOfFiles);
+    const filePath = path.join(dirPath, file);
+    if (fs.statSync(filePath).isDirectory()) {
+      arrayOfFiles = getAllFiles(filePath, arrayOfFiles);
     } else {
       arrayOfFiles.push(filePath);
     }
