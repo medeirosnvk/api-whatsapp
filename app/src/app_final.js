@@ -1511,10 +1511,13 @@ const getAllFiles = (dirPath, arrayOfFiles) => {
   arrayOfFiles = arrayOfFiles || [];
 
   files.forEach((file) => {
-    if (fs.statSync(path.join(dirPath, file)).isDirectory()) {
-      arrayOfFiles = getAllFiles(path.join(dirPath, file), arrayOfFiles);
+    const filePath = path.join(dirPath, file);
+    const fileStat = fs.statSync(filePath);
+
+    if (fileStat.isDirectory()) {
+      arrayOfFiles = getAllFiles(filePath, arrayOfFiles);
     } else {
-      arrayOfFiles.push(path.join(dirPath, file));
+      arrayOfFiles.push(filePath);
     }
   });
 
@@ -1986,7 +1989,7 @@ app.get("/listAllFiles", (req, res) => {
     const files = getAllFiles(mediaDataPath);
 
     // Ordenar arquivos por data de modificação (mais recentes primeiro)
-    files.sort((a, b) => fs.statSync(b).mtime - fs.statSync(a).mtime);
+    // files.sort((a, b) => fs.statSync(b).mtime - fs.statSync(a).mtime);
 
     const fileUrls = files.map((file) => ({
       fileName: path.basename(file),
