@@ -20,6 +20,7 @@
     "express": "^4.19.2",
     "fluent-ffmpeg": "2.1.2",
     "form-data": "^4.0.0",
+    "fs": "^0.0.1-security",
     "fs-extra": "^11.2.0",
     "https": "^1.0.0",
     "mime": "^3.0.0",
