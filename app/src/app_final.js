@@ -1989,7 +1989,7 @@ app.get("/listAllFiles", (req, res) => {
     const files = getAllFiles(mediaDataPath);
 
     // Ordenar arquivos por data de modificação (mais recentes primeiro)
-    // files.sort((a, b) => fs.statSync(b).mtime - fs.statSync(a).mtime);
+    files.sort((a, b) => fs.statSync(b).mtime - fs.statSync(a).mtime);
 
     const fileUrls = files.map((file) => ({
       fileName: path.basename(file),
