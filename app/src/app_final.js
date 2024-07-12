@@ -5,6 +5,7 @@ const axios = require("axios");
 const qrcode = require("qrcode-terminal");
 const qrImage = require("qr-image");
 const express = require("express");
+import https from "https";
 const { Client, LocalAuth, MessageMedia } = require("whatsapp-web.js");
 
 const { executeQuery } = require("./dbconfig");
@@ -30,6 +31,7 @@ const app = express();
 const port = 3060;
 
 app.use(express.json());
+app.use(cors());
 app.use(express.urlencoded({ extended: true }));
 app.use(express.static("qrcodes"));
 
@@ -1100,8 +1102,18 @@ const createSession = (sessionName) => {
 
   client.on("message", async (message) => {
     try {
-      const stateMachine = stateMachines[sessionName]; // Obter a StateMachine específica para a sessão
+      console.log(
+        `Sessão ${sessionName} recebeu a mensagem: ${message.body} de ${
+          message.from
+        } no horário ${new Date()}`
+      );
 
+      let mediaUrl = "";
+      let mediaBase64 = "";
+      let ticketId;
+      let bot_idstatus;
+
+      const stateMachine = stateMachines[sessionName]; // Obter a StateMachine específica para a sessão
       const { body, from, to } = message;
 
       const response = {
@@ -1111,8 +1123,6 @@ const createSession = (sessionName) => {
 
       const fromPhoneNumber = utils.formatPhoneNumber(message.from);
 
-      let mediaUrl = "";
-      let mediaBase64 = "";
       const webhookUrl =
         "https://www.cobrance.com.br/codechat/webhook_cobrance.php";
 
@@ -1132,11 +1142,10 @@ const createSession = (sessionName) => {
         fs.writeFileSync(filePath, media.data, "base64");
         console.log(`Arquivo recebido e salvo em: ${filePath}`);
 
-        mediaUrl = `http://191.101.70.186:3060/media/${fromPhoneNumber}/${fileName}`;
-        mediaBase64 = media.data; // Salvar o conteúdo base64 do arquivo
+        mediaUrl = `https://whatsapp.cobrance.online/media/${fromPhoneNumber}/${fileName}`;
+        mediaBase64 = media.data;
       }
 
-      // Send message info to webhook, including media URL and base64 content if available
       await axios.post(webhookUrl, {
         sessionName,
         message: {
@@ -1152,12 +1161,6 @@ const createSession = (sessionName) => {
         );
         return;
       }
-
-      console.log(
-        `Sessão ${sessionName} recebeu a mensagem: ${message.body} de ${
-          message.from
-        } no horário ${new Date()}`
-      );
 
       if (!fromPhoneNumber || !response) {
         console.log("Mensagem inválida recebida", message);
@@ -1177,8 +1180,6 @@ const createSession = (sessionName) => {
       const statusAtendimento = await requests.getStatusAtendimento(
         fromPhoneNumber
       );
-
-      let bot_idstatus;
 
       if (statusAtendimento[0] && statusAtendimento[0].bot_idstatus) {
         bot_idstatus = statusAtendimento[0].bot_idstatus;
@@ -1207,8 +1208,6 @@ const createSession = (sessionName) => {
       if (bot_idstatus === 1 || bot_idstatus === 3 || bot_idstatus === "") {
         console.log("Usuário em atendimento automático -", bot_idstatus);
       }
-
-      let ticketId;
 
       const ticketStatus = await requests.getTicketStatusByPhoneNumber(
         fromPhoneNumber
@@ -1990,7 +1989,7 @@ app.get("/listAllFiles", (req, res) => {
 
     const fileUrls = files.map((file) => ({
       fileName: path.basename(file),
-      url: `http://191.101.70.186:3060/media/${file
+      url: `https://whatsapp.cobrance.online/media/${file
         .replace(mediaDataPath, "")
         .replace(/\\/g, "/")}`,
     }));
@@ -2004,8 +2003,31 @@ app.get("/listAllFiles", (req, res) => {
 
 app.use("/media", express.static(mediaDataPath));
 
-app.listen(port, () => {
-  console.log(`WhatsApp session server is running on port ${port}`);
+// Configuração para HTTPS
+const privateKey = fs.readFileSync(
+  "/etc/letsencrypt/live/whatsapp.cobrance.online/privkey.pem",
+  "utf8"
+);
+const certificate = fs.readFileSync(
+  "/etc/letsencrypt/live/whatsapp.cobrance.online/fullchain.pem",
+  "utf8"
+);
+const ca = fs.readFileSync(
+  "/etc/letsencrypt/live/whatsapp.cobrance.online/chain.pem",
+  "utf8"
+); // Se necessário
+const credentials = { key: privateKey, cert: certificate, ca };
+
+const httpsServer = https.createServer(credentials, app);
+
+httpsServer.listen(port, () => {
+  console.log(`Servidor HTTPS iniciado na porta ${port}`);
 
   initializeConnectionStatus();
 });
+
+// app.listen(port, () => {
+//   console.log(`WhatsApp session server is running on port ${port}`);
+
+//   initializeConnectionStatus();
+// });
