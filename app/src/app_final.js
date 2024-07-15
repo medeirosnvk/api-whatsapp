@@ -1,5 +1,5 @@
 require("dotenv").config();
-const fs = require("fs");
+const fs = require("fs").promises;
 const path = require("path");
 const axios = require("axios");
 const qrcode = require("qrcode-terminal");
@@ -1505,21 +1505,19 @@ const validateAndFormatNumber = (number) => {
   return cleanedNumber;
 };
 
-const getAllFiles = (dirPath, arrayOfFiles) => {
-  const files = fs.readdirSync(dirPath);
+const getAllFiles = async (dirPath, arrayOfFiles = []) => {
+  const files = await fs.readdir(dirPath);
 
-  arrayOfFiles = arrayOfFiles || [];
-
-  files.forEach((file) => {
+  for (const file of files) {
     const filePath = path.join(dirPath, file);
-    const fileStat = fs.statSync(filePath);
+    const fileStat = await fs.stat(filePath);
 
     if (fileStat.isDirectory()) {
-      arrayOfFiles = getAllFiles(filePath, arrayOfFiles);
+      arrayOfFiles = await getAllFiles(filePath, arrayOfFiles);
     } else {
       arrayOfFiles.push(filePath);
     }
-  });
+  }
 
   return arrayOfFiles;
 };
@@ -1976,22 +1974,22 @@ app.post("/message/sendMedia/:instanceName", async (req, res) => {
   }
 });
 
-app.get("/listAllFiles", (req, res) => {
+app.get("/listAllFiles", async (req, res) => {
   try {
-    if (!fs.existsSync(mediaDataPath)) {
-      console.error(`Diretório ${mediaDataPath} não existe`);
-      return res
-        .status(400)
-        .json({ error: `Diretório ${mediaDataPath} não existe` });
-    }
+    // Verificar se o diretório existe
+    await fs.access(mediaDataPath);
 
     console.log(`Lendo arquivos do diretório: ${mediaDataPath}`);
-    const files = getAllFiles(mediaDataPath);
+    const files = await getAllFiles(mediaDataPath);
 
     // Ordenar arquivos por data de modificação (mais recentes primeiro)
-    files.sort((a, b) => fs.statSync(b).mtime - fs.statSync(a).mtime);
+    const sortedFiles = files.sort(async (a, b) => {
+      const aStat = await fs.stat(a);
+      const bStat = await fs.stat(b);
+      return bStat.mtime - aStat.mtime;
+    });
 
-    const fileUrls = files.map((file) => ({
+    const fileUrls = sortedFiles.map((file) => ({
       fileName: path.basename(file),
       url: `https://whatsapp.cobrance.online/media${file
         .replace(mediaDataPath, "")
