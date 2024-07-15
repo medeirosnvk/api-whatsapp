@@ -1982,14 +1982,18 @@ app.get("/listAllFiles", async (req, res) => {
     console.log(`Lendo arquivos do diretório: ${mediaDataPath}`);
     const files = await getAllFiles(mediaDataPath);
 
-    // Ordenar arquivos por data de modificação (mais recentes primeiro)
-    const sortedFiles = files.sort(async (a, b) => {
-      const aStat = await fs.stat(a);
-      const bStat = await fs.stat(b);
-      return bStat.mtime - aStat.mtime;
-    });
+    // Obter informações de modificação dos arquivos em paralelo
+    const fileStats = await Promise.all(
+      files.map(async (file) => {
+        const stat = await fs.stat(file);
+        return { file, mtime: stat.mtime };
+      })
+    );
 
-    const fileUrls = sortedFiles.map((file) => ({
+    // Ordenar arquivos por data de modificação (mais recentes primeiro)
+    fileStats.sort((a, b) => b.mtime - a.mtime);
+
+    const fileUrls = fileStats.map(({ file }) => ({
       fileName: path.basename(file),
       url: `https://whatsapp.cobrance.online/media${file
         .replace(mediaDataPath, "")
