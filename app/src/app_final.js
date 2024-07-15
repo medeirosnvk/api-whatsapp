@@ -1,5 +1,5 @@
 require("dotenv").config();
-const fs = require("fs").promises;
+const fs = require("fs");
 const path = require("path");
 const axios = require("axios");
 const qrcode = require("qrcode-terminal");
@@ -1505,19 +1505,19 @@ const validateAndFormatNumber = (number) => {
   return cleanedNumber;
 };
 
-const getAllFiles = async (dirPath, arrayOfFiles = []) => {
-  const files = await fs.readdir(dirPath);
+const getAllFiles = (dirPath, arrayOfFiles = []) => {
+  const files = fs.readdirSync(dirPath);
 
-  for (const file of files) {
+  files.forEach((file) => {
     const filePath = path.join(dirPath, file);
-    const fileStat = await fs.stat(filePath);
+    const fileStat = fs.statSync(filePath);
 
     if (fileStat.isDirectory()) {
-      arrayOfFiles = await getAllFiles(filePath, arrayOfFiles);
+      arrayOfFiles = getAllFiles(filePath, arrayOfFiles);
     } else {
       arrayOfFiles.push(filePath);
     }
-  }
+  });
 
   return arrayOfFiles;
 };
@@ -1974,21 +1974,24 @@ app.post("/message/sendMedia/:instanceName", async (req, res) => {
   }
 });
 
-app.get("/listAllFiles", async (req, res) => {
+app.get("/listAllFiles", (req, res) => {
   try {
     // Verificar se o diretório existe
-    await fs.access(mediaDataPath);
+    if (!fs.existsSync(mediaDataPath)) {
+      console.error(`Diretório ${mediaDataPath} não existe`);
+      return res
+        .status(400)
+        .json({ error: `Diretório ${mediaDataPath} não existe` });
+    }
 
     console.log(`Lendo arquivos do diretório: ${mediaDataPath}`);
-    const files = await getAllFiles(mediaDataPath);
+    const files = getAllFiles(mediaDataPath);
 
-    // Obter informações de modificação dos arquivos em paralelo
-    const fileStats = await Promise.all(
-      files.map(async (file) => {
-        const stat = await fs.stat(file);
-        return { file, mtime: stat.mtime };
-      })
-    );
+    // Obter informações de modificação dos arquivos
+    const fileStats = files.map((file) => {
+      const stat = fs.statSync(file);
+      return { file, mtime: stat.mtime };
+    });
 
     // Ordenar arquivos por data de modificação (mais recentes primeiro)
     fileStats.sort((a, b) => b.mtime - a.mtime);
