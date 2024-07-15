@@ -1153,6 +1153,7 @@ const createSession = (sessionName) => {
         sessionName,
         message: {
           ...message,
+          body: mediaName,
           mediaName,
           mediaUrl,
           mediaBase64,
