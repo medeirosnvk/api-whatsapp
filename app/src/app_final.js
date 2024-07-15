@@ -1143,7 +1143,7 @@ const createSession = (sessionName) => {
         fs.writeFileSync(filePath, media.data, "base64");
         console.log(`Arquivo recebido e salvo em: ${filePath}`);
 
-        mediaUrl = `https://whatsapp.cobrance.online/media/${fromPhoneNumber}/${fileName}`;
+        mediaUrl = `https://whatsapp.cobrance.online:3060/media/${fromPhoneNumber}/${fileName}`;
         mediaBase64 = media.data;
       }
 
@@ -1998,7 +1998,7 @@ app.get("/listAllFiles", (req, res) => {
 
     const fileUrls = fileStats.map(({ file }) => ({
       fileName: path.basename(file),
-      url: `https://whatsapp.cobrance.online/media${file
+      url: `https://whatsapp.cobrance.online:3060/media${file
         .replace(mediaDataPath, "")
         .replace(/\\/g, "/")}`,
     }));
