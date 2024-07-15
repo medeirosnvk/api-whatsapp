@@ -1105,7 +1105,7 @@ const createSession = (sessionName) => {
     try {
       if (!client.isConnected()) {
         console.log(
-          "Conexão não está ativa! Reconecte ou verifique o banimento no número."
+          "CONEXÃO NÃO ESTA ATIVA. RECONECTE OU VERIFIQUE BANIMENTO."
         );
         return;
       }
@@ -1124,6 +1124,13 @@ const createSession = (sessionName) => {
 
       const stateMachine = stateMachines[sessionName]; // Obter a StateMachine específica para a sessão
       const { body, from, to } = message;
+
+      if (!stateMachine) {
+        console.error(
+          `StateMachine não encontrada para a sessão ${sessionName}`
+        );
+        return;
+      }
 
       const response = {
         from: message.from,
@@ -1166,13 +1173,6 @@ const createSession = (sessionName) => {
           mediaBase64,
         },
       });
-
-      if (!stateMachine) {
-        console.error(
-          `StateMachine não encontrada para a sessão ${sessionName}`
-        );
-        return;
-      }
 
       if (!fromPhoneNumber || !response) {
         console.log("Mensagem inválida recebida", message);
