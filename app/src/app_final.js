@@ -1993,7 +1993,7 @@ app.get("/listAllFiles", (req, res) => {
 
     const fileUrls = files.map((file) => ({
       fileName: path.basename(file),
-      url: `https://whatsapp.cobrance.online/media/${file
+      url: `https://whatsapp.cobrance.online/media${file
         .replace(mediaDataPath, "")
         .replace(/\\/g, "/")}`,
     }));
@@ -2021,7 +2021,6 @@ const ca = fs.readFileSync(
   "utf8"
 ); // Se necessário
 const credentials = { key: privateKey, cert: certificate, ca };
-
 const httpsServer = https.createServer(credentials, app);
 
 httpsServer.listen(port, () => {
