@@ -1103,6 +1103,13 @@ const createSession = (sessionName) => {
 
   client.on("message", async (message) => {
     try {
+      if (!client.isConnected()) {
+        console.log(
+          "Conexão não está ativa! Reconecte ou verifique o banimento no número."
+        );
+        return;
+      }
+
       console.log(
         `Sessão ${sessionName} recebeu a mensagem: ${message.body} de ${
           message.from
