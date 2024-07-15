@@ -1,7 +1,6 @@
 const axios = require("axios");
 
-const baseURL = "http://191.252.214.9:3030";
-// const baseURL = 'http://localhost:3000';
+const baseURL = "https://api.cobrance.online:3030";
 
 const axiosApiInstance = axios.create({ baseURL });
 
