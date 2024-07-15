@@ -1109,6 +1109,7 @@ const createSession = (sessionName) => {
         } no horário ${new Date()}`
       );
 
+      let mediaName = "";
       let mediaUrl = "";
       let mediaBase64 = "";
       let ticketId;
@@ -1143,6 +1144,7 @@ const createSession = (sessionName) => {
         fs.writeFileSync(filePath, media.data, "base64");
         console.log(`Arquivo recebido e salvo em: ${filePath}`);
 
+        mediaName = fileName;
         mediaUrl = `https://whatsapp.cobrance.online:3060/media/${fromPhoneNumber}/${fileName}`;
         mediaBase64 = media.data;
       }
@@ -1151,6 +1153,7 @@ const createSession = (sessionName) => {
         sessionName,
         message: {
           ...message,
+          mediaName,
           mediaUrl,
           mediaBase64,
         },
