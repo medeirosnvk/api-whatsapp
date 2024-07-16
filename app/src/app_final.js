@@ -1103,12 +1103,12 @@ const createSession = (sessionName) => {
 
   client.on("message", async (message) => {
     try {
-      if (!client.isConnected()) {
-        console.log(
-          "CONEXÃO NÃO ESTA ATIVA. RECONECTE OU VERIFIQUE BANIMENTO."
-        );
-        return;
-      }
+      // if (!client.isConnected()) {
+      //   console.log(
+      //     "CONEXÃO NÃO ESTA ATIVA. RECONECTE OU VERIFIQUE BANIMENTO."
+      //   );
+      //   return;
+      // }
 
       console.log(
         `Sessão ${sessionName} recebeu a mensagem: ${message.body} de ${
