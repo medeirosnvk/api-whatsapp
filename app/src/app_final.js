@@ -1103,13 +1103,6 @@ const createSession = (sessionName) => {
 
   client.on("message", async (message) => {
     try {
-      // if (!client.isConnected()) {
-      //   console.log(
-      //     "CONEXÃO NÃO ESTA ATIVA. RECONECTE OU VERIFIQUE BANIMENTO."
-      //   );
-      //   return;
-      // }
-
       console.log(
         `Sessão ${sessionName} recebeu a mensagem: ${message.body} de ${
           message.from
@@ -1641,7 +1634,7 @@ app.post("/chat/whatsappNumbers/:sessionName", async (req, res) => {
             `Erro ao formatar/verificar o número ${number}:`,
             error.message
           );
-          return res.status(400).json({ success: false, error: error.message });
+          return res.status(400).json([{ exists: false }]);
         }
       })
     );
