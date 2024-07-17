@@ -1167,7 +1167,7 @@ const createSession = (sessionName) => {
         sessionName,
         message: {
           ...message,
-          body: mediaName,
+          body: mediaName || message.body,
           mediaName,
           mediaUrl,
           mediaBase64,
