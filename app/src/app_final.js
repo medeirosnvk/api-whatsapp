@@ -1063,6 +1063,16 @@ const createSession = (sessionName) => {
   client.connectionState = "connecting"; // Propriedade de estado inicial
   client.sessionName = sessionName; // Armazenar o sessionName na instância do cliente
 
+  const qrTimeout = setTimeout(() => {
+    if (client.connectionState !== "open") {
+      client.connectionState = "disconnected";
+      console.log(
+        `Tempo esgotado para a sessão ${sessionName}. Desconectando...`
+      );
+      client.destroy(); // Destrói o cliente para liberar recursos
+    }
+  }, 5 * 60 * 1000); // 5 minutos em milissegundos
+
   client.on("qr", (qr) => {
     console.log(`QR Code para a sessão ${sessionName}:`);
     qrcode.generate(qr, { small: true });
@@ -1070,11 +1080,13 @@ const createSession = (sessionName) => {
   });
 
   client.on("disconnected", () => {
+    clearTimeout(qrTimeout);
     client.connectionState = "disconnected";
     console.log(`Sessão ${sessionName} foi desconectada.`);
   });
 
   client.on("authenticated", () => {
+    clearTimeout(qrTimeout);
     sessions[client.sessionName] = client;
     console.log(`Conexão bem-sucedida na sessão ${client.sessionName}!`);
 
@@ -1083,6 +1095,7 @@ const createSession = (sessionName) => {
   });
 
   client.on("auth_failure", () => {
+    clearTimeout(qrTimeout);
     client.connectionState = "disconnected";
     console.error(
       `Falha de autenticação na sessão ${sessionName}. Por favor, verifique suas credenciais.`
@@ -1090,8 +1103,8 @@ const createSession = (sessionName) => {
   });
 
   client.on("ready", () => {
+    clearTimeout(qrTimeout);
     client.connectionState = "open";
-
     console.log(`Sessão ${sessionName} está pronta!`);
 
     try {
