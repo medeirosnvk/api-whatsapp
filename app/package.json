@@ -6,9 +6,7 @@
   "license": "ISC",
   "keywords": [],
   "scripts": {
-    "start": "nodemon --watch src --ignore src/clientData.json src/app_final.js",
-    "test": "nodemon src/example.js",
-    "dev": "nodemon src/app_boletagem.js"
+    "start": "nodemon --watch src --ignore src/clientData.json src/app.js"
   },
   "dependencies": {
     "@pedroslopez/moduleraid": "^5.0.2",
