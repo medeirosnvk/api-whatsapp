@@ -1018,7 +1018,6 @@ class StateMachine {
   }
 }
 
-// Função para inicializar e atualizar estados de conexão
 const initializeConnectionStatus = () => {
   Object.keys(sessions).forEach((sessionName) => {
     const state = getConnectionStatus(sessionName);
@@ -1345,24 +1344,6 @@ const saveQRCodeImage = (qr, sessionName) => {
   qrCodeWriteStream.on("finish", () => {
     console.log(`QR Code image saved: ${qrCodeFilePath}`);
   });
-};
-
-const deleteQRCodeImage = (sessionName) => {
-  const qrCodeFilePath = path.join(
-    __dirname,
-    "qrcodes",
-    `qrcode_${sessionName}.png`
-  );
-  if (fs.existsSync(qrCodeFilePath)) {
-    try {
-      fs.unlinkSync(qrCodeFilePath);
-      console.log(`QR Code image deleted: ${qrCodeFilePath}`);
-    } catch (error) {
-      console.error(`Error deleting QR Code image:`, error);
-    }
-  } else {
-    console.log(`QR Code image not found at: ${qrCodeFilePath}`);
-  }
 };
 
 const deleteAllQRCodeImages = () => {
@@ -2081,7 +2062,6 @@ app.get("/listAllFiles", (req, res) => {
 
 app.use("/media", express.static(mediaDataPath));
 
-// Configuração para HTTPS
 const privateKey = fs.readFileSync(
   "/etc/letsencrypt/live/whatsapp.cobrance.online/privkey.pem",
   "utf8"
@@ -2093,7 +2073,7 @@ const certificate = fs.readFileSync(
 const ca = fs.readFileSync(
   "/etc/letsencrypt/live/whatsapp.cobrance.online/chain.pem",
   "utf8"
-); // Se necessário
+);
 const credentials = { key: privateKey, cert: certificate, ca };
 const httpsServer = https.createServer(credentials, app);
 
@@ -2103,9 +2083,3 @@ httpsServer.listen(port, () => {
   initializeConnectionStatus();
   restoreAllSessions();
 });
-
-// app.listen(port, () => {
-//   console.log(`WhatsApp session server is running on port ${port}`);
-
-//   initializeConnectionStatus();
-// });
