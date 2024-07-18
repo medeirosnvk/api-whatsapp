@@ -1452,11 +1452,12 @@ const restoreSession = (sessionName) => {
       console.log(`Restaurando sessão de ${sessionName}...`);
       createSession(sessionName);
     } catch (error) {
-      console.error(`Erro ao tentar reconectar a instancia ${sessionName}`);
-      throw new Error(`${error.message}`);
+      console.error(
+        `Erro ao tentar reconectar a instancia ${sessionName}: ${error.message}`
+      );
     }
   } else {
-    console.log(`O diretório ${sessionName} não existe.`);
+    console.error(`O diretório ${sessionPath} não existe.`);
   }
 };
 
@@ -1475,12 +1476,13 @@ const restoreAllSessions = () => {
         console.log(`Restaurando sessão de ${sessionName}...`);
         createSession(sessionName);
       } catch (error) {
-        console.error(`Erro ao tentar reconectar a instancia ${sessionName}`);
-        throw new Error(`${error.message}`);
+        console.error(
+          `Erro ao tentar reconectar a instancia ${sessionName}: ${error.message}`
+        );
       }
     });
   } else {
-    console.log(`O diretório ${sessionName} não existe.`);
+    console.error(`O diretório ${authDir} não existe.`);
   }
 };
 
@@ -2081,5 +2083,5 @@ httpsServer.listen(port, () => {
   console.log(`Servidor HTTPS iniciado na porta ${port}`);
 
   initializeConnectionStatus();
-  // restoreAllSessions();
+  restoreAllSessions();
 });
