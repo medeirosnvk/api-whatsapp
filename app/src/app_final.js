@@ -8,11 +8,22 @@ const express = require("express");
 const https = require("https");
 const cors = require("cors");
 const { Client, LocalAuth, MessageMedia } = require("whatsapp-web.js");
-
 const { executeQuery } = require("./dbconfig");
 const requests = require("./services/requests");
 const utils = require("./services/utils");
 
+let redirectSentMap = new Map();
+let sessions = {};
+let stateMachines = {};
+
+const app = express();
+const port = 3060;
+
+const wwebVersion = "2.2412.54";
+const qrCodeDataPath = path.join(__dirname, "qrcodes");
+const clientDataPath = path.join(__dirname, "clientData.json");
+const mediaDataPath = path.join(__dirname, "media");
+const sessionDataPath = path.join(__dirname, "../.wwebjs_auth");
 const customDbConfig = {
   host: process.env.DB2_MY_SQL_HOST,
   user: process.env.MY_SQL_USER,
@@ -24,22 +35,10 @@ const customDbConfig = {
   connectTimeout: 60000,
 };
 
-let redirectSentMap = new Map();
-let sessions = {};
-let stateMachines = {};
-
-const app = express();
-const port = 3060;
-
 app.use(express.json());
 app.use(cors());
 app.use(express.urlencoded({ extended: true }));
 app.use(express.static("qrcodes"));
-
-const wwebVersion = "2.2412.54";
-const qrCodeDataPath = path.join(__dirname, "qrcodes");
-const clientDataPath = path.join(__dirname, "clientData.json");
-const mediaDataPath = path.join(__dirname, "media");
 
 if (!fs.existsSync(qrCodeDataPath)) {
   fs.mkdirSync(qrCodeDataPath);
@@ -1539,6 +1538,49 @@ const getAllFiles = (dirPath, arrayOfFiles = []) => {
   return arrayOfFiles;
 };
 
+const deleteUnusedSessions = () => {
+  const clientDataFilePath = path.join(__dirname, "clientData.json");
+  let clientData = {};
+
+  // Tente ler o arquivo existente
+  try {
+    if (fs.existsSync(clientDataFilePath)) {
+      const fileContent = fs.readFileSync(clientDataFilePath, "utf-8");
+      clientData = JSON.parse(fileContent);
+    }
+  } catch (error) {
+    console.error("Erro ao ler o arquivo de dados do cliente:", error);
+    return;
+  }
+
+  // Filtra as sessões desconectadas e remove os diretórios e dados correspondentes
+  Object.keys(clientData).forEach((sessionName) => {
+    if (clientData[sessionName].connectionState === "disconnected") {
+      const sessionDirPath = path.join(
+        sessionDataPath,
+        `session-${sessionName}`
+      );
+
+      // Remove o diretório da sessão
+      if (fs.existsSync(sessionDirPath)) {
+        fs.rmdirSync(sessionDirPath, { recursive: true });
+        console.log(`Diretório da sessão ${sessionName} removido com sucesso.`);
+      }
+
+      // Remove os dados da sessão do arquivo JSON
+      delete clientData[sessionName];
+    }
+  });
+
+  // Atualiza o arquivo JSON
+  try {
+    fs.writeFileSync(clientDataFilePath, JSON.stringify(clientData, null, 2));
+    console.log("Dados das sessões atualizados no arquivo JSON.");
+  } catch (error) {
+    console.error("Erro ao salvar os dados do cliente:", error);
+  }
+};
+
 app.post("/instance/create", (req, res) => {
   const { instanceName } = req.body;
 
@@ -1694,6 +1736,16 @@ app.delete("/instance/logoutAll", async (req, res) => {
     res
       .status(500)
       .json({ error: `Error disconnecting all sessions: ${error.message}` });
+  }
+});
+
+app.delete("/instance/clearUnusedSessions", (req, res) => {
+  try {
+    deleteUnusedSessions();
+    res.status(200).send("Sessões não utilizadas foram removidas com sucesso.");
+  } catch (error) {
+    console.error("Erro ao limpar sessões não utilizadas:", error);
+    res.status(500).send("Erro ao limpar sessões não utilizadas.");
   }
 });
 
