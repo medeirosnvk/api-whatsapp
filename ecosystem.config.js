@@ -1,11 +1,10 @@
 module.exports = {
   apps: [
     {
-      name: "app-whatsapp",
+      name: "api-whatsapp",
       script: "npm",
       args: "start",
       watch: true,
-      cwd: "app",
       env: {
         PORT: 3002,
       },
