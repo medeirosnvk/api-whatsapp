@@ -44,6 +44,10 @@ if (!fs.existsSync(qrCodeDataPath)) {
   fs.mkdirSync(qrCodeDataPath);
 }
 
+if (!fs.existsSync(mediaDataPath)) {
+  fs.mkdirSync(mediaDataPath);
+}
+
 if (fs.existsSync(clientDataPath)) {
   sessions = JSON.parse(fs.readFileSync(clientDataPath, "utf8"));
   // Atualiza o estado de todas as sessões para "disconnected"
