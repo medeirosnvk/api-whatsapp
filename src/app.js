@@ -1042,6 +1042,7 @@ const createSession = (sessionName) => {
   }
 
   let client;
+
   try {
     client = new Client({
       authStrategy: new LocalAuth({ clientId: sessionName }),
@@ -1143,6 +1144,8 @@ const createSession = (sessionName) => {
         let bot_idstatus;
 
         const stateMachine = stateMachines[sessionName];
+        const { body, from, to } = message;
+
         if (!stateMachine) {
           console.error(
             `StateMachine não encontrada para a sessão ${sessionName}`
