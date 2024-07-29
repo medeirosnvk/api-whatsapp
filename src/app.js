@@ -1037,254 +1037,276 @@ const createSession = (sessionName) => {
     sessions[sessionName] &&
     sessions[sessionName].connectionState === "open"
   ) {
-    console.log(`A instancia ${sessionName} já está conectada.`);
-    throw new Error(`A instancia ${sessionName} já está conectada.`);
+    console.log(`A instância ${sessionName} já está conectada.`);
+    throw new Error(`A instância ${sessionName} já está conectada.`);
   }
 
-  const client = new Client({
-    authStrategy: new LocalAuth({ clientId: sessionName }),
-    puppeteer: {
-      headless: true,
-      args: [
-        "--no-default-browser-check",
-        "--disable-session-crashed-bubble",
-        "--disable-dev-shm-usage",
-        "--no-sandbox",
-        "--disable-setuid-sandbox",
-        "--disable-accelerated-2d-canvas",
-        "--no-first-run",
-      ],
-      takeoverOnConflict: true,
-    },
-    webVersionCache: {
-      type: "remote",
-      remotePath: `https://raw.githubusercontent.com/wppconnect-team/wa-version/main/html/${wwebVersion}.html`,
-    },
-  });
+  let client;
+  try {
+    client = new Client({
+      authStrategy: new LocalAuth({ clientId: sessionName }),
+      puppeteer: {
+        headless: true,
+        args: [
+          "--no-default-browser-check",
+          "--disable-session-crashed-bubble",
+          "--disable-dev-shm-usage",
+          "--no-sandbox",
+          "--disable-setuid-sandbox",
+          "--disable-accelerated-2d-canvas",
+          "--no-first-run",
+        ],
+      },
+      webVersionCache: {
+        type: "remote",
+        remotePath: `https://raw.githubusercontent.com/wppconnect-team/wa-version/main/html/${process.env.WWEB_VERSION}.html`, // Use variável de ambiente para versão
+      },
+    });
 
-  client.connectionState = "connecting"; // Propriedade de estado inicial
-  client.sessionName = sessionName; // Armazenar o sessionName na instância do cliente
+    client.connectionState = "connecting";
+    client.sessionName = sessionName;
 
-  const qrTimeout = setTimeout(() => {
-    if (client.connectionState !== "open") {
+    const qrTimeout = setTimeout(() => {
+      if (client.connectionState !== "open") {
+        client.connectionState = "disconnected";
+        console.log(
+          `Tempo esgotado para a sessão ${sessionName}. Desconectando...`
+        );
+        client.destroy();
+      }
+    }, 5 * 60 * 1000); // 5 minutos
+
+    client.on("qr", (qr) => {
+      console.log(`QR Code para a sessão ${sessionName}:`);
+      qrcode.generate(qr, { small: true });
+      saveQRCodeImage(qr, sessionName);
+    });
+
+    client.on("disconnected", () => {
+      clearTimeout(qrTimeout);
       client.connectionState = "disconnected";
-      console.log(
-        `Tempo esgotado para a sessão ${sessionName}. Desconectando...`
+      console.log(`Sessão ${sessionName} foi desconectada.`);
+    });
+
+    client.on("authenticated", () => {
+      clearTimeout(qrTimeout);
+      sessions[client.sessionName] = client;
+      console.log(`Conexão bem-sucedida na sessão ${client.sessionName}!`);
+
+      try {
+        const stateMachine = new StateMachine(client, client.sessionName);
+        stateMachines[client.sessionName] = stateMachine;
+      } catch (error) {
+        console.error("Erro ao criar StateMachine:", error);
+      }
+    });
+
+    client.on("auth_failure", () => {
+      clearTimeout(qrTimeout);
+      client.connectionState = "disconnected";
+      console.error(
+        `Falha de autenticação na sessão ${sessionName}. Verifique suas credenciais.`
       );
-      client.destroy(); // Destrói o cliente para liberar recursos
-    }
-  }, 5 * 60 * 1000); // 5 minutos em milissegundos
+    });
 
-  client.on("qr", (qr) => {
-    console.log(`QR Code para a sessão ${sessionName}:`);
-    qrcode.generate(qr, { small: true });
-    saveQRCodeImage(qr, sessionName);
-  });
+    client.on("ready", () => {
+      clearTimeout(qrTimeout);
+      client.connectionState = "open";
+      console.log(`Sessão ${sessionName} está pronta!`);
 
-  client.on("disconnected", () => {
-    clearTimeout(qrTimeout);
-    client.connectionState = "disconnected";
-    console.log(`Sessão ${sessionName} foi desconectada.`);
-  });
-
-  client.on("authenticated", () => {
-    clearTimeout(qrTimeout);
-    sessions[client.sessionName] = client;
-    console.log(`Conexão bem-sucedida na sessão ${client.sessionName}!`);
-
-    const stateMachine = new StateMachine(client, client.sessionName);
-    stateMachines[client.sessionName] = stateMachine;
-  });
-
-  client.on("auth_failure", () => {
-    clearTimeout(qrTimeout);
-    client.connectionState = "disconnected";
-    console.error(
-      `Falha de autenticação na sessão ${sessionName}. Por favor, verifique suas credenciais.`
-    );
-  });
-
-  client.on("ready", () => {
-    clearTimeout(qrTimeout);
-    client.connectionState = "open";
-    console.log(`Sessão ${sessionName} está pronta!`);
-
-    try {
-      saveClientData(client);
-    } catch (error) {
-      console.error("Erro ao criar arquivo clientData.json:", error);
-    }
-  });
-
-  client.on("message", async (message) => {
-    try {
-      console.log(
-        `Sessão ${sessionName} recebeu a mensagem: ${message.body} de ${
-          message.from
-        } no horário ${new Date()}`
-      );
-
-      let mediaName = "";
-      let mediaUrl = "";
-      let mediaBase64 = "";
-      let ticketId;
-      let bot_idstatus;
-
-      const stateMachine = stateMachines[sessionName]; // Obter a StateMachine específica para a sessão
-      const { body, from, to } = message;
-
-      if (!stateMachine) {
-        console.error(
-          `StateMachine não encontrada para a sessão ${sessionName}`
-        );
-        return;
+      try {
+        saveClientData(client);
+      } catch (error) {
+        console.error("Erro ao criar arquivo clientData.json:", error);
       }
+    });
 
-      const response = {
-        from: message.from,
-        body: message.body,
-      };
-
-      const fromPhoneNumber = utils.formatPhoneNumber(message.from);
-
-      const webhookUrl =
-        "https://www.cobrance.com.br/codechat/webhook_cobrance.php";
-
-      if (message.hasMedia) {
-        const media = await message.downloadMedia();
-        const mediaPath = path.join(__dirname, "media", fromPhoneNumber);
-
-        if (!fs.existsSync(mediaPath)) {
-          fs.mkdirSync(mediaPath, { recursive: true });
-        }
-
-        const fileName = `${new Date().getTime()}.${
-          media.mimetype.split("/")[1]
-        }`;
-        const filePath = path.join(mediaPath, fileName);
-
-        fs.writeFileSync(filePath, media.data, "base64");
-        console.log(`Arquivo recebido e salvo em: ${filePath}`);
-
-        mediaName = fileName;
-        mediaUrl = `https://whatsapp.cobrance.online:3060/media/${fromPhoneNumber}/${fileName}`;
-        mediaBase64 = media.data;
-      }
-
-      await axios.post(webhookUrl, {
-        sessionName,
-        message: {
-          ...message,
-          body: mediaName || message.body,
-          mediaName,
-          mediaUrl,
-          mediaBase64,
-        },
-      });
-
-      if (!fromPhoneNumber || !response) {
-        console.log("Mensagem inválida recebida", message);
-        return;
-      }
-
-      const credorExistsFromDB = stateMachine._getCredorFromDB(fromPhoneNumber);
-
-      if (!credorExistsFromDB) {
-        console.log(
-          "Credor sem cadastro no banco de dados. Atendimento chatbot não iniciado para -",
-          fromPhoneNumber
-        );
-        return;
-      }
-
-      const statusAtendimento = await requests.getStatusAtendimento(
-        fromPhoneNumber
-      );
-
-      if (statusAtendimento[0] && statusAtendimento[0].bot_idstatus) {
-        bot_idstatus = statusAtendimento[0].bot_idstatus;
-      }
-
-      if (!bot_idstatus) {
-        console.log(
-          "Status de atendimento não encontrado para o usuário -",
-          fromPhoneNumber
-        );
-      }
-
-      if (bot_idstatus === 2) {
-        console.log("Usuário em atendimento humano -", bot_idstatus);
-        const redirectSent = redirectSentMap.get(fromPhoneNumber);
-        if (!redirectSent) {
-          await client.sendMessage(
-            from,
-            "Estamos redirecionando seu atendimento para um atendente humano, por favor aguarde..."
-          );
-          redirectSentMap.set(fromPhoneNumber, true);
-        }
-        return;
-      }
-
-      if (bot_idstatus === 1 || bot_idstatus === 3 || bot_idstatus === "") {
-        console.log("Usuário em atendimento automático -", bot_idstatus);
-      }
-
-      const ticketStatus = await requests.getTicketStatusByPhoneNumber(
-        fromPhoneNumber
-      );
-
-      if (ticketStatus && ticketStatus.length > 0) {
-        ticketId = ticketStatus[0].id;
-        await requests.getAbrirAtendimentoBot(ticketId);
-
-        console.log(
-          `Iniciando atendimento Bot para ${fromPhoneNumber} no Ticket - ${ticketId}`
-        );
-      } else {
-        await requests.getInserirNumeroCliente(fromPhoneNumber);
-
-        const insertNovoTicket = await requests.getInserirNovoTicket(
-          fromPhoneNumber
-        );
-
-        if (insertNovoTicket && insertNovoTicket.insertId) {
-          ticketId = insertNovoTicket.insertId;
-          await requests.getAbrirAtendimentoBot(ticketId);
-
+    client.on("message", async (message) => {
+      try {
+        if (client.connectionState !== "open") {
           console.log(
-            `Iniciando atendimento Bot para ${fromPhoneNumber} no Ticket - ${ticketId} (NOVO)`
+            `Sessão ${sessionName} está desconectada. Ignorando mensagem.`
           );
-        } else {
-          console.log(`Erro ao criar novo número de Ticket no banco.`);
           return;
         }
+
+        console.log(
+          `Sessão ${sessionName} recebeu a mensagem: ${message.body} de ${
+            message.from
+          } no horário ${new Date()}`
+        );
+
+        let mediaName = "";
+        let mediaUrl = "";
+        let mediaBase64 = "";
+        let ticketId;
+        let bot_idstatus;
+
+        const stateMachine = stateMachines[sessionName];
+        if (!stateMachine) {
+          console.error(
+            `StateMachine não encontrada para a sessão ${sessionName}`
+          );
+          return;
+        }
+
+        const response = {
+          from: message.from,
+          body: message.body,
+        };
+
+        const fromPhoneNumber = utils.formatPhoneNumber(message.from);
+        const webhookUrl =
+          "https://www.cobrance.com.br/codechat/webhook_cobrance.php";
+
+        if (message.hasMedia) {
+          try {
+            const media = await message.downloadMedia();
+            const mediaPath = path.join(__dirname, "media", fromPhoneNumber);
+
+            if (!fs.existsSync(mediaPath)) {
+              fs.mkdirSync(mediaPath, { recursive: true });
+            }
+
+            const fileName = `${new Date().getTime()}.${
+              media.mimetype.split("/")[1]
+            }`;
+            const filePath = path.join(mediaPath, fileName);
+
+            fs.writeFileSync(filePath, media.data, "base64");
+            console.log(`Arquivo recebido e salvo em: ${filePath}`);
+
+            mediaName = fileName;
+            mediaUrl = `https://whatsapp.cobrance.online:3060/media/${fromPhoneNumber}/${fileName}`;
+            mediaBase64 = media.data;
+          } catch (error) {
+            console.error(
+              `Erro ao processar mídia para a sessão ${sessionName}:`,
+              error
+            );
+          }
+        }
+
+        try {
+          await axios.post(webhookUrl, {
+            sessionName,
+            message: {
+              ...message,
+              body: mediaName || message.body,
+              mediaName,
+              mediaUrl,
+              mediaBase64,
+            },
+          });
+        } catch (error) {
+          console.error(
+            `Erro ao enviar dados para o webhook para a sessão ${sessionName}:`,
+            error
+          );
+        }
+
+        if (!fromPhoneNumber || !response) {
+          console.log("Mensagem inválida recebida", message);
+          return;
+        }
+
+        try {
+          const credorExistsFromDB = await stateMachine._getCredorFromDB(
+            fromPhoneNumber
+          );
+          if (!credorExistsFromDB) {
+            console.log(
+              "Credor sem cadastro no banco de dados. Atendimento chatbot não iniciado para -",
+              fromPhoneNumber
+            );
+            return;
+          }
+
+          const statusAtendimento = await requests.getStatusAtendimento(
+            fromPhoneNumber
+          );
+          if (statusAtendimento[0] && statusAtendimento[0].bot_idstatus) {
+            bot_idstatus = statusAtendimento[0].bot_idstatus;
+          }
+
+          if (!bot_idstatus) {
+            console.log(
+              "Status de atendimento não encontrado para o usuário -",
+              fromPhoneNumber
+            );
+          }
+
+          if (bot_idstatus === 2) {
+            console.log("Usuário em atendimento humano -", bot_idstatus);
+            if (!redirectSentMap.get(fromPhoneNumber)) {
+              await client.sendMessage(
+                from,
+                "Estamos redirecionando seu atendimento para um atendente humano, por favor aguarde..."
+              );
+              redirectSentMap.set(fromPhoneNumber, true);
+            }
+            return;
+          }
+
+          if (bot_idstatus === 1 || bot_idstatus === 3 || bot_idstatus === "") {
+            console.log("Usuário em atendimento automático -", bot_idstatus);
+          }
+
+          const ticketStatus = await requests.getTicketStatusByPhoneNumber(
+            fromPhoneNumber
+          );
+
+          if (ticketStatus && ticketStatus.length > 0) {
+            ticketId = ticketStatus[0].id;
+            await requests.getAbrirAtendimentoBot(ticketId);
+            console.log(
+              `Iniciando atendimento Bot para ${fromPhoneNumber} no Ticket - ${ticketId}`
+            );
+          } else {
+            await requests.getInserirNumeroCliente(fromPhoneNumber);
+
+            const insertNovoTicket = await requests.getInserirNovoTicket(
+              fromPhoneNumber
+            );
+            if (insertNovoTicket && insertNovoTicket.insertId) {
+              ticketId = insertNovoTicket.insertId;
+              await requests.getAbrirAtendimentoBot(ticketId);
+              console.log(
+                `Iniciando atendimento Bot para ${fromPhoneNumber} no Ticket - ${ticketId} (NOVO)`
+              );
+            } else {
+              console.log("Erro ao criar novo número de Ticket no banco.");
+              return;
+            }
+          }
+
+          const demim = 0;
+
+          stateMachine._setTicketId(ticketId);
+          stateMachine._setFromNumber(from);
+          stateMachine._setToNumber(to);
+
+          await stateMachine._getRegisterMessagesDB(
+            from,
+            to,
+            message.body,
+            ticketId,
+            demim
+          );
+          await stateMachine.handleMessage(fromPhoneNumber, response);
+        } catch (error) {
+          console.error("Erro ao processar a mensagem:", error);
+        }
+      } catch (error) {
+        console.error("Erro ao lidar com a mensagem:", error);
       }
+    });
 
-      const demim = 0;
-
-      stateMachine._setTicketId(ticketId);
-      stateMachine._setFromNumber(from);
-      stateMachine._setToNumber(to);
-
-      await stateMachine._getRegisterMessagesDB(
-        from,
-        to,
-        body,
-        ticketId,
-        demim
-      );
-
-      await stateMachine.handleMessage(fromPhoneNumber, response);
-    } catch (error) {
-      console.error("Erro ao lidar com a mensagem:", error);
-    }
-  });
-
-  client.initialize();
-  sessions[sessionName] = client;
-
-  const stateMachine = new StateMachine(client, sessionName); // Inicializar a StateMachine após a inicialização do cliente
-  stateMachines[sessionName] = stateMachine;
+    client.initialize();
+    sessions[sessionName] = client;
+  } catch (error) {
+    console.error(`Erro ao criar a sessão ${sessionName}:`, error);
+  }
 
   return client;
 };

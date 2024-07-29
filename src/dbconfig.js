@@ -3,46 +3,66 @@ const mysql = require("mysql2/promise");
 require("dotenv").config();
 
 const createBrowserInstance = async () => {
-  const browser = await puppeteer.launch({
-    headless: false,
-    args: ["--no-sandbox"],
-    executablePath: "/usr/bin/chromium-browser",
-    ignoreDefaultArgs: ["--disable-extensions"],
-  });
-  return browser;
+  try {
+    const browser = await puppeteer.launch({
+      headless: false, // Defina como true se não precisar da interface gráfica
+      args: ["--no-sandbox"],
+      executablePath:
+        process.env.CHROME_EXECUTABLE_PATH || "/usr/bin/chromium-browser", // Utilize variável de ambiente
+      ignoreDefaultArgs: ["--disable-extensions"],
+    });
+    return browser;
+  } catch (error) {
+    console.error("Erro ao iniciar o navegador:", error);
+    throw error;
+  }
 };
 
 const createConnection = async (dbConfig) => {
-  const connection = await mysql.createConnection({
-    ...dbConfig,
-    connectTimeout: 60000,
-  });
-  return connection;
+  try {
+    const connection = await mysql.createConnection({
+      ...dbConfig,
+      connectTimeout: 60000,
+    });
+    return connection;
+  } catch (error) {
+    console.error("Erro ao conectar ao banco de dados:", error);
+    throw error;
+  }
 };
 
 const defaultDbConfig = {
-  host: process.env.DB1_MY_SQL_HOST,
-  user: process.env.MY_SQL_USER,
-  password: process.env.DB1_MY_SQL_PASSWORD,
-  port: process.env.MY_SQL_PORT,
-  database: process.env.DB1_MY_SQL_DATABASE,
-  connectionLimit: parseInt(process.env.MY_SQL_CONNECTION_LIMIT),
-  charset: process.env.MY_SQL_CHARSET,
-  connectTimeout: 60000,
+  host: process.env.DB1_MY_SQL_HOST || "localhost",
+  user: process.env.MY_SQL_USER || "root",
+  password: process.env.DB1_MY_SQL_PASSWORD || "",
+  port: parseInt(process.env.MY_SQL_PORT, 10) || 3306,
+  database: process.env.DB1_MY_SQL_DATABASE || "test",
+  connectionLimit: parseInt(process.env.MY_SQL_CONNECTION_LIMIT, 10) || 10,
+  charset: process.env.MY_SQL_CHARSET || "utf8mb4",
 };
 
 const executeQuery = async (sql, customDbConfig = defaultDbConfig) => {
+  let connection;
+
   try {
-    const connection = await createConnection(customDbConfig);
-    try {
-      const [rows, fields] = await connection.execute(sql);
-      return rows;
-    } finally {
-      await connection.end();
-    }
+    connection = await createConnection(customDbConfig);
+    console.log(`Executando consulta: ${sql}`);
+    const [rows, fields] = await connection.execute(sql);
+    return rows;
   } catch (error) {
     console.error("Erro ao executar a consulta:", error);
-    throw error; // Re-throw the error to handle it in the caller function
+    throw error;
+  } finally {
+    if (connection) {
+      try {
+        await connection.end();
+      } catch (error) {
+        console.error(
+          "Erro ao encerrar a conexão com o banco de dados:",
+          error
+        );
+      }
+    }
   }
 };
 
