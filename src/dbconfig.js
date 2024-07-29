@@ -46,7 +46,6 @@ const executeQuery = async (sql, customDbConfig = defaultDbConfig) => {
 
   try {
     connection = await createConnection(customDbConfig);
-    console.log(`Executando consulta: ${sql}`);
     const [rows, fields] = await connection.execute(sql);
     return rows;
   } catch (error) {
