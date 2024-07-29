@@ -2090,8 +2090,23 @@ app.get("/listAllFiles", (req, res) => {
 
 app.use("/media", express.static(mediaDataPath));
 
-app.listen(port, () => {
-  console.log(`Servidor HTTP iniciado na porta ${port}`);
+const privateKey = fs.readFileSync(
+  "/etc/letsencrypt/live/whatsapp.cobrance.online/privkey.pem",
+  "utf8"
+);
+const certificate = fs.readFileSync(
+  "/etc/letsencrypt/live/whatsapp.cobrance.online/fullchain.pem",
+  "utf8"
+);
+const ca = fs.readFileSync(
+  "/etc/letsencrypt/live/whatsapp.cobrance.online/chain.pem",
+  "utf8"
+);
+const credentials = { key: privateKey, cert: certificate, ca };
+const httpsServer = https.createServer(credentials, app);
+
+httpsServer.listen(port, () => {
+  console.log(`Servidor HTTPS iniciado na porta ${port}`);
 
   initializeConnectionStatus();
   restoreAllSessions();
