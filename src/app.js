@@ -1681,7 +1681,8 @@ app.post("/restoreAll", (req, res) => {
 
 app.post("/chat/whatsappNumbers/:sessionName", async (req, res) => {
   const { sessionName } = req.params;
-  const { numbers } = req.body;
+  const { number } = req.body;
+
   const client = sessions[sessionName];
 
   if (!client) {
@@ -1690,38 +1691,34 @@ app.post("/chat/whatsappNumbers/:sessionName", async (req, res) => {
       .json({ success: false, message: "Client is not initialized" });
   }
 
-  if (!Array.isArray(numbers) || numbers.length === 0) {
+  if (!number) {
     return res.status(400).json({
       success: false,
-      message: 'Invalid input format. "numbers" should be a non-empty array.',
+      message: 'Invalid input format. "number" is required.',
     });
   }
 
   try {
-    const results = await Promise.all(
-      numbers.map(async (number) => {
-        try {
-          // Validate and format the number
-          const formattedNumber = validateAndFormatNumber(number);
-          console.log(`Verificando número formatado: ${formattedNumber}`);
-          const isRegistered = await client.isRegisteredUser(formattedNumber);
-          return res.status(200).json([{ exists: true }]);
-        } catch (error) {
-          console.error(
-            `Erro ao formatar/verificar o número ${number}:`,
-            error.message
-          );
-          return res.status(400).json([{ exists: false }]);
-        }
-      })
-    );
+    // Validate and format the number
+    const formattedNumber = validateAndFormatNumber(number);
+    console.log(`Verificando número formatado: ${formattedNumber}`);
 
-    return { results };
+    // Verifica se o número está registrado
+    const isRegistered = await client.isRegisteredUser(formattedNumber);
+
+    // Envia a resposta com a verificação
+    return res.status(200).json([
+      {
+        exists: isRegistered,
+      },
+    ]);
   } catch (error) {
-    console.error("Erro ao verificar os números:", error.message);
-    res
-      .status(500)
-      .json({ success: false, message: "Erro ao verificar os números" });
+    console.error(`Erro ao verificar o número ${number}:`, error.message);
+    return res.status(500).json([
+      {
+        exists: false,
+      },
+    ]);
   }
 });
 
