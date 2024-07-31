@@ -1716,26 +1716,31 @@ app.post("/chat/whatsappNumbers/:sessionName", async (req, res) => {
   try {
     // Valida e formata o número
     const formattedNumber = validateAndFormatNumber(number);
-    console.log(`Número fornecido: ${number}`);
-    console.log(`Número formatado: ${formattedNumber}`);
 
     // Verifica se o número está registrado
     const isRegistered = await client.isRegisteredUser(formattedNumber);
-    console.log(`Número ${formattedNumber} registrado: ${isRegistered}`);
 
-    // Envia a resposta com a verificação
-    return res.status(200).json([
-      {
-        exists: isRegistered,
-      },
-    ]);
+    if (isRegistered === true) {
+      console.log(`Número ${number} existe no WhatsApp`, isRegistered);
+      return res.status(200).json([
+        {
+          exists: isRegistered,
+        },
+      ]);
+    } else {
+      console.log(`Número ${number} NÃO existe no WhatsApp`, isRegistered);
+      return res.status(404).json([
+        {
+          exists: isRegistered,
+        },
+      ]);
+    }
   } catch (error) {
     console.error(`Erro ao verificar o número ${number}:`, error.message);
-    return res.status(400).json([
-      {
-        exists: false,
-      },
-    ]);
+    return res.status(500).json({
+      success: false,
+      message: "Erro ao verificar o número",
+    });
   }
 });
 
