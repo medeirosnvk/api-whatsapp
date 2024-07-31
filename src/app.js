@@ -1745,15 +1745,13 @@ app.post("/chat/whatsappNumbers/:sessionName", async (req, res) => {
     } catch (error) {
       console.error(`Erro ao verificar o número ${number}:`, error.message);
       return res.status(500).json({
-        success: false,
-        message: "Erro ao verificar o número",
+        error: error.message,
       });
     }
   } catch (error) {
     console.error(`Erro na rota whatsappNumbers`, error.message);
     return res.status(500).json({
-      success: false,
-      message: "Erro na rota whatsappNumbers",
+      error: error.message,
     });
   }
 });
