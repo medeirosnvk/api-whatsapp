@@ -2168,5 +2168,5 @@ httpsServer.listen(port, () => {
   console.log(`Servidor HTTPS iniciado na porta ${port}`);
 
   initializeConnectionStatus();
-  // restoreAllSessions();
+  restoreAllSessions();
 });
