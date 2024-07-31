@@ -1533,19 +1533,23 @@ const validateAndFormatNumber = (number) => {
   // Remove qualquer caractere não numérico
   const cleanedNumber = number.replace(/\D/g, "");
 
+  // Valida o comprimento do número (deve ser 12 ou 13 dígitos)
+  if (cleanedNumber.length < 12 || cleanedNumber.length > 13) {
+    throw new Error("Invalid phone number length: must be 12 or 13 digits");
+  }
+
   // Remove o nono dígito extra se o número tiver 13 dígitos
   let formattedNumber;
+
   if (cleanedNumber.length === 13) {
     formattedNumber = cleanedNumber.slice(0, 12); // Remove o nono dígito
-  } else if (cleanedNumber.length === 12) {
-    formattedNumber = cleanedNumber;
   } else {
-    throw new Error("Invalid phone number length");
+    formattedNumber = cleanedNumber;
   }
 
   // Garante que o número começa com o código do país
   if (!formattedNumber.startsWith("55")) {
-    throw new Error("Invalid country code");
+    throw new Error("Invalid country code: must start with 55");
   }
 
   // Retorna o número formatado
@@ -1700,7 +1704,6 @@ app.post("/chat/whatsappNumbers/:sessionName", async (req, res) => {
       .json({ success: false, message: "Client is not initialized" });
   }
 
-  // Verifica se o número é uma string e se não está vazio
   if (typeof number !== "string" || !number.trim()) {
     return res.status(400).json({
       success: false,
@@ -1726,7 +1729,7 @@ app.post("/chat/whatsappNumbers/:sessionName", async (req, res) => {
     ]);
   } catch (error) {
     console.error(`Erro ao verificar o número ${number}:`, error.message);
-    return res.status(500).json([
+    return res.status(400).json([
       {
         exists: false,
       },
@@ -2142,5 +2145,5 @@ httpsServer.listen(port, () => {
   console.log(`Servidor HTTPS iniciado na porta ${port}`);
 
   initializeConnectionStatus();
-  restoreAllSessions();
+  // restoreAllSessions();
 });
