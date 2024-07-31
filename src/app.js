@@ -1060,7 +1060,7 @@ const createSession = (sessionName) => {
       },
       webVersionCache: {
         type: "remote",
-        remotePath: `https://raw.githubusercontent.com/wppconnect-team/wa-version/main/html/${process.env.WWEB_VERSION}.html`, // Use variável de ambiente para versão
+        remotePath: `https://raw.githubusercontent.com/wppconnect-team/wa-version/main/html/${wwebVersion}.html`,
       },
     });
 
@@ -1108,6 +1108,24 @@ const createSession = (sessionName) => {
       console.error(
         `Falha de autenticação na sessão ${sessionName}. Verifique suas credenciais.`
       );
+    });
+
+    client.on("auth_failure", (msg) => {
+      console.log("MSG DENTRO DE AUTH_FAILURE -", msg);
+
+      clearTimeout(qrTimeout);
+      client.connectionState = "disconnected";
+      console.error(
+        `Falha de autenticação na sessão ${sessionName}. Verifique suas credenciais.`
+      );
+
+      if (msg.includes("ban")) {
+        client.connectionState = "banned";
+        console.error(`A sessão ${client.sessionName} foi banida.`);
+        sessions[sessionName].connectionState === "banned";
+      } else {
+        client.connectionState = "disconnected";
+      }
     });
 
     client.on("ready", () => {
@@ -1754,10 +1772,10 @@ app.delete("/instance/logoutAll", async (req, res) => {
 app.delete("/instance/clearUnusedSessions", (req, res) => {
   try {
     deleteUnusedSessions();
-    res.status(200).send("Sessões não utilizadas foram removidas com sucesso.");
+    res.status(200).json("Sessões não utilizadas foram removidas com sucesso.");
   } catch (error) {
     console.error("Erro ao limpar sessões não utilizadas:", error);
-    res.status(500).send("Erro ao limpar sessões não utilizadas.");
+    res.status(500).json("Erro ao limpar sessões não utilizadas.");
   }
 });
 
@@ -1994,7 +2012,9 @@ app.post("/message/sendText/:instanceName", async (req, res) => {
 
     await client.sendMessage(`${processedNumber}@c.us`, textMessage.text);
 
-    console.log(`Mensagem de texto enviada com sucesso ao numero ${number}!`);
+    console.log(
+      `Mensagem de texto enviada com sucesso ao numero ${number} pela instancia ${instanceName}!`
+    );
     res.status(200).json({ status: "PENDING" });
   } catch (error) {
     res.status(500).send(`Error sending message: ${error.message}`);
@@ -2012,12 +2032,10 @@ app.post("/message/sendMedia/:instanceName", async (req, res) => {
       .send("instanceName, number, and mediaMessage.media are required");
   }
 
-  if (!client) {
-    return res.status(400).send(`Session ${instanceName} does not exist`);
-  }
-
-  if (client.connectionState === "disconnected") {
-    return res.status(400).send(`Session ${instanceName} is disconnected`);
+  if (!client || client.connectionState !== "open") {
+    return res
+      .status(400)
+      .send(`Session ${instanceName} is disconnected or does not exist`);
   }
 
   try {
@@ -2048,9 +2066,20 @@ app.post("/message/sendMedia/:instanceName", async (req, res) => {
       caption: caption,
     });
 
-    console.log(`Mensagem enviada com sucesso ao numero ${number}!`);
+    console.log(
+      `Mensagem enviada com sucesso ao numero ${number} pela instancia ${instanceName}!`
+    );
     res.status(200).json({ status: "PENDING" });
   } catch (error) {
+    if (error.message.includes("disconnected")) {
+      console.error(`Erro: A sessão ${instanceName} está desconectada.`);
+    } else if (error.message.includes("ban")) {
+      console.error(`Erro: A sessão ${instanceName} foi banida.`);
+    } else {
+      console.error(`Erro desconhecido ao enviar mensagem: ${error.message}`);
+    }
+
+    // Notificar o usuário sobre o erro específico
     res.status(500).send(`Error sending message: ${error.message}`);
   }
 });
