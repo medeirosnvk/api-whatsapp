@@ -1526,20 +1526,25 @@ const restoreAllSessions = () => {
 };
 
 const validateAndFormatNumber = (number) => {
-  // Remove any non-digit characters
+  // Verifica se o número é uma string
+  if (typeof number !== "string") {
+    throw new Error("Number must be a string");
+  }
+
+  // Remove qualquer caractere não numérico
   const cleanedNumber = number.replace(/\D/g, "");
 
-  // Validate the length of the number (Brazilian numbers have 13 digits with country code)
+  // Valida o comprimento do número (números brasileiros têm 13 dígitos com o código do país)
   if (cleanedNumber.length !== 13) {
     throw new Error("Invalid phone number length");
   }
 
-  // Ensure the number starts with the country code
+  // Garante que o número começa com o código do país
   if (!cleanedNumber.startsWith("55")) {
     throw new Error("Invalid country code");
   }
 
-  // Return the formatted number
+  // Retorna o número formatado
   return cleanedNumber;
 };
 
@@ -1691,15 +1696,16 @@ app.post("/chat/whatsappNumbers/:sessionName", async (req, res) => {
       .json({ success: false, message: "Client is not initialized" });
   }
 
-  if (!number) {
+  // Verifica se o número é uma string e se não está vazio
+  if (typeof number !== "string" || !number.trim()) {
     return res.status(400).json({
       success: false,
-      message: 'Invalid input format. "number" is required.',
+      message: 'Invalid input format. "number" must be a non-empty string.',
     });
   }
 
   try {
-    // Validate and format the number
+    // Valida e formata o número
     const formattedNumber = validateAndFormatNumber(number);
     console.log(`Verificando número formatado: ${formattedNumber}`);
 
@@ -2130,5 +2136,5 @@ httpsServer.listen(port, () => {
   console.log(`Servidor HTTPS iniciado na porta ${port}`);
 
   initializeConnectionStatus();
-  restoreAllSessions();
+  // restoreAllSessions();
 });
