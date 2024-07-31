@@ -1697,7 +1697,7 @@ app.post("/restoreAll", (req, res) => {
 app.post("/chat/whatsappNumbers/:sessionName", async (req, res) => {
   try {
     const { sessionName } = req.params;
-    const { number } = req.body;
+    const { numbers } = req.body;
 
     const client = sessions[sessionName];
 
@@ -1707,12 +1707,15 @@ app.post("/chat/whatsappNumbers/:sessionName", async (req, res) => {
         .json({ success: false, message: "Client is not initialized" });
     }
 
-    if (typeof number !== "string" || !number.trim()) {
+    if (!Array.isArray(numbers) || numbers.length !== 1) {
       return res.status(400).json({
         success: false,
-        message: 'Invalid input format. "number" must be a non-empty string.',
+        message:
+          'Invalid input format. "numbers" should be an array containing exactly one number.',
       });
     }
+
+    const number = numbers[0];
 
     // Valida e formata o número
     const formattedNumber = validateAndFormatNumber(number);
