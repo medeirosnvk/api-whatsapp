@@ -1744,15 +1744,19 @@ app.post("/chat/whatsappNumbers/:sessionName", async (req, res) => {
       }
     } catch (error) {
       console.error(`Erro ao verificar o número ${number}:`, error.message);
-      return res.status(500).json({
-        error: error.message,
-      });
+      return res.status(404).json([
+        {
+          exists: false,
+        },
+      ]);
     }
   } catch (error) {
     console.error(`Erro na rota whatsappNumbers`, error.message);
-    return res.status(500).json({
-      error: error.message,
-    });
+    return res.status(404).json([
+      {
+        exists: false,
+      },
+    ]);
   }
 });
 
