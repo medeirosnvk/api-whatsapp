@@ -1695,52 +1695,65 @@ app.post("/restoreAll", (req, res) => {
 });
 
 app.post("/chat/whatsappNumbers/:sessionName", async (req, res) => {
-  const { sessionName } = req.params;
-  const { number } = req.body;
-
-  const client = sessions[sessionName];
-
-  if (!client) {
-    return res
-      .status(500)
-      .json({ success: false, message: "Client is not initialized" });
-  }
-
-  if (typeof number !== "string" || !number.trim()) {
-    return res.status(400).json({
-      success: false,
-      message: 'Invalid input format. "number" must be a non-empty string.',
-    });
-  }
-
   try {
+    const { sessionName } = req.params;
+    const { number } = req.body;
+
+    const client = sessions[sessionName];
+
+    if (!client) {
+      return res
+        .status(500)
+        .json({ success: false, message: "Client is not initialized" });
+    }
+
+    if (typeof number !== "string" || !number.trim()) {
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid input format. "number" must be a non-empty string.',
+      });
+    }
+
     // Valida e formata o número
     const formattedNumber = validateAndFormatNumber(number);
 
-    // Verifica se o número está registrado
-    const isRegistered = await client.isRegisteredUser(formattedNumber);
-    console.log("isRegistered -", isRegistered);
+    try {
+      const isRegistered = await client.isRegisteredUser(formattedNumber);
+      console.log("isRegistered -", isRegistered);
 
-    if (isRegistered === true) {
-      console.log(`Número ${number} existe no WhatsApp`, isRegistered);
-      return res.status(200).json([
-        {
-          exists: isRegistered,
-        },
-      ]);
-    } else {
-      console.log(`Número ${number} NÃO existe no WhatsApp`, isRegistered);
-      return res.status(404).json([
-        {
-          exists: isRegistered,
-        },
-      ]);
+      if (isRegistered === true) {
+        console.log(
+          `Número ${number} existe no WhatsApp, isRegistered -`,
+          isRegistered
+        );
+        return res.status(200).json([
+          {
+            exists: isRegistered,
+          },
+        ]);
+      } else {
+        console.log(
+          `Número ${number} NÃO existe no WhatsApp, isRegistered -`,
+          isRegistered
+        );
+        return res.status(404).json([
+          {
+            exists: isRegistered,
+          },
+        ]);
+      }
+    } catch (error) {
+      console.error(`Erro ao verificar o número ${number}:`, error.message);
+      return res.status(500).json({
+        success: false,
+        message: "Erro ao verificar o número",
+      });
     }
   } catch (error) {
-    console.error(`Erro ao verificar o número ${number}:`, error.message);
+    console.error(`Erro na rota whatsappNumbers`, error.message);
     return res.status(500).json({
       success: false,
-      message: "Erro ao verificar o número",
+      message: "Erro na rota whatsappNumbers",
     });
   }
 });
