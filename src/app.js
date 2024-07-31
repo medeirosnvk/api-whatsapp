@@ -1102,14 +1102,6 @@ const createSession = (sessionName) => {
       }
     });
 
-    client.on("auth_failure", () => {
-      clearTimeout(qrTimeout);
-      client.connectionState = "disconnected";
-      console.error(
-        `Falha de autenticação na sessão ${sessionName}. Verifique suas credenciais.`
-      );
-    });
-
     client.on("auth_failure", (msg) => {
       console.log("MSG DENTRO DE AUTH_FAILURE -", msg);
 
