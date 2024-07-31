@@ -1526,7 +1526,6 @@ const restoreAllSessions = () => {
 };
 
 const validateAndFormatNumber = (number) => {
-  // Verifica se o número é uma string
   if (typeof number !== "string") {
     throw new Error("Number must be a string");
   }
@@ -1534,18 +1533,23 @@ const validateAndFormatNumber = (number) => {
   // Remove qualquer caractere não numérico
   const cleanedNumber = number.replace(/\D/g, "");
 
-  // Valida o comprimento do número (números brasileiros têm 13 dígitos com o código do país)
-  if (cleanedNumber.length !== 13) {
+  // Remove o nono dígito extra se o número tiver 13 dígitos
+  let formattedNumber;
+  if (cleanedNumber.length === 13) {
+    formattedNumber = cleanedNumber.slice(0, 12); // Remove o nono dígito
+  } else if (cleanedNumber.length === 12) {
+    formattedNumber = cleanedNumber;
+  } else {
     throw new Error("Invalid phone number length");
   }
 
   // Garante que o número começa com o código do país
-  if (!cleanedNumber.startsWith("55")) {
+  if (!formattedNumber.startsWith("55")) {
     throw new Error("Invalid country code");
   }
 
   // Retorna o número formatado
-  return cleanedNumber;
+  return formattedNumber;
 };
 
 const getAllFiles = (dirPath, arrayOfFiles = []) => {
@@ -1707,10 +1711,12 @@ app.post("/chat/whatsappNumbers/:sessionName", async (req, res) => {
   try {
     // Valida e formata o número
     const formattedNumber = validateAndFormatNumber(number);
-    console.log(`Verificando número formatado: ${formattedNumber}`);
+    console.log(`Número fornecido: ${number}`);
+    console.log(`Número formatado: ${formattedNumber}`);
 
     // Verifica se o número está registrado
     const isRegistered = await client.isRegisteredUser(formattedNumber);
+    console.log(`Número ${formattedNumber} registrado: ${isRegistered}`);
 
     // Envia a resposta com a verificação
     return res.status(200).json([
@@ -2136,5 +2142,5 @@ httpsServer.listen(port, () => {
   console.log(`Servidor HTTPS iniciado na porta ${port}`);
 
   initializeConnectionStatus();
-  // restoreAllSessions();
+  restoreAllSessions();
 });
