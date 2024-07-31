@@ -1538,12 +1538,14 @@ const validateAndFormatNumber = (number) => {
     throw new Error("Invalid phone number length: must be 12 or 13 digits");
   }
 
-  // Remove o nono dígito extra se o número tiver 13 dígitos
   let formattedNumber;
 
+  // Se o número tiver 13 dígitos, remove o nono dígito extra
   if (cleanedNumber.length === 13) {
-    formattedNumber = cleanedNumber.slice(0, 12); // Remove o nono dígito
+    // Mantém o código do país e do estado, e remove o nono dígito extra
+    formattedNumber = cleanedNumber.slice(0, 4) + cleanedNumber.slice(5);
   } else {
+    // Se o número tem 12 dígitos, usa como está
     formattedNumber = cleanedNumber;
   }
 
