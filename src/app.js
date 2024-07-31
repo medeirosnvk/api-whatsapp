@@ -1719,6 +1719,7 @@ app.post("/chat/whatsappNumbers/:sessionName", async (req, res) => {
 
     // Verifica se o número está registrado
     const isRegistered = await client.isRegisteredUser(formattedNumber);
+    console.log("isRegistered -", isRegistered);
 
     if (isRegistered === true) {
       console.log(`Número ${number} existe no WhatsApp`, isRegistered);
