@@ -1083,7 +1083,9 @@ const createSession = (sessionName) => {
       saveQRCodeImage(qr, sessionName);
     });
 
-    client.on("disconnected", () => {
+    client.on("disconnected", (msg) => {
+      console.log("MSG DENTRO DE DISCONNECTED -", msg);
+
       clearTimeout(qrTimeout);
       client.connectionState = "disconnected";
       console.log(`Sessão ${sessionName} foi desconectada.`);
@@ -1722,7 +1724,6 @@ app.post("/chat/whatsappNumbers/:sessionName", async (req, res) => {
 
     try {
       const isRegistered = await client.isRegisteredUser(formattedNumber);
-      console.log("isRegistered -", isRegistered);
 
       if (isRegistered === true) {
         console.log(
