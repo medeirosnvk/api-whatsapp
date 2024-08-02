@@ -1602,8 +1602,17 @@ const deleteUnusedSessions = () => {
 
       // Remove o diretório da sessão
       if (fs.existsSync(sessionDirPath)) {
-        fs.rmSync(sessionDirPath, { recursive: true, force: true });
-        console.log(`Diretório da sessão ${sessionName} removido com sucesso.`);
+        try {
+          fs.rmSync(sessionDirPath, { recursive: true, force: true });
+          console.log(
+            `Diretório da sessão ${sessionName} removido com sucesso.`
+          );
+        } catch (error) {
+          console.error(
+            `Erro ao remover o diretório da sessão ${sessionName}:`,
+            error
+          );
+        }
       }
 
       // Remove os dados da sessão do arquivo JSON
