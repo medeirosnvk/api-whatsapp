@@ -1577,6 +1577,60 @@ const getAllFiles = (dirPath, arrayOfFiles = []) => {
   return arrayOfFiles;
 };
 
+const deleteSession = (sessionName) => {
+  const clientDataFilePath = path.join(__dirname, "clientData.json");
+  let clientData = {};
+
+  // Tente ler o arquivo existente
+  try {
+    if (fs.existsSync(clientDataFilePath)) {
+      const fileContent = fs.readFileSync(clientDataFilePath, "utf-8");
+      clientData = JSON.parse(fileContent);
+    }
+  } catch (error) {
+    console.error("Erro ao ler o arquivo de dados do cliente:", error);
+    return { error: "Erro ao ler o arquivo de dados do cliente." };
+  }
+
+  // Verifica se a sessão existe e está desconectada
+  if (
+    clientData[sessionName] &&
+    clientData[sessionName].connectionState === "disconnected"
+  ) {
+    const sessionDirPath = path.join(sessionDataPath, `session-${sessionName}`);
+
+    // Remove o diretório da sessão
+    try {
+      if (fs.existsSync(sessionDirPath)) {
+        fs.rmSync(sessionDirPath, { recursive: true, force: true });
+        console.log(`Diretório da sessão ${sessionName} removido com sucesso.`);
+      }
+    } catch (error) {
+      console.error(
+        `Erro ao remover o diretório da sessão ${sessionName}:`,
+        error
+      );
+      return { error: `Erro ao remover o diretório da sessão ${sessionName}.` };
+    }
+
+    // Remove os dados da sessão do arquivo JSON
+    delete clientData[sessionName];
+
+    // Atualiza o arquivo JSON
+    try {
+      fs.writeFileSync(clientDataFilePath, JSON.stringify(clientData, null, 2));
+      console.log("Dados das sessões atualizados no arquivo JSON.");
+    } catch (error) {
+      console.error("Erro ao salvar os dados do cliente:", error);
+      return { error: "Erro ao salvar os dados do cliente." };
+    }
+
+    return { success: `Sessão ${sessionName} removida com sucesso.` };
+  } else {
+    return { error: "Sessão não encontrada ou não está desconectada." };
+  }
+};
+
 const deleteUnusedSessions = () => {
   const clientDataFilePath = path.join(__dirname, "clientData.json");
   let clientData = {};
@@ -1806,6 +1860,22 @@ app.delete("/instance/logoutAll", async (req, res) => {
     res
       .status(500)
       .json({ error: `Error disconnecting all sessions: ${error.message}` });
+  }
+});
+
+app.delete("/instance/deleteSession/:sessionName", (req, res) => {
+  const sessionName = req.params.sessionName;
+
+  try {
+    const result = deleteSession(sessionName);
+    if (result.success) {
+      res.status(200).json(result.success);
+    } else {
+      res.status(404).json(result.error);
+    }
+  } catch (error) {
+    console.error("Erro ao tentar excluir a sessão:", error);
+    res.status(500).json("Erro ao tentar excluir a sessão.");
   }
 });
 
