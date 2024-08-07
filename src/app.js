@@ -1083,13 +1083,26 @@ const createSession = (sessionName) => {
       saveQRCodeImage(qr, sessionName);
     });
 
-    client.on("disconnected", (data) => {
-      console.log("DISCONNECTED -", JSON.stringify(data, undefined, 2));
+    client.on("disconnected", async (data) => {
+      try {
+        console.log("DISCONNECTED -", JSON.stringify(data, undefined, 2));
 
-      clearTimeout(qrTimeout);
-      client.connectionState = "disconnected";
-      client.logout();
-      console.log(`Sessão ${sessionName} foi desconectada.`);
+        clearTimeout(qrTimeout);
+        client.connectionState = "disconnected";
+        console.log(`Sessão ${sessionName} foi desconectada.`);
+
+        // Tentar logout
+        await client.logout();
+      } catch (error) {
+        console.error("Erro ao lidar com desconexão:", error.message);
+
+        if (error.message.includes("Cannot read properties of undefined")) {
+          console.error(
+            "Erro ao acessar propriedades indefinidas durante a desconexão:",
+            error.message
+          );
+        }
+      }
     });
 
     client.on("authenticated", (data) => {
