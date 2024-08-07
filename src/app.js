@@ -1088,17 +1088,26 @@ const createSession = (sessionName) => {
 
       clearTimeout(qrTimeout);
       client.connectionState = "disconnected";
+      client.logout();
       console.log(`Sessão ${sessionName} foi desconectada.`);
     });
 
     client.on("authenticated", () => {
       clearTimeout(qrTimeout);
+
+      if (sessions && sessions[sessionName]) {
+        console.log("SESSIONS JA EXISTE", sessions, sessionName);
+        return;
+      }
+
       sessions[client.sessionName] = client;
       console.log(`Conexão bem-sucedida na sessão ${client.sessionName}!`);
 
       try {
+        console.log("CONSOLE PRE STATEMACHINE AUTHENTICATED");
         const stateMachine = new StateMachine(client, client.sessionName);
         stateMachines[client.sessionName] = stateMachine;
+        console.log("CONSOLE POS STATEMACHINE AUTHENTICATED");
       } catch (error) {
         console.error("Erro ao criar StateMachine:", error);
       }
@@ -1315,6 +1324,10 @@ const createSession = (sessionName) => {
       } catch (error) {
         console.error("Erro ao lidar com a mensagem:", error);
       }
+    });
+
+    client.on("change_state", (data) => {
+      console.log("change_state -", JSON.stringify(data, undefined, 2));
     });
 
     client.initialize();
