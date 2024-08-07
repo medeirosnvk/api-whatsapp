@@ -1075,7 +1075,7 @@ const createSession = (sessionName) => {
         );
         client.destroy();
       }
-    }, 5 * 60 * 1000); // 5 minutos
+    }, 2 * 60 * 1000); // 2 minutos
 
     client.on("qr", (qr) => {
       console.log(`QR Code para a sessão ${sessionName}:`);
