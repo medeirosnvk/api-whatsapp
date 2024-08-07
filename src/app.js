@@ -1083,8 +1083,8 @@ const createSession = (sessionName) => {
       saveQRCodeImage(qr, sessionName);
     });
 
-    client.on("disconnected", (msg) => {
-      console.log("MSG DENTRO DE DISCONNECTED -", msg);
+    client.on("disconnected", (data) => {
+      console.log("DISCONNECTED -", JSON.stringify(data, undefined, 2));
 
       clearTimeout(qrTimeout);
       client.connectionState = "disconnected";
@@ -1092,7 +1092,8 @@ const createSession = (sessionName) => {
       console.log(`Sessão ${sessionName} foi desconectada.`);
     });
 
-    client.on("authenticated", () => {
+    client.on("authenticated", (data) => {
+      console.log("AUTHENTICATED -", JSON.stringify(data, undefined, 2));
       clearTimeout(qrTimeout);
 
       if (sessions && sessions[sessionName]) {
@@ -1113,8 +1114,8 @@ const createSession = (sessionName) => {
       }
     });
 
-    client.on("auth_failure", (msg) => {
-      console.log("MSG DENTRO DE AUTH_FAILURE -", msg);
+    client.on("auth_failure", (data) => {
+      console.log("AUTH_FAILURE -", JSON.stringify(data, undefined, 2));
 
       clearTimeout(qrTimeout);
       client.connectionState = "disconnected";
@@ -1122,7 +1123,7 @@ const createSession = (sessionName) => {
         `Falha de autenticação na sessão ${sessionName}. Verifique suas credenciais.`
       );
 
-      if (msg.includes("ban")) {
+      if (data.includes("ban")) {
         client.connectionState = "banned";
         console.error(`A sessão ${client.sessionName} foi banida.`);
         sessions[sessionName].connectionState === "banned";
