@@ -1118,10 +1118,8 @@ const createSession = (sessionName) => {
       console.log(`Conexão bem-sucedida na sessão ${client.sessionName}!`);
 
       try {
-        console.log("CONSOLE PRE STATEMACHINE AUTHENTICATED");
         const stateMachine = new StateMachine(client, client.sessionName);
         stateMachines[client.sessionName] = stateMachine;
-        console.log("CONSOLE POS STATEMACHINE AUTHENTICATED");
       } catch (error) {
         console.error("Erro ao criar StateMachine:", error);
       }
@@ -1152,6 +1150,8 @@ const createSession = (sessionName) => {
 
       try {
         saveClientData(client);
+        const stateMachine = new StateMachine(client, client.sessionName);
+        stateMachines[client.sessionName] = stateMachine;
       } catch (error) {
         console.error("Erro ao criar arquivo clientData.json:", error);
       }
